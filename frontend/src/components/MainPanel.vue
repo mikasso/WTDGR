@@ -136,9 +136,10 @@ export default {
 
             height: 7vh;
             white-space: nowrap;
+            color: black;
 
             padding: 5px;
-            background-color: rgb(250, 250, 250);
+            background-color: rgb(200, 200, 200);
             border-bottom: rgb(140, 140, 140) 1px solid ;
             
             .menu{
@@ -161,12 +162,13 @@ export default {
                     min-height: 30px;
                     padding: 0px 10px;
 
+                    background-color: white;
                     cursor: pointer;
                     &:hover{
-                        background: rgb(240, 240, 240);
+                        background: rgb(230, 230, 230);
                     }
 
-                    border: rgb(180, 180, 180) 1px solid;
+                    border: rgb(170, 170, 170) 1px solid;
                     border-radius: 5px;
 
                     display: flex;
@@ -182,14 +184,14 @@ export default {
                 }
 
                 .selected{
-                    background: rgb(220, 220, 220);
+                    background: rgb(230, 230, 230);
                     &:hover{
-                        background: rgb(220, 220, 220);
+                        background: rgb(230, 230, 230);
                     }
                 }
 
                 .select{
-                    border: rgb(210, 210, 210) 1px solid;
+                    border: rgb(170, 170, 170) 1px solid;
                     border-radius: 5px;
 
                     min-width: 50px;
