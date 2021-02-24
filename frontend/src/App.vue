@@ -17,7 +17,8 @@ export default {
 
 <style>
 html, body{
-  min-height: 100%;
+  height: 100%;
+  margin: 0;
 }
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
