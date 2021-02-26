@@ -8,13 +8,16 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@vector-js/library": "0.0.1",
     "animejs": "^3.2.1",
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.6.5",
+    "konva": "^7.2.4",
     "node-sass": "^4.14.1",
     "vector-js": "0.0.0",
     "vectors-js": "^1.1.1",
-    "vue": "^2.6.11"
+    "vue": "^2.6.11",
+    "vue-konva": "^2.1.7"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
