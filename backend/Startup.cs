@@ -5,6 +5,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using SignalRChat.Hubs;
+using backend.JwtManager;
+using backend.JwtTokenManager;
+using backend.Models;
+using backend.Services;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using System;
+
 namespace backend
 {
     public class Startup
@@ -20,8 +29,13 @@ namespace backend
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            string connectionString = Configuration.GetConnectionString("DefaultConnection");
-            //services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connectionString));
+            services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
+            services.AddSingleton<IDatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
+            
+            services.Configure<JwtSettings>(Configuration.GetSection("JwtSettings"));
+            services.AddScoped<ITokenManager,TokenManager>();
+            services.AddScoped<IUserService, UserService>();
+
             services.AddSpaStaticFiles(configuration: options => { options.RootPath = "wwwroot"; });
             services.AddControllers();
             services.AddCors(options =>
@@ -35,13 +49,31 @@ namespace backend
                     .WithOrigins("https://localhost:5001");
                 });
             });
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-  .AddJwtBearer(options =>
-  {
-      options.Authority = Configuration["Okta:Authority"];
-      options.Audience = "api://default";
-  });
+
+            JwtSettings jwtSettings = new JwtSettings
+            {
+                Issuer = Configuration["JwtSettings:Issuer"],
+                Key = Configuration["JwtSettings:Key"]
+            };
+            InitalizeAuthentication(services, jwtSettings);
+
+            services.AddSignalR();
             services.AddMvc(option => option.EnableEndpointRouting = false);
+        }
+
+        private void InitalizeAuthentication(IServiceCollection services, JwtSettings jwtSettings)
+        {
+            var accessToken = new AccessTokenOptionsGenerator(jwtSettings);
+            var refreshToken = new RefreshTokenOptionsGenerator(jwtSettings);
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+               .AddJwtBearer(jwtBearerOptions =>
+                    accessToken.GetOptions(jwtBearerOptions))
+               .AddJwtBearer("refresh", jwtBearerOptions =>
+                    refreshToken.GetOptions(jwtBearerOptions));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,7 +90,13 @@ namespace backend
             app.UseAuthentication();
             app.UseMvc();
             app.UseRouting();
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/chathub");
+            });
+
             app.UseSpaStaticFiles();
             app.UseSpa(configuration: builder =>
             {
@@ -68,14 +106,5 @@ namespace backend
                 }
             });
         }
-    }
-}
-
-
-public class ApplicationDbContext : DbContext
-{
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
     }
 }
