@@ -17,7 +17,7 @@ namespace backend.JwtManager
         public string Issuer { get; set;}
         protected string Audience { get; set; }
 
-        public TokenOptionsGenerator(IJwtSettings settings)
+        public TokenOptionsGenerator(IJwtParametersOptions settings)
         {
             Key = settings.Key;
             Issuer = settings.Issuer;

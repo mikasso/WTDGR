@@ -9,7 +9,7 @@ namespace backend.JwtManager
 {
     public class RefreshTokenOptionsGenerator : TokenOptionsGenerator, ITokenOptionsGenerator
     {
-        public RefreshTokenOptionsGenerator( IJwtSettings settings) : base (settings)
+        public RefreshTokenOptionsGenerator( IJwtParametersOptions settings) : base (settings)
         {
             Audience = "refresh";
         }

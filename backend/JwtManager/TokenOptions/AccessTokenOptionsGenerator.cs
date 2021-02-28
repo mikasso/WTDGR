@@ -8,7 +8,7 @@ namespace backend.JwtManager
 {
     public class AccessTokenOptionsGenerator : TokenOptionsGenerator
     {
-        public AccessTokenOptionsGenerator(IJwtSettings settings) : base(settings)
+        public AccessTokenOptionsGenerator(IJwtParametersOptions settings) : base(settings)
         {
             Audience = "access";
         }

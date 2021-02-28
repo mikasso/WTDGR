@@ -35,6 +35,7 @@ namespace backend
             services.Configure<JwtSettings>(Configuration.GetSection("JwtSettings"));
             services.AddScoped<ITokenManager,TokenManager>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRoomService, RoomService>();
 
             services.AddSpaStaticFiles(configuration: options => { options.RootPath = "wwwroot"; });
             services.AddControllers();
@@ -50,21 +51,23 @@ namespace backend
                 });
             });
 
-            JwtSettings jwtSettings = new JwtSettings
-            {
-                Issuer = Configuration["JwtSettings:Issuer"],
-                Key = Configuration["JwtSettings:Key"]
-            };
-            InitalizeAuthentication(services, jwtSettings);
+            InitalizeAuthentication(services, Configuration);
 
             services.AddSignalR();
             services.AddMvc(option => option.EnableEndpointRouting = false);
         }
 
-        private void InitalizeAuthentication(IServiceCollection services, JwtSettings jwtSettings)
+        private void InitalizeAuthentication(IServiceCollection services, IConfiguration Configuration)
         {
-            var accessToken = new AccessTokenOptionsGenerator(jwtSettings);
-            var refreshToken = new RefreshTokenOptionsGenerator(jwtSettings);
+            IJwtParametersOptions jwtParamOptions = new JwtSettings
+            {
+                Issuer = Configuration["JwtSettings:Issuer"],
+                Key = Configuration["JwtSettings:Key"]
+            };
+
+            var accessToken = new AccessTokenOptionsGenerator(jwtParamOptions);
+            var refreshToken = new RefreshTokenOptionsGenerator(jwtParamOptions);
+
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

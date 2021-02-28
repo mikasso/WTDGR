@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System;
 
 namespace backend.Services
 {
@@ -12,12 +13,14 @@ namespace backend.Services
     {
         public List<User> Get();
         public User Get(string id);
-        public User Create(User user);
-        public Tokens Login(Authentication authentication);
-        public Tokens Refresh(Claim userClaim, Claim refreshClaim);
+        public User CreateUser(User user);
+        public User CreateOwner(User owner, string roomId);
+        public Tokens Authenticate(User user);
+        public Tokens Refresh(string username, string refreshKey);
         public void Update(string id, User userIn);
         public void Remove(User userIn);
         public void Remove(string id);
+        public bool UserExistsInRoom(string username, string roomId);
     }
     public class UserService : IUserService
     {
@@ -39,19 +42,51 @@ namespace backend.Services
         public User Get(string id) =>
             users.Find<User>(user => user.Id == id).FirstOrDefault();
 
-        public User Create(User user)
+        public bool UserExistsInRoom(string userId, string roomId)
         {
+            var found = users.Find<User>
+                (u => u.RoomId == roomId && u.Id == userId)
+                .FirstOrDefault();
+            return found != null;
+        }
+
+        private bool UserWithThisNameExistsInRoom(User user)
+        {
+            var found = users.Find<User>
+            (u => u.RoomId == user.RoomId && u.Username == user.Username)
+            .FirstOrDefault();
+            return found != null;
+        }
+
+
+        public User CreateUser(User user)
+        {
+            if (UserWithThisNameExistsInRoom(user))
+                throw new System.Exception("User already exists in this room");
+
+            user.Role = UserRoles.User;
             users.InsertOne(user);
             return user;
         }
 
-        public Tokens Login(Authentication authentication)
+        public User CreateOwner(User owner, string roomId)
         {
-            User user = users.Find<User>(u => u.Username == authentication.Username).FirstOrDefault();
+            owner.Role = UserRoles.Owner;
+            owner.RoomId = roomId;
+            users.InsertOne(owner);
+            return owner;
+        }
 
-            bool validPassword = true; // XD
+        public Tokens Authenticate(User user)
+        {
+            var foundUser = users.Find<User>(
+                                  u => u.Username == user.Username &&
+                                  u.RoomId == user.RoomId &&
+                                  u.Role == user.Role).FirstOrDefault();
 
-            if (validPassword)
+            bool userExists = foundUser != null;
+
+            if (userExists)
             {
                 var refreshToken = tokenManager.GenerateRefreshToken(user);
 
@@ -70,13 +105,13 @@ namespace backend.Services
             }
             else
             {
-                throw new System.Exception("Username or password incorrect");
+                throw new System.Exception("Username data are incorrect. User doesnt exist in database!");
             }
         }
 
-        public Tokens Refresh(Claim userClaim, Claim refreshClaim)
+        public Tokens Refresh(string username, string refreshKey)
         {
-            User user = users.Find<User>(x => x.Username == userClaim.Value).FirstOrDefault();
+            User user = users.Find<User>(x => x.Username == username).FirstOrDefault();
 
             if (user == null)
                 throw new System.Exception("User doesn't exist");
@@ -84,7 +119,7 @@ namespace backend.Services
             if (user.RefreshTokens == null)
                 user.RefreshTokens = new List<string>();
 
-            string token = user.RefreshTokens.FirstOrDefault(x => x == refreshClaim.Value);
+            string token = user.RefreshTokens.FirstOrDefault(x => x == refreshKey);
 
             if (token != null)
             {

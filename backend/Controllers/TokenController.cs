@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using backend.Models;
 using backend.Services;
+using backend.JwtManager;
 using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers
@@ -22,29 +23,17 @@ namespace backend.Controllers
             _userService = userService;
         }
 
-        [HttpPost("accesstoken", Name = "login")]
-        public IActionResult Login([FromBody] Authentication auth)
-        {
-            try
-            {
-                return Ok(_userService.Login(auth));
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
-        }
-
         [Authorize(AuthenticationSchemes = "refresh")]
         [HttpPut("accesstoken", Name = "refresh")]
         public IActionResult Refresh()
         {
-            Claim refreshtoken = User.Claims.FirstOrDefault(x => x.Type == "refresh");
-            Claim username = User.Claims.FirstOrDefault(x => x.Type == "username");
+            //Read from claims data
+            var username = User.GetUsername();
+            var refreshKey = User.GetRefreshKey();
 
             try
             {
-                return Ok(_userService.Refresh(username, refreshtoken));
+                return Ok(_userService.Refresh(username,refreshKey));
             }
             catch (Exception e)
             {

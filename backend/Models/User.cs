@@ -5,15 +5,24 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace backend.Models
 {
+    public class UserRoles
+    {
+        public const string Owner = "Owner";
+        public const string User = "User";        
+    }
+
     public class User
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
+        [BsonRequired]
         public string Username { get; set; }
-      //  public string Role { get; set; }
-       // public string RoomId { get; set; }
-
+        [BsonRequired]
+        public string Role { get; set; } 
+        
+        [BsonRequired]
+        public string RoomId { get; set; }
         [JsonIgnore]
         public List<string> RefreshTokens { get; set; }
     }

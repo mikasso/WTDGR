@@ -6,6 +6,8 @@ using backend.Models;
 using backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using backend.JwtManager;
+using System;
 
 namespace backend.Controllers
 {
@@ -22,26 +24,7 @@ namespace backend.Controllers
             _userService = userService;
         }
 
-        //[HttpGet]
-        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        //public IEnumerable<User> Get()
-        //{
-        //    return _userService.Get();
-        //}
-        [HttpGet("{userId}", Name = "GetOne")]
-        public User GetOne([FromRoute] string userId)
-        {
-            return _userService.Get(userId);
-        }
-        
-
-        [HttpPost]
-        public User CreateOne([FromBody] User user)
-        {
-            user = _userService.Create(user);
-            return user;
-        }
-
+        [Authorize(Roles = "Owner")]
         [HttpPut("{userId}")]
         public User UpdateOne([FromRoute] string userId, [FromBody] User user)
         {
@@ -49,11 +32,19 @@ namespace backend.Controllers
             return user;
         }
 
+        [Authorize(Roles = "Owner")]
         [HttpDelete("{userId}")]
         public IActionResult DeleteOne([FromRoute] string userId)
         {
-            _userService.Remove(userId);
-            return NoContent();
+
+            var userExists = _userService.UserExistsInRoom(userId, User.GetRoomId());
+            if (userExists)
+            {
+                _userService.Remove(userId);
+                return NoContent();
+            }
+            else
+                return NotFound("User doesn't exists in your room");
         }
     }
 }

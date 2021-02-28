@@ -6,6 +6,7 @@ using JWT.Algorithms;
 using System.Text;
 using backend.Models;
 using Microsoft.Extensions.Options;
+using backend.JwtManager;
 
 namespace backend.JwtTokenManager
 {
@@ -18,20 +19,28 @@ namespace backend.JwtTokenManager
     }
     public class TokenManager : ITokenManager
     {
+        JwtSettings settings { get; set; }
         public TokenManager(IOptions<JwtSettings> settings)
         {
-            Secret = settings.Value.Key;
+            this.settings = settings.Value;
         }
 
-        private readonly string Secret;
-        public string GenerateAccessToken(User user)
+        private JwtBuilder GenerateTokenBase(User user, int lifeTimeInMinutes)
         {
             return new JwtBuilder()
                 .WithAlgorithm(new HMACSHA256Algorithm())
-                .WithSecret(Encoding.ASCII.GetBytes(Secret))
-                .AddClaim("exp", DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds())
-                .AddClaim("username", user.Username)
-                .Issuer("JwtExample")
+                .WithSecret(settings.Key)
+                .AddClaim(ClaimType.Username, user.Username)
+                .AddClaim(ClaimType.Role, user.Role)
+                .AddClaim(ClaimType.RoomId, user.RoomId)
+                .AddClaim(ClaimType.UserId, user.Id)
+                .AddClaim(ClaimType.Expire, DateTimeOffset.UtcNow.AddMinutes(lifeTimeInMinutes).ToUnixTimeSeconds())
+                .Issuer(settings.Issuer);
+        }
+
+        public string GenerateAccessToken(User user)
+        {
+            return GenerateTokenBase(user, settings.AccessTokenLifetime)
                 .Audience("access")
                 .Encode();
         }
@@ -47,13 +56,8 @@ namespace backend.JwtTokenManager
 
             var randomString = System.Text.Encoding.ASCII.GetString(randomNumber);
 
-            string jwt = new JwtBuilder()
-                .WithAlgorithm(new HMACSHA256Algorithm())
-                .WithSecret(Secret)
-                .AddClaim("exp", DateTimeOffset.UtcNow.AddHours(4).ToUnixTimeSeconds())
-                .AddClaim("refresh", randomString)
-                .AddClaim("username", user.Username)
-                .Issuer("JwtExample")
+            string jwt = GenerateTokenBase(user, settings.RefreshTokenLifetime)
+                .AddClaim(ClaimType.Refresh, randomString)
                 .Audience("refresh")
                 .Encode();
 
@@ -63,7 +67,7 @@ namespace backend.JwtTokenManager
         public IDictionary<string, object> VerifyToken(string token)
         {
             return new JwtBuilder()
-                 .WithSecret(Secret)
+                 .WithSecret(settings.Key)
                  .MustVerifySignature()
                  .Decode<IDictionary<string, object>>(token);
         }
