@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace backend.JwtManager
+namespace Backend.JwtManager
 {
     public interface ITokenOptionsGenerator{
         public JwtBearerOptions GetOptions(JwtBearerOptions jwtBearerOptions);

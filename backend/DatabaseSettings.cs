@@ -1,4 +1,4 @@
-namespace backend.Models
+namespace Backend
 {
     public class DatabaseSettings : IDatabaseSettings
     {

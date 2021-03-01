@@ -1,6 +1,6 @@
-﻿using backend.DTO;
-using backend.Models;
-using backend.Services;
+﻿using Backend.DTO;
+using Backend.Models;
+using Backend.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -9,20 +9,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace backend.Controllers
+namespace Backend.Controllers
 {
     [Route("[controller]")]
     [ApiController]
     public class RoomController : ControllerBase
     {
-        private readonly ILogger<RoomController> _logger;
+        private readonly ILogger<RoomController> logger;
         private readonly IRoomService roomServices;
-        private IUserService userService { get; }
+        private readonly ITokenService tokenSerivce;
+        private readonly IUserService userService;
 
-        public RoomController(ILogger<RoomController> logger, IRoomService roomServices, IUserService userService)
+
+        public RoomController(ILogger<RoomController> logger, IRoomService roomServices,
+            ITokenService tokenService, IUserService userService)
         {
-            _logger = logger;
+            this.logger = logger;
             this.roomServices = roomServices;
+            this.tokenSerivce = tokenService;
             this.userService = userService;
         }
 
@@ -36,7 +40,7 @@ namespace backend.Controllers
                 var response = new RoomResponse()
                 {
                     User = owner,
-                    Tokens = userService.Authenticate(owner) 
+                    Tokens = tokenSerivce.Authenticate(owner) 
                 };
                 return Ok(response);
             }
@@ -55,7 +59,7 @@ namespace backend.Controllers
                 var response = new RoomResponse()
                 {
                     User = user,
-                    Tokens = userService.Authenticate(user)
+                    Tokens = tokenSerivce.Authenticate(user)
                 };
                 return Ok(response);
             }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace backend.JwtManager
+namespace Backend.JwtManager
 {
     public static class ClaimType
     {

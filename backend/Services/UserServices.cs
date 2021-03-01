@@ -1,71 +1,85 @@
-﻿using backend.Models;
-using backend.JwtTokenManager;
+﻿using Backend.Models;
+using Backend.JwtManager;
 using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System;
+using MongoDB.Bson;
 
-namespace backend.Services
+namespace Backend.Services
 {
 
     public interface IUserService
     {
-        public List<User> Get();
-        public User Get(string id);
+        public List<User> GetAll();
+        public User GetById(string id);
+        public List<User> GetAllInRoom(string roomId);
+        public User GetByNameAndRoom(string username, string roomId);
         public User CreateUser(User user);
         public User CreateOwner(User owner, string roomId);
-        public Tokens Authenticate(User user);
-        public Tokens Refresh(string username, string refreshKey);
         public void Update(string id, User userIn);
-        public void Remove(User userIn);
         public void Remove(string id);
         public bool UserExistsInRoom(string username, string roomId);
     }
     public class UserService : IUserService
     {
-        private readonly IMongoCollection<User> users;
-        private readonly ITokenManager tokenManager;
-        public UserService(IDatabaseSettings settings, ITokenManager tokenManager)
+        public IMongoCollection<User> Users { get; set; }
+        public UserService(IDatabaseSettings settings)
         {
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
-
-            this.tokenManager = tokenManager;
-
-            users = database.GetCollection<User>("users");
+            Users = database.GetCollection<User>("users");
         }
 
-        public List<User> Get() =>
-            users.Find(user => true).ToList();
+        public List<User> GetAll() =>
+            Users.Find(user => true).ToList();
 
-        public User Get(string id) =>
-            users.Find<User>(user => user.Id == id).FirstOrDefault();
+        public User GetById(string id)
+        {
+            return Users.Find(Builders<User>
+                        .Filter.Eq("Id", id))
+                        .FirstOrDefault();
+        }
+        public List<User> GetAllInRoom(string roomId)
+        {
+            return Users.Find(Builders<User>
+                    .Filter.Eq("RoomId", roomId))
+                    .ToList();
+        }
+        public User GetByNameAndRoom(string username, string roomId)
+        {
+            var builder = Builders<User>.Filter;
+            var filter = builder.Eq("Username", username) & builder.Eq("RoomId", roomId);
+            return Users.Find(filter).FirstOrDefault();
+        }
 
         public bool UserExistsInRoom(string userId, string roomId)
         {
-            var found = users.Find<User>
-                (u => u.RoomId == roomId && u.Id == userId)
-                .FirstOrDefault();
-            return found != null;
+            var found = GetById(userId);
+            return found != null && found.RoomId == roomId;
         }
 
         private bool UserWithThisNameExistsInRoom(User user)
         {
-            var found = users.Find<User>
-            (u => u.RoomId == user.RoomId && u.Username == user.Username)
+            var found = Users.Find<User>
+            (u => u.Username == user.Username)
             .FirstOrDefault();
             return found != null;
         }
 
-
+        /// <summary>
+        /// Creates new users in user's with role "user" room
+        /// </summary>
+        /// <param name="user"> User has to have assigned Username and RoomId</param>
+        /// <returns>New created user from MongoDB</returns>
         public User CreateUser(User user)
         {
             if (UserWithThisNameExistsInRoom(user))
                 throw new System.Exception("User already exists in this room");
 
             user.Role = UserRoles.User;
-            users.InsertOne(user);
+            Users.InsertOne(user);
             return user;
         }
 
@@ -73,83 +87,14 @@ namespace backend.Services
         {
             owner.Role = UserRoles.Owner;
             owner.RoomId = roomId;
-            users.InsertOne(owner);
+            Users.InsertOne(owner);
             return owner;
         }
 
-        public Tokens Authenticate(User user)
-        {
-            var foundUser = users.Find<User>(
-                                  u => u.Username == user.Username &&
-                                  u.RoomId == user.RoomId &&
-                                  u.Role == user.Role).FirstOrDefault();
-
-            bool userExists = foundUser != null;
-
-            if (userExists)
-            {
-                var refreshToken = tokenManager.GenerateRefreshToken(user);
-
-                if (user.RefreshTokens == null)
-                    user.RefreshTokens = new List<string>();
-
-                user.RefreshTokens.Add(refreshToken.refreshToken);
-
-                users.ReplaceOne(u => u.Id == user.Id, user);
-
-                return new Tokens
-                {
-                    AccessToken = tokenManager.GenerateAccessToken(user),
-                    RefreshToken = refreshToken.jwt
-                };
-            }
-            else
-            {
-                throw new System.Exception("Username data are incorrect. User doesnt exist in database!");
-            }
-        }
-
-        public Tokens Refresh(string username, string refreshKey)
-        {
-            User user = users.Find<User>(x => x.Username == username).FirstOrDefault();
-
-            if (user == null)
-                throw new System.Exception("User doesn't exist");
-
-            if (user.RefreshTokens == null)
-                user.RefreshTokens = new List<string>();
-
-            string token = user.RefreshTokens.FirstOrDefault(x => x == refreshKey);
-
-            if (token != null)
-            {
-                var refreshToken = tokenManager.GenerateRefreshToken(user);
-
-                user.RefreshTokens.Add(refreshToken.refreshToken);
-
-                user.RefreshTokens.Remove(token);
-
-                users.ReplaceOne(u => u.Id == user.Id, user);
-
-                return new Tokens
-                {
-                    AccessToken = tokenManager.GenerateAccessToken(user),
-                    RefreshToken = refreshToken.jwt
-                };
-            }
-            else
-            {
-                throw new System.Exception("Refresh token incorrect");
-            }
-        }
-
         public void Update(string id, User userIn) =>
-            users.ReplaceOne(user => user.Id == id, userIn);
-
-        public void Remove(User userIn) =>
-            users.DeleteOne(user => user.Id == userIn.Id);
+            Users.ReplaceOne(user => user.Id == id, userIn);
 
         public void Remove(string id) =>
-            users.DeleteOne(user => user.Id == id);
+            Users.DeleteOne(user => user.Id == id);
     }
 }

@@ -2,14 +2,14 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using backend.Models;
-using backend.Services;
+using Backend.Models;
+using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using backend.JwtManager;
+using Backend.JwtManager;
 using System;
 
-namespace backend.Controllers
+namespace Backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]

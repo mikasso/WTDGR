@@ -3,24 +3,24 @@ using System.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using backend.Models;
-using backend.Services;
-using backend.JwtManager;
+using Backend.Models;
+using Backend.Services;
+using Backend.JwtManager;
 using Microsoft.AspNetCore.Authorization;
 
-namespace backend.Controllers
+namespace Backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class TokensController : ControllerBase
     {
-        private readonly ILogger<TokensController> _logger;
-        private readonly IUserService _userService;
+        private readonly ILogger<TokensController> logger;
+        private readonly ITokenService tokenService;
 
-        public TokensController(ILogger<TokensController> logger, IUserService userService)
+        public TokensController(ILogger<TokensController> logger, ITokenService tokenSerivce)
         {
-            _logger = logger;
-            _userService = userService;
+            this.logger = logger;
+            this.tokenService = tokenSerivce;
         }
 
         [Authorize(AuthenticationSchemes = "refresh")]
@@ -28,12 +28,12 @@ namespace backend.Controllers
         public IActionResult Refresh()
         {
             //Read from claims data
-            var username = User.GetUsername();
+            var userId = User.GetUserId();
             var refreshKey = User.GetRefreshKey();
 
             try
             {
-                return Ok(_userService.Refresh(username,refreshKey));
+                return Ok(tokenService.Refresh(userId,refreshKey));
             }
             catch (Exception e)
             {

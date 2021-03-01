@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace backend.Models
+namespace Backend.Models
 {
     public class UserRoles
     {
@@ -20,7 +20,6 @@ namespace backend.Models
         public string Username { get; set; }
         [BsonRequired]
         public string Role { get; set; } 
-        
         [BsonRequired]
         public string RoomId { get; set; }
         [JsonIgnore]

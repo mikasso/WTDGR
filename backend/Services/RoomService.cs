@@ -1,4 +1,4 @@
-﻿using backend.Models;
+﻿using Backend.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace backend.Services
+namespace Backend.Services
 {
     public interface IRoomService
     {

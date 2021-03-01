@@ -4,17 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using SignalRChat.Hubs;
-using backend.JwtManager;
-using backend.JwtTokenManager;
-using backend.Models;
-using backend.Services;
+using Backend.JwtManager;
+using Backend.Services;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using System;
+using Backend.Hubs;
 
-namespace backend
+namespace Backend
 {
     public class Startup
     {
@@ -36,6 +31,7 @@ namespace backend
             services.AddScoped<ITokenManager,TokenManager>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoomService, RoomService>();
+            services.AddScoped<ITokenService, TokenService>();
 
             services.AddSpaStaticFiles(configuration: options => { options.RootPath = "wwwroot"; });
             services.AddControllers();
@@ -97,7 +93,7 @@ namespace backend
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<ChatHub>("/chathub");
+                endpoints.MapHub<GraphHub>("/graphHub");
             });
 
             app.UseSpaStaticFiles();
