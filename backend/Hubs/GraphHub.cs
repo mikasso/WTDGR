@@ -2,14 +2,16 @@
 using Backend.Services;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
+using Backend.DTO;
+using MongoDB.Bson;
 
 namespace Backend.Hubs
 {
 
     public interface IGraphHub
     {
-        Task SendVertex(Vertex message);
-        Task ReceiveVertex(Vertex message);
+        Task SendVertex(Vertex vertex);
+        Task ReceiveVertex(Vertex vertex);
         Task SendText(string message);
         Task ReceiveText(string message);
         Task GetGraph();
@@ -17,7 +19,6 @@ namespace Backend.Hubs
 
     public class GraphHub : Hub<IGraphHub>
     {
-        private IRoomService RoomService { get; }
         private IUserService UserService { get; }
         private User MyUser
         {
@@ -29,15 +30,14 @@ namespace Backend.Hubs
             get { return (IGraphHub) Context.Items["Group"]; }
             set { Context.Items.Add("Group", value); }
         }
-        public GraphHub(IRoomService roomService, IUserService userService)
+        public GraphHub(IUserService userService)
         {
-            RoomService = roomService;
             UserService = userService;
         }
 
         public async Task JoinRoom(User user)
         {
-            if (UserService.UserExistsInRoom(user.Id, user.RoomId))
+            if (CanJoinToRoom(user))
             {
                 MyUser = user;
                 await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
@@ -52,9 +52,23 @@ namespace Backend.Hubs
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, MyUser.RoomId);
             await MyGroup.ReceiveText($"{Context.ConnectionId} has left the group {MyUser.RoomId}.");
         }
+
         public async Task SendText(string message)
         {
             await MyGroup.ReceiveText(message);
+        }
+
+        public async Task SendVertex(Vertex vertex)
+        {
+            vertex.Name = ObjectId.GenerateNewId().ToString();
+            await MyGroup.ReceiveVertex(vertex);
+        }
+
+        private bool CanJoinToRoom(User user)
+        {
+            if (user.RoomId == null)
+                return false;
+            return UserService.UserExistsInRoom(user.Id, user.RoomId);
         }
     }
 }

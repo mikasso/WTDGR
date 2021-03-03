@@ -9,9 +9,10 @@ namespace Backend.JwtManager
 {
     public class RefreshTokenOptionsGenerator : TokenOptionsGenerator, ITokenOptionsGenerator
     {
+        public const string TokenSchemeName = "refresh";
         public RefreshTokenOptionsGenerator( IJwtParametersOptions settings) : base (settings)
         {
-            Audience = "refresh";
+            Audience = TokenSchemeName;
         }
         public override JwtBearerOptions GetOptions(JwtBearerOptions jwtBearerOptions)
         {

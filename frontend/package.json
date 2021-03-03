@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@latelier/vue-signalr": "^2.0.4",
     "@microsoft/signalr": "^5.0.3",
     "@vector-js/library": "0.0.1",
     "animejs": "^3.2.1",

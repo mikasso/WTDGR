@@ -25,7 +25,6 @@ import Toolbar from './Toolbar.vue'
 export default {
     name: 'MainPanel',
     mounted(){
-
     },
 
     components: {
