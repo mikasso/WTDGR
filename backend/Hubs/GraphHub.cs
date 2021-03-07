@@ -1,9 +1,10 @@
 ﻿using Backend.Models;
-using Backend.Services;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using Backend.DTO;
 using MongoDB.Bson;
+using Backend.Helpers;
+using System;
 
 namespace Backend.Hubs
 {
@@ -14,12 +15,12 @@ namespace Backend.Hubs
         Task ReceiveVertex(Vertex vertex);
         Task SendText(string message);
         Task ReceiveText(string message);
+        Task ReceiveJoinResponse(User user);
         Task GetGraph();
     }
 
     public class GraphHub : Hub<IGraphHub>
     {
-        private IUserService UserService { get; }
         private User MyUser
         {
             get { return (User)Context.Items["User"]; }
@@ -27,28 +28,48 @@ namespace Backend.Hubs
         }
         private IGraphHub MyGroup
         {
-            get { return (IGraphHub) Context.Items["Group"]; }
+            get { return (IGraphHub)Context.Items["Group"]; }
             set { Context.Items.Add("Group", value); }
         }
-        public GraphHub(IUserService userService)
+        private RoomManager Room
         {
-            UserService = userService;
+            get { return RoomsContainer.GetRoom(MyUser.RoomId); }
         }
-
+        public async Task CreateRoom(User owner)
+        {
+            var roomManager = RoomsContainer.CreateRoom();
+            owner = roomManager.CreateOwner(owner);
+            await AssignUserToContext(owner);
+            await ReplyForJoin(owner);
+        }
         public async Task JoinRoom(User user)
         {
             if (CanJoinToRoom(user))
             {
-                MyUser = user;
-                await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
-                MyGroup = Clients.Group(user.RoomId);
-                await MyGroup.ReceiveText($"{MyUser.Username}:  has joined the room {MyUser.RoomId}.");
+                await AssignUserToContext(user);
+                await ReplyForJoin(user);
             }
-            else 
-                await Clients.Caller.ReceiveText("Error: User cannot join this room");
+            else await Clients.Caller.ReceiveText("Error: User cannot join this room");
         }
+
+        private async Task AssignUserToContext(User user)
+        {
+            MyUser = user;
+            await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
+            MyGroup = Clients.Group(user.RoomId);
+            Room.Users.Add(user);
+        }
+
+        private async Task ReplyForJoin(User user)
+        {
+            await MyGroup.ReceiveText($"{MyUser.Name}:  has joined the room {MyUser.RoomId}.");
+            await Clients.Caller.ReceiveJoinResponse(user);
+        }
+
+
         public async Task LeaveRoom()
         {
+            Room.Users.Delete(MyUser.Name);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, MyUser.RoomId);
             await MyGroup.ReceiveText($"{Context.ConnectionId} has left the group {MyUser.RoomId}.");
         }
@@ -57,18 +78,29 @@ namespace Backend.Hubs
         {
             await MyGroup.ReceiveText(message);
         }
-
         public async Task SendVertex(Vertex vertex)
         {
-            vertex.Name = ObjectId.GenerateNewId().ToString();
+            if (MyGroup == null)
+            {
+                await Clients.Caller.ReceiveText("You are not in any room");
+                return;
+            }
+            vertex.Name = Room.Vertices.Count.ToString();
+            Room.Vertices.Add(vertex);
             await MyGroup.ReceiveVertex(vertex);
         }
 
         private bool CanJoinToRoom(User user)
         {
-            if (user.RoomId == null)
+            try
+            {
+                var room = RoomsContainer.GetRoom(user.RoomId);
+                return !room.Users.Exists(user.Name);
+            }
+            catch (Exception)
+            {
                 return false;
-            return UserService.UserExistsInRoom(user.Id, user.RoomId);
+            }
         }
     }
 }

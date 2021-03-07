@@ -1,11 +1,7 @@
 ﻿using Backend.Models;
-using Backend.JwtManager;
 using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System;
-using MongoDB.Bson;
 
 namespace Backend.Services
 {
@@ -63,7 +59,7 @@ namespace Backend.Services
         private bool UserWithThisNameExistsInRoom(User user)
         {
             var found = Users.Find<User>
-            (u => u.Username == user.Username)
+            (u => u.Name == user.Name)
             .FirstOrDefault();
             return found != null;
         }
@@ -92,9 +88,9 @@ namespace Backend.Services
         }
 
         public void Update(string id, User userIn) =>
-            Users.ReplaceOne(user => user.Id == id, userIn);
+            Users.ReplaceOne(user => user.Name == id, userIn);
 
         public void Remove(string id) =>
-            Users.DeleteOne(user => user.Id == id);
+            Users.DeleteOne(user => user.Name == id);
     }
 }

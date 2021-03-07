@@ -5,11 +5,11 @@
         v-model='toolbar'>
       </Toolbar>
 
-      <Table 
-        class='table'
-        ref='tableComponent'
+      <Board 
+        class='Board'
+        ref='BoardComponent'
         :toolbar="toolbar">          
-      </Table>
+      </Board>
 
       <div class='users'>
           userzy
@@ -19,7 +19,7 @@
 
 
 <script>
-import Table from './Table.vue'
+import Board from './Board.vue'
 import Toolbar from './Toolbar.vue'
 
 export default {
@@ -28,7 +28,7 @@ export default {
     },
 
     components: {
-        Table,
+        Board,
         Toolbar,
     },
     
@@ -39,7 +39,7 @@ export default {
     methods: {
         toolbarButton({name}){
             console.log(this.toolbar)
-            this.$refs.tableComponent.toolbarButton(name);
+            this.$refs.BoardComponent.toolbarButton(name);
         }
     },
 }
@@ -55,7 +55,7 @@ export default {
         grid-template-columns: auto 20%;
         grid-template-rows: 8% auto;
 
-        .table{
+        .Board{
             grid-column-start: 1;
             grid-column-end: 1;
             grid-row-start: 2;            

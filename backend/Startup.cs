@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Backend.JwtManager;
 using Backend.Services;
 using Microsoft.Extensions.Options;
 using Backend.Hubs;
 using Backend.Configuration;
+using Backend.Helpers;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 namespace Backend
 {
@@ -42,10 +42,11 @@ namespace Backend
             //Signleton for database
             services.AddSingleton<IDatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
             //Dependency inversion for this classes
-            services.AddScoped<ITokenManager,TokenManager>();
+
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoomService, RoomService>();
-            services.AddScoped<ITokenService, TokenService>();
+            //Start room 1 TODO delete this line
+            RoomsContainer.CreateRoom();
             //Configure SPA service 
             services.AddSpaStaticFiles(configuration: options => { options.RootPath = "wwwroot"; });
             services.AddControllers();
@@ -54,54 +55,31 @@ namespace Backend
             {
                 options.AddPolicy(vue.CorsPolicyName, builder =>
                 {
-                    builder
+                    builder.WithOrigins(vue.Url)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .AllowCredentials()
-                    .AllowAnyOrigin()
-                    .WithOrigins(vue.Url);
+                    .AllowCredentials();
                 });
             });
 
-            InitalizeAuthentication(services);
 
             services.AddSignalR();
             services.AddMvc(option => option.EnableEndpointRouting = false);
         }
 
-        private void InitalizeAuthentication(IServiceCollection services)
-        {
-            var accessToken = new AccessTokenOptionsGenerator(jwtSettings);
-            var refreshToken = new RefreshTokenOptionsGenerator(jwtSettings);
-
-            services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-               .AddJwtBearer(jwtBearerOptions =>
-                    accessToken.GetOptions(jwtBearerOptions))
-               .AddJwtBearer(RefreshTokenOptionsGenerator.TokenSchemeName, jwtBearerOptions =>
-                    refreshToken.GetOptions(jwtBearerOptions));
-        }
-
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
+        {  
+            app.UseRouting();
+
             app.UseCors(vue.CorsPolicyName);
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            //dbContext.Database.EnsureCreated();
-            app.UseAuthentication();
-            app.UseMvc();
-            app.UseRouting();
-
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
                 endpoints.MapHub<GraphHub>("/graphHub");
             });
 
