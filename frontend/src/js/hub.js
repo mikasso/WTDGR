@@ -15,7 +15,7 @@ function Hub (board){
         this.user = user;
         console.log(user); });
     this.connection.on("ReceiveVertex", (vertex) => {
-        this.board.draw(vertex) });
+        this.board.receiveVertex(vertex) });
     this.connection.on("ReceiveText", (text) => {
         console.log(text) });
 }

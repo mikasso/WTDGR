@@ -1,30 +1,32 @@
 
-import Line from 'konva'
+import Konva  from 'konva'
 
 export default{
-    EdegeGenerator
+    EdgeManager
 }
 
-function EdegeGenerator(layer){
+const RightClickType = 3
+
+function EdgeManager(layer){
     this.layer = layer
-    this.curentVertex =  null
+    this.currentVertex =  null
     this.isDrawing = false
     this.currentLine = null;
 }
 
-EdegeGenerator.prototype.redrawTo = function(x,y){
+EdgeManager.prototype.redrawTo = function(x,y){
     this.currentLine.attrs.points[2] =  x;
     this.currentLine.attrs.points[3] = y;
     this.layer.draw();
 }
 
-EdegeGenerator.prototype.startDrawing = function(event){
-    if(event.evt.which != 3) //is not righ click
+EdgeManager.prototype.startDrawing = function(event){
+    if(!isRightClick(event)) 
         return
     this.isDrawing = true;
-    this.curentVertex = event.target;
+    this.currentVertex = event.target;
 
-    const start = this.curentVertex.attrs;
+    const start = this.currentVertex.attrs;
     const end = { 
         x: event.evt.layerX,
         y: event.evt.layerY }
@@ -33,14 +35,13 @@ EdegeGenerator.prototype.startDrawing = function(event){
     this.layer.draw();  
 }
 
-EdegeGenerator.prototype.tryConnectVertices = function(event){
-    console.log('mouse up on vertex')
-    if(event.evt.which != 3 || this.curentVertex == null) //is not righ click
+EdgeManager.prototype.tryToConnectVertices = function(event){
+    if( !isRightClick(event) || this.currentVertex === null) //is not righ click
         return 
     const v1 = event.currentTarget;
     const v2 = this.currentVertex; 
     const cord = v1.attrs;
-    this.reDrawEdegeToXY(cord.x, cord.y);
+    this.redrawTo(cord.x, cord.y);
     const edge = {
         v1:  v1,
         v2:  v2,
@@ -51,7 +52,7 @@ EdegeGenerator.prototype.tryConnectVertices = function(event){
     this.currentLine = null;
 }
 
-EdegeGenerator.prototype.dragEdges = function(event){
+EdgeManager.prototype.dragEdges = function(event){
     const vertex = event.target;
     var edge,line,toChange;
     for(var i=0;i<vertex.edges.length;i++){
@@ -68,8 +69,8 @@ EdegeGenerator.prototype.dragEdges = function(event){
     this.layer.draw();
 }
 
-EdegeGenerator.prototype.getLine = function(start,end){
-    var line = new Line({
+EdgeManager.prototype.getLine = function(start,end){
+    var line = new Konva.Line({
         points: [start.x, start.y, end.x, end.y],
         stroke: 'black',
         strokeWidth: 2,
@@ -77,4 +78,22 @@ EdegeGenerator.prototype.getLine = function(start,end){
         lineJoin: 'round',
     });
     return line;
+}
+
+EdgeManager.prototype.handleMouseUp = function(){
+    this.isDrawing = false;
+    this.currentVertex = null;
+    if(this.currentLine !== null){
+        this.currentLine.destroy();
+        this.layer.draw();
+        }
+}
+
+EdgeManager.prototype.handleMouseMove = function(event) {
+    if(this.isDrawing)
+        this.redrawTo(event.evt.layerX, event.evt.layerY);            
+}
+
+function isRightClick(event){
+    return event.evt.which == RightClickType;
 }
