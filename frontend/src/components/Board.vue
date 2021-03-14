@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import GraphHub from "../js/hub";
+import GraphHub from "../js/SignalR/hub";
 import EdgeManager from "../js/Shapes/Edges/edge_manager";
 import VertexManager from "../js/Shapes/Vertices/vertex_manager";
 

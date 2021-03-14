@@ -85,20 +85,6 @@ EdgeManager.prototype.handleMouseMove = function(event) {
   });
 };
 
-// Przeniesc to gdzies indziej!!!
-const RightClickType = 3;
-
-MouseEvent.prototype.getPoint = function() {
-  return {
-    x: this.layerX,
-    y: this.layerY,
-  };
-};
-
-MouseEvent.prototype.isRightClick = function() {
-  return this.which == RightClickType;
-};
-
 Konva.Line.prototype.redraw = function(point) {
   this.attrs.points[2] = point.x;
   this.attrs.points[3] = point.y;
