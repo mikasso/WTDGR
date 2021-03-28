@@ -10,12 +10,12 @@
 import GraphHub from "../js/SignalR/hub";
 import EdgeManager from "../js/Shapes/Edges/edge_manager";
 import VertexManager from "../js/Shapes/Vertices/vertex_manager";
-import Employee from "../ts/test.ts";
+import { Employee } from "../ts/test";
 
 export default {
   name: "Board",
   mounted: function() {
-    e = Employee(10, "Jan");
+    var e = new Employee(10, "number");
     console.log(e);
     this.hub = new GraphHub.Hub(this);
     this.hub.joinRoom(this.getRandomUserName(), "1");

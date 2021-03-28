@@ -1,5 +1,3 @@
-export { Employee };
-
 class Employee {
   empCode: number;
   empName: string;
@@ -13,3 +11,5 @@ class Employee {
     return 10000;
   }
 }
+
+export { Employee };
