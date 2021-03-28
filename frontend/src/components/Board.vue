@@ -10,10 +10,13 @@
 import GraphHub from "../js/SignalR/hub";
 import EdgeManager from "../js/Shapes/Edges/edge_manager";
 import VertexManager from "../js/Shapes/Vertices/vertex_manager";
+import Employee from "../ts/test.ts";
 
 export default {
   name: "Board",
   mounted: function() {
+    e = Employee(10, "Jan");
+    console.log(e);
     this.hub = new GraphHub.Hub(this);
     this.hub.joinRoom(this.getRandomUserName(), "1");
     // Create and configure stage, layers, to draw

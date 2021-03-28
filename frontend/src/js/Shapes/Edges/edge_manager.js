@@ -85,14 +85,5 @@ EdgeManager.prototype.handleMouseMove = function(event) {
   });
 };
 
-Konva.Line.prototype.redraw = function(point) {
-  this.attrs.points[2] = point.x;
-  this.attrs.points[3] = point.y;
-  this.parent.draw();
-  console.log("redraw");
-};
-
-Konva.Line.prototype.toEdge = function() {};
-
 function EmptyShape() {}
 EmptyShape.prototype.destroy = function() {};
