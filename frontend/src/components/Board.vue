@@ -6,92 +6,100 @@
   </div>
 </template>
 
-<script>
-import GraphHub from "../js/SignalR/hub";
-import EdgeManager from "../js/Shapes/Edges/edge_manager";
-import VertexManager from "../js/Shapes/Vertices/vertex_manager";
-import { Employee } from "../ts/test";
+<script lang="ts">
+import { Hub } from "../ts/SignalR/hub";
+import { EdgeManager } from "../ts/Shapes/Edges/edge_manager";
+import { VertexManager } from "../ts/Shapes/Vertices/vertex_manager";
+import { KonvaMouseEvent } from "@/ts/Aliases/aliases";
+import Konva from "konva";
+import { Component, Vue } from "vue-property-decorator";
+import { VertexConfig } from "../ts/Aliases/aliases";
 
-export default {
-  name: "Board",
-  mounted: function() {
-    var e = new Employee(10, "number");
-    console.log(e);
-    this.hub = new GraphHub.Hub(this);
+@Component
+export default class Board extends Vue {
+  name: string = "Board";
+  private hub!: any;
+  private stage!: Konva.Stage;
+  private vertexLayer!: Konva.Layer;
+  private edgesLayer!: Konva.Layer;
+  private edgeManager!: EdgeManager;
+  private vertexManager!: VertexManager;
+  mounted() {
+    this.hub = new Hub(this);
     this.hub.joinRoom(this.getRandomUserName(), "1");
     // Create and configure stage, layers, to draw
-    this.stage = new this.Konva.Stage(this.stageConfig);
-    this.vertexLayer = new this.Konva.Layer();
-    this.edgesLayer = new this.Konva.Layer();
-    this.configLayers();
-    this.bindStage();
-    // Create managers objects to manage vertices and lines
-    this.edgeManager = new EdgeManager.EdgeManager(this.edgesLayer);
-    this.vertexManager = new VertexManager.VertexManager(this.vertexLayer);
-  },
-  props: {
-    toolbar: {
-      default: null,
-    },
-  },
-  data: () => ({
-    stageConfig: {
+    const stageConfig = {
       container: "board",
       width: window.innerWidth * 0.8,
       height: window.innerHeight * 0.92,
-    },
-  }),
-  methods: {
-    getRandomUserName() {
-      const id = Math.floor(Math.random() * 10000);
-      return "User_" + id.toString();
-    },
-    blockContextMenu: function(e) {
-      e.preventDefault(); //disable context menu when right click
-    },
-    handleClik(event) {
-      if (event.evt.which !== 1)
-        //is not right click
-        return;
-      const mousePos = this.stage.getPointerPosition();
-      const vertex = this.vertexManager.getConfig(mousePos);
-      this.hub.sendVertex(vertex);
-    },
-    toolbarButton(name) {
-      console.log("Board: " + name);
-    },
-    bindStage() {
-      this.stage.on("click", (event) => this.handleClik(event));
+    };
+    this.stage = new Konva.Stage(stageConfig);
+    this.vertexLayer = new Konva.Layer();
+    this.edgesLayer = new Konva.Layer();
+    this.configLayers();
+    // Create managers objects to manage vertices and lines
+    this.edgeManager = new EdgeManager(this.edgesLayer);
+    this.vertexManager = new VertexManager(this.vertexLayer);
+    this.bindStage();
+  }
+  joinRoom() {
+    console.log("TODO joinRoom()");
+  }
+  createRoom() {
+    console.log("TODO createRoom()");
+  }
+  getRandomUserName(): string {
+    const id = Math.floor(Math.random() * 10000);
+    return "User_" + id.toString();
+  }
+  blockContextMenu(e: Event) {
+    e.preventDefault(); //disable context menu when right click
+  }
+  handleClik(event: KonvaMouseEvent) {
+    console.log("click");
+    if (event.evt.which !== 1)
+      //is not right click
+      return;
+    const mousePos = this.stage.getPointerPosition();
+    const vertex = this.vertexManager.getConfig(mousePos);
+    this.hub.sendVertex(vertex);
+  }
+  toolbarButton(name: string) {
+    console.log("Board: " + name);
+  }
+  bindStage() {
+    this.stage.on("click", (event: KonvaMouseEvent) => this.handleClik(event));
 
-      this.stage.on("mouseup", (event) =>
-        this.edgeManager.handleMouseUp(event)
-      );
+    this.stage.on("mouseup", () => this.edgeManager.handleMouseUp());
 
-      this.stage.on("mousemove", (event) =>
-        this.edgeManager.handleMouseMove(event)
-      );
-    },
-    configLayers() {
-      this.stage.add(this.edgesLayer);
-      this.stage.add(this.vertexLayer);
-      this.vertexLayer.moveToTop();
-    },
-    bindVertexEvents(vertex) {
-      vertex.on("mousedown", (event) => this.edgeManager.startDrawing(event));
+    this.stage.on("mousemove", (event: KonvaMouseEvent) =>
+      this.edgeManager.handleMouseMove(event)
+    );
+  }
+  configLayers() {
+    this.stage.add(this.edgesLayer);
+    this.stage.add(this.vertexLayer);
+    this.vertexLayer.moveToTop();
+  }
+  bindVertexEvents(vertex: Konva.Circle) {
+    vertex.on("mousedown", (event: KonvaMouseEvent) =>
+      this.edgeManager.startDrawing(event)
+    );
 
-      vertex.on("mouseup", (event) =>
-        this.edgeManager.tryToConnectVertices(event)
-      );
+    vertex.on("mouseup", (event: KonvaMouseEvent) =>
+      this.edgeManager.tryToConnectVertices(event)
+    );
 
-      vertex.on("dragmove", (event) => this.edgeManager.dragEdges(event));
-    },
-    receiveVertex(config) {
-      const vertex = this.vertexManager.create(config);
-      this.bindVertexEvents(vertex);
-      this.vertexManager.draw(vertex);
-    },
-  },
-};
+    vertex.on("dragmove", (event: KonvaMouseEvent) =>
+      this.edgeManager.dragEdges(event)
+    );
+  }
+  receiveVertex(config: VertexConfig) {
+    const vertex = this.vertexManager.create(config);
+    this.bindVertexEvents(vertex);
+    this.vertexManager.draw(vertex);
+  }
+}
 </script>
 
 <style scoped>
