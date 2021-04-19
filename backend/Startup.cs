@@ -16,7 +16,6 @@ namespace Backend
     {
         public IConfiguration Configuration { get; }
         private readonly VueSettings vue;
-        private readonly IJwtParametersOptions jwtSettings;
         public Startup(IConfiguration configuration)
         {
             //Read setting form appsettings.json
@@ -26,18 +25,12 @@ namespace Backend
                 CorsPolicyName = Configuration["Vue:CorsPolicyName"],
                 Url = Configuration["Vue:Url"]
             };
-            jwtSettings = new JwtSettings
-            {
-                Issuer = Configuration["JwtSettings:Issuer"],
-                Key = Configuration["JwtSettings:Key"]
-            };
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<JwtSettings>(Configuration.GetSection(nameof(JwtSettings)));
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
             //Signleton for database
             services.AddSingleton<IDatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
