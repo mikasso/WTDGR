@@ -131,5 +131,5 @@ export class EdgeManager {
   //     otherVer!.edges.splice(removedIndex, 1);
   //   }  
     
-  }
+  // }
 }

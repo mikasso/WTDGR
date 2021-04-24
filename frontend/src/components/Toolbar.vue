@@ -1,12 +1,12 @@
 <template>
     <div class='toolbar'>
-          <div class='menu'>
+          <!-- <div class='menu'>
               górne menu
-          </div>
+          </div> -->
           <div class='tools'>
             <div v-for='(tool, index) in toolbar.tools' v-bind:key='index' 
               class='tool' :class="{selected: tool == toolbar.selected_tool}"
-              @click='toolbar.selected_tool = tool'>
+              @click='stateChanged(); toolbar.selected_tool = tool'>
 
                 <img :src="require('../assets/tools/' + tool + '.png')">
                 {{tool}}
@@ -14,20 +14,21 @@
 
             <div class='tool'
               style='margin-left:15px;'
-              @click='handleButton("undo");'>
+              @click='stateChanged()'>
                 <img src='../assets/buttons/undo.png'>
                 Undo
             </div>
             <div class='tool'
               style='margin-right:15px;'
-              @click='handleButton("redo");'>
+              @click='stateChanged()'>
                 <img src='../assets/buttons/redo.png'>
                 Redo
             </div>
 
             Vertex style:
             <select class='select'
-              v-model='toolbar.vertex_style'>
+              v-model='toolbar.vertex_style'
+              @change='stateChanged()'>
                 <option v-for='(style, index) in toolbar.vertex_styles' v-bind:key='index'
                   :value='style'>
                     <img :src="require('../assets/vertex_styles/' + style + '.png')">
@@ -36,7 +37,8 @@
             </select>
             Edge style:
             <select class='select'
-              v-model='toolbar.edge_style'>
+              v-model='toolbar.edge_style'
+              @change='stateChanged()'>
                 <option v-for='(style, index) in toolbar.edge_styles' v-bind:key='index'
                   :value='style'>
                     {{style}}
@@ -44,7 +46,8 @@
             </select>
             Direction:
             <select class='select'
-              v-model='toolbar.direction'>
+              v-model='toolbar.direction'
+              @change='stateChanged()'>
                 <option v-for='(style, index) in toolbar.directions' v-bind:key='index'
                   :value='style'>
                     {{style}}
@@ -101,8 +104,8 @@ export default {
     },
 
     methods: {
-        handleButton(buttonName) {
-            this.$emit('buttonPressed', {name: buttonName});
+        stateChanged() {
+            this.$emit('stateChanged', {state: this.toolbar});
         }
     }
     
@@ -111,12 +114,6 @@ export default {
 
 <style scoped lang='scss'>
 .toolbar{
-    grid-column-start: 1;
-    grid-column-end: 1;
-    grid-row-start: 1;            
-    grid-row-end: 1;     
-
-    height: 7vh;
     white-space: nowrap;
     color: black;
 
@@ -130,8 +127,6 @@ export default {
     }
     .tools{
         width: 100%;
-        height: 50%;
-
         padding: 5px;
 
         display: flex;
