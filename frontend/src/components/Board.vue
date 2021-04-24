@@ -14,6 +14,7 @@ import { KonvaMouseEvent } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Component, Vue } from "vue-property-decorator";
 import { VertexConfig } from "../ts/Aliases/aliases";
+import { isRightClick } from "@/ts/Helpers/functions";
 
 @Component
 export default class Board extends Vue {
@@ -56,10 +57,7 @@ export default class Board extends Vue {
     e.preventDefault(); //disable context menu when right click
   }
   handleClik(event: KonvaMouseEvent) {
-    console.log("click");
-    if (event.evt.which !== 1)
-      //is not right click
-      return;
+    if (isRightClick(event)) return;
     const mousePos = this.stage.getPointerPosition();
     const vertex = this.vertexManager.getConfig(mousePos);
     this.hub.sendVertex(vertex);

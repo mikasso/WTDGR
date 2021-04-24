@@ -2,7 +2,7 @@ import { KonvaMouseEvent } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Vertex } from "../Vertices/vertex_manager";
 import { EdgeManagerState, NotDrawingState } from "./drawing_state";
-import { getPointFromEvent, isRightClick } from "../../Helpers/functions";
+import { getPointFromEvent } from "../../Helpers/functions";
 import { Vector2d } from "konva/types/types";
 import { LineConfig } from "konva/types/shapes/Line";
 
@@ -75,10 +75,7 @@ export class EdgeManager {
     const vertex = event.target as Vertex;
     for (let i = 0; i < vertex.edges.length; i++) {
       const edge = vertex.edges[i];
-      let toChange = 2;
-      console.log(edge.v1!._id);
-      if (edge.v1!._id !== vertex._id) toChange = 0;
-
+      let toChange = edge.v1!._id !== vertex._id ? 0 : 2;
       edge.attrs.points[toChange] = vertex.attrs.x;
       edge.attrs.points[toChange + 1] = vertex.attrs.y;
     }
@@ -114,7 +111,7 @@ export class EdgeManager {
 
   // public removeFromVertex(vertex: Vertex){
   //   console.log(this.layer.getChildren())
-    
+
   //   for(var i = 0; i < vertex.edges.length; i++){
   //     var edge = vertex.edges[i];
 
@@ -129,7 +126,7 @@ export class EdgeManager {
   //     }
   //     if(removedIndex)
   //     otherVer!.edges.splice(removedIndex, 1);
-  //   }  
-    
-  }
+  //   }
+
+  // }
 }
