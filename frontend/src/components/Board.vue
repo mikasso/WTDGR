@@ -14,6 +14,7 @@ import Konva from "konva";
 import { Component, Vue } from "vue-property-decorator";
 // eslint-disable-next-line no-unused-vars
 import { VertexConfig } from "../ts/Aliases/aliases";
+// eslint-disable-next-line no-unused-vars
 import { isLeftClick, isRightClick } from "../ts/Helpers/functions";
 @Component({
   props: ["toolbar"],
@@ -70,7 +71,6 @@ export default class Board extends Vue {
 
   bindStage() {
     this.stage.on("click", (event: KonvaMouseEvent) => this.handleClick(event));
-
     this.stage.on("mouseup", (event: KonvaMouseEvent) =>
       this.handleMouseUp(event)
     );
@@ -100,13 +100,18 @@ export default class Board extends Vue {
         this.vertexManager.startMoving(vertex);
       } else if (this.toolbarState.selected_tool == "Erase") {
         this.vertexManager.remove(vertex);
+      } else if (this.toolbarState.selected_tool == "Custom") {
+        if (isRightClick(event)) this.edgeManager.startDrawing(event);
+        else this.vertexManager.startMoving(vertex);
       }
     });
 
     vertex.on("mouseup", (event: KonvaMouseEvent) => {
       if (this.toolbarState.selected_tool == "Edge")
         this.edgeManager.tryToConnectVertices(event);
-      else if (
+      else if (this.toolbarState.selected_tool == "Custom") {
+        this.edgeManager.tryToConnectVertices(event);
+      } else if (
         this.toolbarState.selected_tool == "Vertex" ||
         this.toolbarState.selected_tool == "Select"
       ) {
@@ -115,16 +120,20 @@ export default class Board extends Vue {
     });
 
     vertex.on("dragmove", (event: KonvaMouseEvent) => {
-      if (this.toolbarState.selected_tool == "Select") {
+      if (
+        this.toolbarState.selected_tool == "Select" ||
+        this.toolbarState.selected_tool == "Custom"
+      ) {
         this.edgeManager.dragEdges(event);
       }
     });
   }
 
   handleClick(event: KonvaMouseEvent) {
-    if (isRightClick(event)) return;
+    if (!isLeftClick(event)) return;
     const mousePos = this.stage.getPointerPosition();
-    if (this.toolbarState.selected_tool == "Vertex") {
+    const selectedTool = this.toolbarState.selected_tool;
+    if (selectedTool == "Vertex" || selectedTool == "Custom") {
       const vertex = this.vertexManager.createWithPos(mousePos);
       this.bindVertexEvents(vertex);
       this.vertexManager.draw(vertex);
@@ -132,7 +141,7 @@ export default class Board extends Vue {
   }
 
   handleMouseUp(event: KonvaMouseEvent) {
-    if (isRightClick(event)) return;
+    if (!isLeftClick(event)) return;
     if (this.toolbarState.selected_tool == "Select") {
       this.vertexManager.stopMoving();
     } else if (this.toolbarState.selected_tool == "Edge") {
@@ -141,11 +150,12 @@ export default class Board extends Vue {
   }
 
   handleMouseMove(event: KonvaMouseEvent) {
-    if (isLeftClick(event)) return;
     // if(this.toolbarState.selected_tool == "Select"){
     //   this.vertexManager.move(this.stage.getPointerPosition()!, this.edgeManager)
     // }
-    else if (this.toolbarState.selected_tool == "Edge") {
+    if (this.toolbarState.selected_tool == "Edge") {
+      this.edgeManager.handleMouseMove(event);
+    } else if (this.toolbarState.selected_tool == "Custom") {
       this.edgeManager.handleMouseMove(event);
     }
   }
