@@ -10,8 +10,8 @@
         class="tool"
         :class="{ selected: tool == toolbar.selected_tool }"
         @click="
-          stateChanged();
           toolbar.selected_tool = tool;
+          stateChanged();
         "
       >
         <img :src="require('../assets/tools/' + tool + '.png')" />
@@ -79,6 +79,7 @@ export default {
   name: "Toolbar",
   mounted() {
     this.$emit("input", this.toolbar);
+    //this.stateChanged();
   },
   data: () => ({
     toolbar: {
@@ -113,7 +114,7 @@ export default {
 
   methods: {
     stateChanged() {
-      this.$emit("stateChanged", { state: this.toolbar });
+      this.$emit("stateChanged", { state: this.toolbar.selected_tool });
     },
   },
 };
