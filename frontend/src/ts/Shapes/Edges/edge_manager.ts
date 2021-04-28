@@ -5,6 +5,7 @@ import { EdgeManagerState, NotDrawingState } from "./drawing_state";
 import { getPointFromEvent } from "../../Helpers/functions";
 import { Vector2d } from "konva/types/types";
 import { LineConfig } from "konva/types/shapes/Line";
+import { EventHandler } from "../EventHandler";
 
 class CustomLine extends Konva.Line {
   public redraw(point: Vector2d) {
@@ -57,7 +58,7 @@ export class EdgeManager {
     });
   }
 
-  public tryToConnectVertices(event: KonvaMouseEvent) {
+  public tryConnectVertices(event: KonvaMouseEvent) {
     const v1 = event.currentTarget as Vertex;
     const v2 = this.currentVertex as Vertex;
     const cord = v1.attrs;
@@ -92,14 +93,14 @@ export class EdgeManager {
     this.layer.draw();
   }
 
-  public handleMouseUp() {
+  public removeCurrentEdge() {
     this.state = this.state.mouseUp();
     this.currentLine?.destroy();
     this.currentLine = null;
     this.layer.draw();
   }
 
-  public handleMouseMove(event: KonvaMouseEvent) {
+  public moveCurrentEdge(event: KonvaMouseEvent) {
     this.state = this.state.mouseMove(() => {
       const endPoint = getPointFromEvent(event);
       this.currentLine?.redraw(endPoint);

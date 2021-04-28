@@ -1,4 +1,4 @@
-import { VertexConfig } from "@/ts/Aliases/aliases";
+import { KonvaMouseEvent, VertexConfig } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Vector2d } from "konva/types/types";
 import { Edge, EdgeManager } from "../Edges/edge_manager";
@@ -11,7 +11,7 @@ export class Vertex extends Konva.Circle {
 
 export class VertexManager {
   private defualtConfig: VertexConfig;
-  private movedNode: Konva.Node;
+  private dragging: boolean;
   private vertexCount: number;
   private vertexes: Vertex[];
 
@@ -38,6 +38,7 @@ export class VertexManager {
       fill: this.defualtConfig.fill,
       stroke: this.defualtConfig.stroke,
       strokeWidth: this.defualtConfig.strokeWidth,
+      draggable: this.dragging,
       x: Math.round(x),
       y: Math.round(y),
     };
@@ -45,7 +46,6 @@ export class VertexManager {
   }
 
   public create(config: VertexConfig): Vertex {
-    config.draggable = false;
     config.name = "Vertex" + this.vertexCount.toString();
     this.vertexCount += 1;
     const vertex: Vertex = new Vertex(config);
@@ -53,32 +53,27 @@ export class VertexManager {
     return vertex;
   }
 
-  private findVertexByName(name: String) {
-    for (var i = 0; i < this.vertexes.length; i++) {
-      if (this.vertexes[i].attrs.name == name) return this.vertexes[i];
-    }
-    return this.vertexes[0]; // :)
-  }
-
-  public createWithPos(mousePos: Vector2d | null): Vertex {
-    const config = this.getConfig(mousePos);
-    return this.create(config);
-  }
-
   public draw(vertexConfig: Vertex) {
     this.layer.add(vertexConfig);
     this.layer.draw();
   }
 
-  public startMoving(vertex: Konva.Circle) {
-    this.movedNode = this.layer.findOne("." + vertex.attrs.name);
-    this.movedNode.draggable(true);
+  public allowDrag() {
+    this.dragging = true;
+    this.updateDragProp();
   }
 
-  public stopMoving() {
-    this.movedNode.draggable(false);
+  public disableDrag() {
+    this.dragging = false;
+    this.updateDragProp();
   }
 
+  private updateDragProp() {
+    const items = this.layer.getChildren();
+    items.each((x) => {
+      if (x.getClassName() === "Circle") x.setDraggable(this.dragging);
+    });
+  }
   public remove(vertex: Konva.Circle /*, edgeManager: EdgeManager*/) {
     const removedNode = this.layer.findOne("." + vertex.attrs.name);
     // var removedVertex = this.findVertexByName(vertex.attrs.name);
