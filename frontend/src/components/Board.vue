@@ -110,7 +110,7 @@ export default class Board extends Vue {
     this.handleVertexMouseUp = () => {};
     this.handleVertexMouseDown = () => {};
     this.handleVertexDrag = () => {};
-    this.vertexManager.disableDrag(); //race with emit from toolbar!!
+    this.vertexManager.disableDrag();
     if (selectedTool == "Vertex") {
       this.handleClick = this.createVertex;
     } else if (selectedTool == "Edge") {
