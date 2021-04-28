@@ -85,10 +85,7 @@ export class EdgeManager {
   public dragEdgesOfVertex(vertex: Vertex) {
     for (let i = 0; i < vertex.edges.length; i++) {
       const edge = vertex.edges[i];
-      let toChange = 2;
-      console.log(edge.v1!._id);
-      if (edge.v1!._id !== vertex._id) toChange = 0;
-
+      let toChange = edge.v1!._id !== vertex._id ? 0 : 2;
       edge.attrs.points[toChange] = vertex.attrs.x;
       edge.attrs.points[toChange + 1] = vertex.attrs.y;
     }

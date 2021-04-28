@@ -1,7 +1,7 @@
 import { VertexConfig } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Vector2d } from "konva/types/types";
-import { Edge } from "../Edges/edge_manager";
+import { Edge, EdgeManager } from "../Edges/edge_manager";
 
 export class Vertex extends Konva.Circle {
   constructor(config: Konva.CircleConfig, public edges: Edge[] = []) {
@@ -11,9 +11,13 @@ export class Vertex extends Konva.Circle {
 
 export class VertexManager {
   private defualtConfig: VertexConfig;
+  private movedNode: Konva.Node;
+  private vertexCount: number;
+  private vertexes: Vertex[];
 
   constructor(private layer: Konva.Layer) {
-    console.log("Hello");
+    this.vertexCount = 0;
+    this.vertexes = [];
     this.defualtConfig = {
       type: "v-circle",
       name: "unnamed",
@@ -41,13 +45,45 @@ export class VertexManager {
   }
 
   public create(config: VertexConfig): Vertex {
-    config.draggable = true;
+    config.draggable = false;
+    config.name = "Vertex" + this.vertexCount.toString();
+    this.vertexCount += 1;
     const vertex: Vertex = new Vertex(config);
+    this.vertexes.push(vertex);
     return vertex;
+  }
+
+  private findVertexByName(name: String) {
+    for (var i = 0; i < this.vertexes.length; i++) {
+      if (this.vertexes[i].attrs.name == name) return this.vertexes[i];
+    }
+    return this.vertexes[0]; // :)
+  }
+
+  public createWithPos(mousePos: Vector2d | null): Vertex {
+    const config = this.getConfig(mousePos);
+    return this.create(config);
   }
 
   public draw(vertexConfig: Vertex) {
     this.layer.add(vertexConfig);
+    this.layer.draw();
+  }
+
+  public startMoving(vertex: Konva.Circle) {
+    this.movedNode = this.layer.findOne("." + vertex.attrs.name);
+    this.movedNode.draggable(true);
+  }
+
+  public stopMoving() {
+    this.movedNode.draggable(false);
+  }
+
+  public remove(vertex: Konva.Circle /*, edgeManager: EdgeManager*/) {
+    const removedNode = this.layer.findOne("." + vertex.attrs.name);
+    // var removedVertex = this.findVertexByName(vertex.attrs.name);
+    // edgeManager.removeFromVertex(removedVertex);
+    removedNode.remove();
     this.layer.draw();
   }
 }

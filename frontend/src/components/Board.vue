@@ -1,8 +1,6 @@
 <template>
   <div id="root">
-    <button v-on:click="createRoom()">Create room</button>
-    <button v-on:click="joinRoom()">Join room</button>
-    <div id="board" @contextmenu="blockContextMenu($event)"></div>
+    <div id="board" ref="board" @contextmenu="blockContextMenu($event)"></div>
   </div>
 </template>
 
@@ -10,99 +8,158 @@
 import { Hub } from "../ts/SignalR/hub";
 import { EdgeManager } from "../ts/Shapes/Edges/edge_manager";
 import { VertexManager } from "../ts/Shapes/Vertices/vertex_manager";
+// eslint-disable-next-line no-unused-vars
 import { KonvaMouseEvent } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Component, Vue } from "vue-property-decorator";
+// eslint-disable-next-line no-unused-vars
 import { VertexConfig } from "../ts/Aliases/aliases";
-import { isRightClick } from "@/ts/Helpers/functions";
-
-@Component
+// eslint-disable-next-line no-unused-vars
+import { isLeftClick, isRightClick } from "../ts/Helpers/functions";
+@Component({
+  props: ["toolbar"],
+})
 export default class Board extends Vue {
   name: string = "Board";
   private hub!: any;
+  private toolbarState!: any;
   private stage!: Konva.Stage;
   private vertexLayer!: Konva.Layer;
   private edgesLayer!: Konva.Layer;
   private edgeManager!: EdgeManager;
   private vertexManager!: VertexManager;
+
   mounted() {
     this.hub = new Hub(this);
-    this.hub.joinRoom(this.getRandomUserName(), "1");
-    // Create and configure stage, layers, to draw
-    const stageConfig = {
+    // this.hub.joinRoom(this.getRandomUserName(), "1");
+
+    this.stage = new Konva.Stage({
       container: "board",
-      width: window.innerWidth * 0.8,
-      height: window.innerHeight * 0.92,
-    };
-    this.stage = new Konva.Stage(stageConfig);
+      width: document.getElementById("board")!.clientWidth,
+      height: window.innerHeight,
+    });
     this.vertexLayer = new Konva.Layer();
     this.edgesLayer = new Konva.Layer();
     this.configLayers();
+
     // Create managers objects to manage vertices and lines
     this.edgeManager = new EdgeManager(this.edgesLayer);
     this.vertexManager = new VertexManager(this.vertexLayer);
     this.bindStage();
   }
+
   joinRoom() {
     console.log("TODO joinRoom()");
   }
+
   createRoom() {
     console.log("TODO createRoom()");
   }
+
   getRandomUserName(): string {
     const id = Math.floor(Math.random() * 10000);
     return "User_" + id.toString();
   }
+
   blockContextMenu(e: Event) {
     e.preventDefault(); //disable context menu when right click
   }
-  handleClik(event: KonvaMouseEvent) {
-    if (isRightClick(event)) return;
-    const mousePos = this.stage.getPointerPosition();
-    const vertex = this.vertexManager.getConfig(mousePos);
-    this.hub.sendVertex(vertex);
-  }
-  toolbarButton(name: string) {
-    console.log("Board: " + name);
-  }
-  bindStage() {
-    this.stage.on("click", (event: KonvaMouseEvent) => this.handleClik(event));
 
-    this.stage.on("mouseup", () => this.edgeManager.handleMouseUp());
+  toolbarStateChanged(state: any) {
+    this.toolbarState = state.state;
+  }
+
+  bindStage() {
+    this.stage.on("click", (event: KonvaMouseEvent) => this.handleClick(event));
+    this.stage.on("mouseup", (event: KonvaMouseEvent) =>
+      this.handleMouseUp(event)
+    );
 
     this.stage.on("mousemove", (event: KonvaMouseEvent) =>
-      this.edgeManager.handleMouseMove(event)
+      this.handleMouseMove(event)
     );
   }
+
   configLayers() {
     this.stage.add(this.edgesLayer);
     this.stage.add(this.vertexLayer);
     this.vertexLayer.moveToTop();
   }
-  bindVertexEvents(vertex: Konva.Circle) {
-    vertex.on("mousedown", (event: KonvaMouseEvent) =>
-      this.edgeManager.startDrawing(event)
-    );
 
-    vertex.on("mouseup", (event: KonvaMouseEvent) =>
-      this.edgeManager.tryToConnectVertices(event)
-    );
-
-    vertex.on("dragmove", (event: KonvaMouseEvent) =>
-      this.edgeManager.dragEdges(event)
-    );
-  }
   receiveVertex(config: VertexConfig) {
     const vertex = this.vertexManager.create(config);
     this.bindVertexEvents(vertex);
     this.vertexManager.draw(vertex);
   }
+
+  bindVertexEvents(vertex: Konva.Circle) {
+    vertex.on("mousedown", (event: KonvaMouseEvent) => {
+      if (this.toolbarState.selected_tool == "Edge") {
+        this.edgeManager.startDrawing(event);
+      } else if (this.toolbarState.selected_tool == "Select") {
+        this.vertexManager.startMoving(vertex);
+      } else if (this.toolbarState.selected_tool == "Erase") {
+        this.vertexManager.remove(vertex);
+      } else if (this.toolbarState.selected_tool == "Custom") {
+        if (isRightClick(event)) this.edgeManager.startDrawing(event);
+        else this.vertexManager.startMoving(vertex);
+      }
+    });
+
+    vertex.on("mouseup", (event: KonvaMouseEvent) => {
+      if (this.toolbarState.selected_tool == "Edge")
+        this.edgeManager.tryToConnectVertices(event);
+      else if (this.toolbarState.selected_tool == "Custom") {
+        this.edgeManager.tryToConnectVertices(event);
+      } else if (
+        this.toolbarState.selected_tool == "Vertex" ||
+        this.toolbarState.selected_tool == "Select"
+      ) {
+        this.vertexManager.stopMoving();
+      }
+    });
+
+    vertex.on("dragmove", (event: KonvaMouseEvent) => {
+      if (
+        this.toolbarState.selected_tool == "Select" ||
+        this.toolbarState.selected_tool == "Custom"
+      ) {
+        this.edgeManager.dragEdges(event);
+      }
+    });
+  }
+
+  handleClick(event: KonvaMouseEvent) {
+    if (!isLeftClick(event)) return;
+    const mousePos = this.stage.getPointerPosition();
+    const selectedTool = this.toolbarState.selected_tool;
+    if (selectedTool == "Vertex" || selectedTool == "Custom") {
+      const vertex = this.vertexManager.createWithPos(mousePos);
+      this.bindVertexEvents(vertex);
+      this.vertexManager.draw(vertex);
+    }
+  }
+
+  handleMouseUp(event: KonvaMouseEvent) {
+    if (!isLeftClick(event)) return;
+    if (this.toolbarState.selected_tool == "Select") {
+      this.vertexManager.stopMoving();
+    } else if (this.toolbarState.selected_tool == "Edge") {
+      this.edgeManager.handleMouseUp();
+    }
+  }
+
+  handleMouseMove(event: KonvaMouseEvent) {
+    // if(this.toolbarState.selected_tool == "Select"){
+    //   this.vertexManager.move(this.stage.getPointerPosition()!, this.edgeManager)
+    // }
+    if (this.toolbarState.selected_tool == "Edge") {
+      this.edgeManager.handleMouseMove(event);
+    } else if (this.toolbarState.selected_tool == "Custom") {
+      this.edgeManager.handleMouseMove(event);
+    }
+  }
 }
 </script>
 
-<style scoped>
-.stage {
-  width: 100%;
-  height: 100%;
-}
-</style>
+<style scoped></style>
