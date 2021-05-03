@@ -93,6 +93,7 @@ export default {
         "Star",
         "Erase",
         "Label",
+        "Pencil"
       ],
 
       vertex_styles: ["circle", "smallcircle"],
