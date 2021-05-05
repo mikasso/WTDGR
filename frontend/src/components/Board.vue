@@ -33,8 +33,9 @@ export default class Board extends Vue {
   private edgeManager!: EdgeManager;
   private vertexManager!: VertexManager;
   private pencilManager!: PencilManager;
-  private handleMouseDown!: (event: KonvaMouseEvent) => void;
+  private handleClick!: (event: KonvaMouseEvent) => void;
   private handleMouseMove!: (event: KonvaMouseEvent) => void;
+  private handleMouseDown!: (event: KonvaMouseEvent) => void;
   private handleMouseUp!: (event: KonvaMouseEvent) => void;
   private handlePencilMouseDown!: (event: KonvaMouseEvent, pencil: Pencil) => void;
   private handleVertexMouseUp!: (
@@ -87,7 +88,10 @@ export default class Board extends Vue {
   }
 
   bindStage() {
-    this.stage.on("mousedown", (event: KonvaMouseEvent) => this.handleMouseDown(event));
+    this.stage.on("click", (event: KonvaMouseEvent) => this.handleClick(event));
+    this.stage.on("mousedown", (event: KonvaMouseEvent) =>
+      this.handleMouseDown(event)
+    );
     this.stage.on("mouseup", (event: KonvaMouseEvent) =>
       this.handleMouseUp(event)
     );
@@ -113,15 +117,16 @@ export default class Board extends Vue {
     console.log(selectedTool);
     //Clear all handlers
     this.handleMouseMove = () => {};
-    this.handleMouseUp = () => {};
     this.handleMouseDown = () => {};
+    this.handleMouseUp = () => {};
+    this.handleClick = () => {};
     this.handleVertexMouseUp = () => {};
     this.handleVertexMouseDown = () => {};
     this.handleVertexDrag = () => {};
     this.handlePencilMouseDown = () => {};
     this.vertexManager.disableDrag();
     if (selectedTool == "Vertex") {
-      this.handleMouseDown = this.createVertex;
+      this.handleClick = this.createVertex;
     } else if (selectedTool == "Edge") {
       this.handleMouseUp = () => this.edgeManager.removeCurrentEdge();
       this.handleMouseMove = (event: KonvaMouseEvent) => {
@@ -135,7 +140,7 @@ export default class Board extends Vue {
         this.edgeManager.tryConnectVertices(event);
     } else if (selectedTool == "Custom") {
       this.vertexManager.allowDrag();
-      this.handleMouseDown = this.createVertex;
+      this.handleClick = this.createVertex;
       this.handleMouseUp = () => this.edgeManager.removeCurrentEdge();
       this.handleMouseMove = (event: KonvaMouseEvent) => {
         this.edgeManager.moveCurrentEdge(event);
