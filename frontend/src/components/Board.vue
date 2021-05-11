@@ -7,17 +7,12 @@
 <script lang="ts">
 import { Hub } from "../ts/SignalR/hub";
 import { EdgeManager } from "../ts/Shapes/Edges/edge_manager";
-// eslint-disable-next-line no-unused-vars
 import { VertexManager, Vertex } from "../ts/Shapes/Vertices/vertex_manager";
-// eslint-disable-next-line no-unused-vars
 import { PencilManager, Pencil } from "../ts/Shapes/Pencil/pencil_manager";
-// eslint-disable-next-line no-unused-vars
 import { KonvaMouseEvent } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Component, Vue } from "vue-property-decorator";
-// eslint-disable-next-line no-unused-vars
 import { VertexConfig } from "../ts/Aliases/aliases";
-// eslint-disable-next-line no-unused-vars
 import { isLeftClick, isRightClick } from "../ts/Helpers/functions";
 @Component({
   props: ["toolbar"],
@@ -25,7 +20,6 @@ import { isLeftClick, isRightClick } from "../ts/Helpers/functions";
 export default class Board extends Vue {
   name: string = "Board";
   private hub!: any;
-  private toolbarState!: any;
   private stage!: Konva.Stage;
   private vertexLayer!: Konva.Layer;
   private edgesLayer!: Konva.Layer;
@@ -37,7 +31,10 @@ export default class Board extends Vue {
   private handleMouseMove!: (event: KonvaMouseEvent) => void;
   private handleMouseDown!: (event: KonvaMouseEvent) => void;
   private handleMouseUp!: (event: KonvaMouseEvent) => void;
-  private handlePencilMouseDown!: (event: KonvaMouseEvent, pencil: Pencil) => void;
+  private handlePencilMouseDown!: (
+    event: KonvaMouseEvent,
+    pencil: Pencil
+  ) => void;
   private handleVertexMouseUp!: (
     event: KonvaMouseEvent,
     vertex: Vertex
@@ -114,17 +111,10 @@ export default class Board extends Vue {
 
   toolbarStateChanged(stateChanged: { state: string }) {
     const selectedTool = stateChanged.state;
-    console.log(selectedTool);
-    //Clear all handlers
-    this.handleMouseMove = () => {};
-    this.handleMouseDown = () => {};
-    this.handleMouseUp = () => {};
-    this.handleClick = () => {};
-    this.handleVertexMouseUp = () => {};
-    this.handleVertexMouseDown = () => {};
-    this.handleVertexDrag = () => {};
-    this.handlePencilMouseDown = () => {};
+    this.clearHandlers();
+
     this.vertexManager.disableDrag();
+    this.edgeManager.disableRemove();
     if (selectedTool == "Vertex") {
       this.handleClick = this.createVertex;
     } else if (selectedTool == "Edge") {
@@ -137,9 +127,9 @@ export default class Board extends Vue {
         else this.edgeManager.startDrawing(event);
       };
       this.handleVertexMouseUp = (event: KonvaMouseEvent) =>
-        this.edgeManager.tryConnectVertices(event);
+        this.edgeManager.create(event);
     } else if (selectedTool == "Custom") {
-      this.vertexManager.allowDrag();
+      this.vertexManager.enableDrag();
       this.handleClick = this.createVertex;
       this.handleMouseUp = () => this.edgeManager.removeCurrentEdge();
       this.handleMouseMove = (event: KonvaMouseEvent) => {
@@ -149,29 +139,42 @@ export default class Board extends Vue {
         if (!isLeftClick(event)) this.edgeManager.startDrawing(event);
       };
       this.handleVertexMouseUp = (event: KonvaMouseEvent) =>
-        this.edgeManager.tryConnectVertices(event);
+        this.edgeManager.create(event);
       this.handleVertexDrag = (event: KonvaMouseEvent) =>
         this.edgeManager.dragEdges(event);
     } else if (selectedTool == "Select") {
-      this.vertexManager.allowDrag();
+      this.vertexManager.enableDrag();
       this.handleVertexDrag = (event: KonvaMouseEvent) =>
         this.edgeManager.dragEdges(event);
     } else if (selectedTool == "Erase") {
-      this.handleVertexMouseDown = (event: KonvaMouseEvent, vertex: Vertex) =>
+      this.handleVertexMouseDown = (__, vertex: Vertex) => {
+        this.edgeManager.remove(vertex.edges);
         this.vertexManager.remove(vertex);
-      this.handlePencilMouseDown = (event: KonvaMouseEvent, pencil: Pencil) =>
+      };
+      this.handlePencilMouseDown = (__, pencil: Pencil) =>
         this.pencilManager.remove(pencil);
+      this.edgeManager.enableRemove();
     } else if (selectedTool == "Pencil") {
       this.handleMouseDown = (event: KonvaMouseEvent) => {
         this.startPencil(event);
       };
       this.handleMouseMove = (event: KonvaMouseEvent) => {
         this.movePencil(event);
-      };      
+      };
       this.handleMouseUp = () => {
         this.pencilManager.finishDrawing();
-      };   
+      };
     }
+  }
+  clearHandlers() {
+    this.handleMouseMove = () => {};
+    this.handleMouseDown = () => {};
+    this.handleMouseUp = () => {};
+    this.handleClick = () => {};
+    this.handleVertexMouseUp = () => {};
+    this.handleVertexMouseDown = () => {};
+    this.handleVertexDrag = () => {};
+    this.handlePencilMouseDown = () => {};
   }
 
   createVertex(event: KonvaMouseEvent) {
