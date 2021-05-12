@@ -5,7 +5,6 @@ import { EdgeManagerState, NotDrawingState } from "./drawing_state";
 import { getPointFromEvent } from "../../Helpers/functions";
 import { Vector2d } from "konva/types/types";
 import { LineConfig } from "konva/types/shapes/Line";
-import { EventHandler } from "../EventHandler";
 
 class CustomLine extends Konva.Line {
   public redraw(point: Vector2d) {
@@ -17,8 +16,8 @@ class CustomLine extends Konva.Line {
 
 export class Edge extends CustomLine {
   constructor(
-    readonly v1: Vertex | null = null,
-    readonly v2: Vertex | null = null,
+    readonly v1: Vertex,
+    readonly v2: Vertex,
     lineConfig: LineConfig
   ) {
     super(lineConfig);
@@ -51,14 +50,14 @@ export class EdgeManager {
       const startPoint = this.currentVertex.attrs;
       const endPoint = getPointFromEvent(event);
       const lineConfig = this.defaultLineConfig;
-      lineConfig.name = "edge" + this.edgeCount.toString();
+      lineConfig.name = `edge ${this.edgeCount.toString()}`;
       lineConfig.points = [startPoint.x, startPoint.y, endPoint.x, endPoint.y];
       this.currentLine = new CustomLine(lineConfig);
       this.layer.add(this.currentLine);
     });
   }
 
-  public tryConnectVertices(event: KonvaMouseEvent) {
+  public create(event: KonvaMouseEvent) {
     const v1 = event.currentTarget as Vertex;
     const v2 = this.currentVertex as Vertex;
     const cord = v1.attrs;
@@ -70,33 +69,17 @@ export class EdgeManager {
     this.layer.add(edge);
     this.currentLine?.remove();
     this.currentLine = null;
+    return edge;
   }
 
   public dragEdges(event: KonvaMouseEvent) {
     const vertex = event.target as Vertex;
     for (let i = 0; i < vertex.edges.length; i++) {
       const edge = vertex.edges[i];
-      let toChange = edge.v1!._id !== vertex._id ? 0 : 2;
+      const toChange = edge.v1._id !== vertex._id ? 0 : 2;
       edge.attrs.points[toChange] = vertex.attrs.x;
       edge.attrs.points[toChange + 1] = vertex.attrs.y;
     }
-    this.layer.draw();
-  }
-
-  public dragEdgesOfVertex(vertex: Vertex) {
-    for (let i = 0; i < vertex.edges.length; i++) {
-      const edge = vertex.edges[i];
-      let toChange = edge.v1!._id !== vertex._id ? 0 : 2;
-      edge.attrs.points[toChange] = vertex.attrs.x;
-      edge.attrs.points[toChange + 1] = vertex.attrs.y;
-    }
-    this.layer.draw();
-  }
-
-  public removeCurrentEdge() {
-    this.state = this.state.mouseUp();
-    this.currentLine?.destroy();
-    this.currentLine = null;
     this.layer.draw();
   }
 
@@ -107,24 +90,36 @@ export class EdgeManager {
     });
   }
 
-  // public removeFromVertex(vertex: Vertex){
-  //   console.log(this.layer.getChildren())
+  public removeCurrentEdge() {
+    this.state = this.state.mouseUp();
+    this.currentLine?.destroy();
+    this.currentLine = null;
+    this.layer.draw();
+  }
 
-  //   for(var i = 0; i < vertex.edges.length; i++){
-  //     var edge = vertex.edges[i];
+  public enableRemove() {
+    const items = this.layer.getChildren();
+    items.each((x) => {
+      if (x.getClassName() === "Line")
+        x.on("click", () => this.remove([x as Edge]));
+    });
+  }
 
-  //     var otherVer = edge.v1;
-  //     if(otherVer?.attrs.name == vertex.attrs.name)
-  //       otherVer = edge.v2;
+  public disableRemove() {
+    const items = this.layer.getChildren();
+    items.each((x) => {
+      if (x.getClassName() === "Line") x.off("click");
+    });
+  }
 
-  //     var removedIndex;
-  //     for(var i = 0; i < otherVer!.edges.length; i++){
-  //       if(otherVer!.edges[i].attrs.name == edge.attrs.name)
-  //         removedIndex = i;
-  //     }
-  //     if(removedIndex)
-  //     otherVer!.edges.splice(removedIndex, 1);
-  //   }
-
-  // }
+  public remove(edges: Edge[]) {
+    edges.forEach((edge) => {
+      [edge.v1, edge.v2].forEach((vertex) => {
+        vertex.edges = vertex.edges.filter((x) => x._id !== edge._id);
+      });
+      console.log(edge._id);
+      edge.remove();
+    });
+    this.layer.draw();
+  }
 }

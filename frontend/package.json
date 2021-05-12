@@ -21,7 +21,6 @@
     "vectors-js": "^1.1.1",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
-    "vue-konva": "^2.1.7",
     "vue-property-decorator": "^9.1.2"
   },
   "devDependencies": {
@@ -42,20 +41,15 @@
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
+    "parser": "@typescript-eslint/parser",
     "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended",
-      "@vue/typescript"
+      "plugin:@typescript-eslint/recommended"
     ],
-    "parserOptions": {
-      "parser": "@typescript-eslint/parser"
-    },
     "rules": {
-      "@typescript-eslint/no-unused-vars": "off"
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error"
+      ]
     }
   },
   "browserslist": [

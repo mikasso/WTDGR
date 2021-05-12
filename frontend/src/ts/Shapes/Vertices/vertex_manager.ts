@@ -58,7 +58,7 @@ export class VertexManager {
     this.layer.draw();
   }
 
-  public allowDrag() {
+  public enableDrag() {
     this.dragging = true;
     this.updateDragProp();
   }
@@ -74,11 +74,8 @@ export class VertexManager {
       if (x.getClassName() === "Circle") x.setDraggable(this.dragging);
     });
   }
-  public remove(vertex: Konva.Circle /*, edgeManager: EdgeManager*/) {
-    const removedNode = this.layer.findOne("." + vertex.attrs.name);
-    // var removedVertex = this.findVertexByName(vertex.attrs.name);
-    // edgeManager.removeFromVertex(removedVertex);
-    removedNode.remove();
+  public remove(vertex: Konva.Circle) {
+    vertex.remove();
     this.layer.draw();
   }
 }
