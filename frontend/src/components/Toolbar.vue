@@ -1,8 +1,5 @@
 <template>
-  <div class="toolbar">
-    <!-- <div class='menu'>
-              górne menu
-          </div> -->
+  <div class="toolbar" v-if="toolbar">
     <div class="tools">
       <div
         v-for="(tool, index) in toolbar.tools"
@@ -74,51 +71,47 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "Toolbar",
-  mounted() {
-    this.$emit("input", this.toolbar);
-    //this.stateChanged();
-  },
-  data: () => ({
-    toolbar: {
-      selected_tool: "Select",
-      tools: [
-        "Select",
-        "Vertex",
-        "Edge",
-        "Custom",
-        "Path",
-        "Star",
-        "Erase",
-        "Label",
-        "Pencil"
-      ],
+<script lang="ts">
+import { Component, Watch, Emit, Vue } from "vue-property-decorator";
 
-      vertex_styles: ["circle", "smallcircle"],
-      vertex_style: "circle",
+@Component
+export default class Toolbar extends Vue {
+  myProperty: string
+  name: string =  "Toolbar"
 
-      edge_styles: ["line", "dashed"],
-      edge_style: "line",
+  toolbar: {
+    selected_tool: "Select",
+    tools: [
+      "Select",
+      "Vertex",
+      "Edge",
+      "Custom",
+      "Path",
+      "Star",
+      "Erase",
+      "Label",
+      "Pencil"
+    ],
 
-      directions: ["undirected", "forward", "backwords"],
-      direction: "undirected",
-    },
-  }),
+    vertex_styles: ["circle", "smallcircle"],
+    vertex_style: "circle",
 
-  watch: {
-    toolbar: function() {
-      this.$emit("imput", this.toolbar);
-    },
-  },
+    edge_styles: ["line", "dashed"],
+    edge_style: "line",
 
-  methods: {
-    stateChanged() {
-      this.$emit("stateChanged", { state: this.toolbar.selected_tool });
-    },
-  },
-};
+    directions: ["undirected", "forward", "backwords"],
+    direction: "undirected",
+  }
+
+  @Watch('myProperty')
+  onPropertyChanged(value: string, oldValue: string) {
+    this.$emit("imput", this.toolbar);
+  }
+  @Emit('stateChanged')
+  stateChanged(stateChanged: { state: string }) {
+    return {state: this.toolbar.selected_tool};
+  }
+}
 </script>
 
 <style scoped lang="scss">

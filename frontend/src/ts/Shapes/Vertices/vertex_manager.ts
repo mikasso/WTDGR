@@ -1,7 +1,7 @@
-import { KonvaMouseEvent, VertexConfig } from "@/ts/Aliases/aliases";
+import { VertexConfig } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Vector2d } from "konva/types/types";
-import { Edge, EdgeManager } from "../Edges/edge_manager";
+import { Edge } from "../Edges/edge_manager";
 
 export class Vertex extends Konva.Circle {
   constructor(config: Konva.CircleConfig, public edges: Edge[] = []) {
