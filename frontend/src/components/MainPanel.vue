@@ -28,29 +28,36 @@
 </template>
 
 
-<script>
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
 import Board from './Board.vue'
 import Toolbar from './Toolbar.vue'
 
-export default {
-    name: 'MainPanel',
-    mounted(){
-    },
+@Component({
+  components: {
+    Board,
+    Toolbar,
+  }
+})
 
-    components: {
-        Board,
-        Toolbar,
-    },
-    
-    data: ()=> ({
-        toolbar: null,
-    }),
+export default class MainPanel extends Vue {
+  name: string = "MainPanel";
+  mounted(){
+  }
 
-    methods: {
-        toolbarState(state){
-            this.$refs.BoardComponent.toolbarStateChanged(state);
-        },
-    },
+  $refs!: {
+    BoardComponent: HTMLFormElement
+  }
+
+  data () {
+    return {
+      toolbar: null,
+    }
+  }
+
+  toolbarState(state: string){
+      this.$refs.BoardComponent.toolbarStateChanged(state);
+  }
 }
 </script>
 
