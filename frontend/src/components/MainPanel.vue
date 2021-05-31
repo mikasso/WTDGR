@@ -28,29 +28,54 @@
 </template>
 
 
-<script>
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
 import Board from './Board.vue'
 import Toolbar from './Toolbar.vue'
+import {toolbarObj} from "../ts/Helpers/toolbar"
 
-export default {
-    name: 'MainPanel',
-    mounted(){
-    },
+@Component({
+  components: {
+    Board,
+    Toolbar,
+  }
+})
 
-    components: {
-        Board,
-        Toolbar,
-    },
-    
-    data: ()=> ({
-        toolbar: null,
-    }),
+export default class MainPanel extends Vue {
+  name: string = "MainPanel";
+  mounted(){
+  }
+  toolbar: toolbarObj = {
+    selected_tool: "Select",
+    tools: [
+      "Select",
+      "Vertex",
+      "Edge",
+      "Custom",
+      "Path",
+      "Star",
+      "Erase",
+      "Label",
+      "Pencil"
+    ],
 
-    methods: {
-        toolbarState(state){
-            this.$refs.BoardComponent.toolbarStateChanged(state);
-        },
-    },
+    vertex_styles: ["circle", "smallcircle"],
+    vertex_style: "circle",
+
+    edge_styles: ["line", "dashed"],
+    edge_style: "line",
+
+    directions: ["undirected", "forward", "backwords"],
+    direction: "undirected",
+  }
+
+  $refs!: {
+    BoardComponent: HTMLFormElement
+  }
+
+  toolbarState(state: string){
+      this.$refs.BoardComponent.toolbarStateChanged(state);
+  }
 }
 </script>
 
