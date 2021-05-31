@@ -23,7 +23,7 @@ export class NotDrawingState implements EdgeManagerState {
     callback();
     return new DrawingState();
   }
-  mouseMove(callback: () => void): EdgeManagerState {
+  mouseMove(): EdgeManagerState {
     return this;
   }
   mouseUp(): EdgeManagerState {

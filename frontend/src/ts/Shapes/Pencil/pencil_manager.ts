@@ -1,4 +1,3 @@
-import { KonvaMouseEvent, VertexConfig } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Vector2d } from "konva/types/types";
 import { LineConfig } from "konva/types/shapes/Line";
@@ -38,7 +37,7 @@ export class PencilManager {
 
     public appendPoint(mousePos: Vector2d | null){
       if(!this.drawing) return;
-      var points = this.currentDrawing.attrs.points;
+      const points = this.currentDrawing.attrs.points;
       points.push(mousePos!.x);
       points.push(mousePos!.y);
       this.currentDrawing.points(points);
