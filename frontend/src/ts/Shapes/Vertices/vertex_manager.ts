@@ -1,7 +1,7 @@
-import { KonvaMouseEvent, VertexConfig } from "@/ts/Aliases/aliases";
+import { VertexConfig } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Vector2d } from "konva/types/types";
-import { Edge, EdgeManager } from "../Edges/edge_manager";
+import { Edge } from "../Edges/edge_manager";
 
 export class Vertex extends Konva.Circle {
   constructor(config: Konva.CircleConfig, public edges: Edge[] = []) {
@@ -58,7 +58,7 @@ export class VertexManager {
     this.layer.draw();
   }
 
-  public allowDrag() {
+  public enableDrag() {
     this.dragging = true;
     this.updateDragProp();
   }
@@ -74,11 +74,8 @@ export class VertexManager {
       if (x.getClassName() === "Circle") x.setDraggable(this.dragging);
     });
   }
-  public remove(vertex: Konva.Circle /*, edgeManager: EdgeManager*/) {
-    const removedNode = this.layer.findOne("." + vertex.attrs.name);
-    // var removedVertex = this.findVertexByName(vertex.attrs.name);
-    // edgeManager.removeFromVertex(removedVertex);
-    removedNode.remove();
+  public remove(vertex: Konva.Circle) {
+    vertex.remove();
     this.layer.draw();
   }
 }

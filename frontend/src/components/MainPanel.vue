@@ -68,7 +68,7 @@ export default class MainPanel extends Vue {
     directions: ["undirected", "forward", "backwords"],
     direction: "undirected",
   }
-
+  
   $refs!: {
     BoardComponent: HTMLFormElement
   }
