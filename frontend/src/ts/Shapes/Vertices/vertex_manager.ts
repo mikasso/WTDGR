@@ -14,8 +14,9 @@ export class VertexManager {
   private dragging: boolean;
   private vertexCount: number;
   private vertexes: Vertex[];
+  public layer: Konva.Layer;
 
-  constructor(private layer: Konva.Layer) {
+  constructor() {
     this.vertexCount = 0;
     this.vertexes = [];
     this.defualtConfig = {

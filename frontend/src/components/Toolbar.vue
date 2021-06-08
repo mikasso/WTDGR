@@ -79,6 +79,8 @@ import {toolbarObj} from "../ts/Helpers/toolbar"
 export default class Toolbar extends Vue {
   myProperty: string
   name: string =  "Toolbar"
+  mounted(){
+  }
 
   toolbar: toolbarObj = {
     selected_tool: "Select",

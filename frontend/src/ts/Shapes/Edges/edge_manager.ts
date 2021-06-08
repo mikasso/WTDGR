@@ -30,8 +30,9 @@ export class EdgeManager {
   private currentVertex: Vertex;
   private defaultLineConfig: LineConfig;
   private edgeCount: number;
-  constructor(private layer: Konva.Layer) {
-    this.layer = layer;
+  public layer: Konva.Layer;
+
+  constructor() {
     this.state = new NotDrawingState();
     this.currentLine = null;
     this.edgeCount = 0;
