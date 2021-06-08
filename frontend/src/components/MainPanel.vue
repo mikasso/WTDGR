@@ -65,16 +65,16 @@ export default class MainPanel extends Vue {
     edge_styles: ["line", "dashed"],
     edge_style: "line",
 
-    directions: ["undirected", "forward", "backwords"],
-    direction: "undirected",
+    directions: [],
+    direction: "",
   }
-  
+
   $refs!: {
     BoardComponent: HTMLFormElement
   }
 
   toolbarState(state: string){
-      this.$refs.BoardComponent.toolbarStateChanged(state);
+    this.$refs.BoardComponent.toolbarStateChanged(state);
   }
 }
 </script>

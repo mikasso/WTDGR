@@ -5,13 +5,14 @@
 </template>
 
 <script lang="ts">
+import { LayerManager, BoardLayer } from "../ts/Layers/BoardLayer";
 import { Hub } from "../ts/SignalR/hub";
 import { EdgeManager } from "../ts/Shapes/Edges/edge_manager";
 import { VertexManager, Vertex } from "../ts/Shapes/Vertices/vertex_manager";
 import { PencilManager, Pencil } from "../ts/Shapes/Pencil/pencil_manager";
 import { KonvaMouseEvent } from "@/ts/Aliases/aliases";
 import Konva from "konva";
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Emit} from "vue-property-decorator";
 import { VertexConfig } from "../ts/Aliases/aliases";
 import { isLeftClick, isRightClick } from "../ts/Helpers/functions";
 @Component({
@@ -21,9 +22,7 @@ export default class Board extends Vue {
   name: string = "Board";
   private hub!: any;
   private stage!: Konva.Stage;
-  private vertexLayer!: Konva.Layer;
-  private edgesLayer!: Konva.Layer;
-  private pencilLayer!: Konva.Layer;
+  private layerManager!: LayerManager;
   private edgeManager!: EdgeManager;
   private vertexManager!: VertexManager;
   private pencilManager!: PencilManager;
@@ -53,15 +52,14 @@ export default class Board extends Vue {
       width: document.getElementById("board")!.clientWidth,
       height: window.innerHeight,
     });
-    this.vertexLayer = new Konva.Layer();
-    this.edgesLayer = new Konva.Layer();
-    this.pencilLayer = new Konva.Layer();
-    this.configLayers();
+
+    this.layerManager = new LayerManager(this.stage);
 
     // Create managers objects to manage vertices and lines
-    this.pencilManager = new PencilManager(this.pencilLayer);
-    this.edgeManager = new EdgeManager(this.edgesLayer);
-    this.vertexManager = new VertexManager(this.vertexLayer);
+    this.pencilManager = new PencilManager();
+    this.edgeManager = new EdgeManager();
+    this.vertexManager = new VertexManager();
+    this.bindLayers();
 
     this.toolbarStateChanged({ state: "Select" });
     this.bindStage();
@@ -95,6 +93,12 @@ export default class Board extends Vue {
     this.stage.on("mousemove", (event: KonvaMouseEvent) =>
       this.handleMouseMove(event)
     );
+  }
+
+  bindLayers() {
+    this.vertexManager.layer = this.layerManager.currentLayer.vertexLayer;
+    this.edgeManager.layer = this.layerManager.currentLayer.edgeLayer;
+    this.pencilManager.layer = this.layerManager.currentLayer.pencilLayer;
   }
 
   bindVertexEvents(vertex: Vertex) {
@@ -200,14 +204,6 @@ export default class Board extends Vue {
     if (!isLeftClick(event)) return;
     const mousePos = this.stage.getPointerPosition();
     this.pencilManager.appendPoint(mousePos);
-  }
-
-  configLayers() {
-    this.stage.add(this.pencilLayer);
-    this.stage.add(this.edgesLayer);
-    this.edgesLayer.moveToTop();
-    this.stage.add(this.vertexLayer);
-    this.vertexLayer.moveToTop();
   }
 
   receiveVertex(config: VertexConfig) {
