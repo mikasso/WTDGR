@@ -18,8 +18,7 @@ export class Edge extends CustomLine {
   constructor(
     readonly v1: Vertex,
     readonly v2: Vertex,
-    lineConfig: LineConfig,
-    public layer: Konva.Layer
+    lineConfig: LineConfig
   ) {
     super(lineConfig);
   }
@@ -31,9 +30,8 @@ export class EdgeManager {
   private currentVertex: Vertex;
   private defaultLineConfig: LineConfig;
   private edgeCount: number;
-  public layer: Konva.Layer;
-
-  constructor() {
+  constructor(private layer: Konva.Layer) {
+    this.layer = layer;
     this.state = new NotDrawingState();
     this.currentLine = null;
     this.edgeCount = 0;
@@ -64,7 +62,7 @@ export class EdgeManager {
     const v2 = this.currentVertex as Vertex;
     const cord = v1.attrs;
     this.currentLine?.redraw(cord);
-    const edge = new Edge(v1, v2, this.currentLine!.attrs, this.layer);
+    const edge = new Edge(v1, v2, this.currentLine!.attrs);
     this.edgeCount += 1;
     v1.edges.push(edge);
     v2.edges.push(edge);
@@ -82,8 +80,7 @@ export class EdgeManager {
       edge.attrs.points[toChange] = vertex.attrs.x;
       edge.attrs.points[toChange + 1] = vertex.attrs.y;
     }
-    console.log(vertex, vertex.layer, this.layer)
-    if(vertex.edges.length > 0) vertex.edges[0].layer.draw();
+    this.layer.draw();
   }
 
   public moveCurrentEdge(event: KonvaMouseEvent) {
