@@ -4,7 +4,11 @@ import { Vector2d } from "konva/types/types";
 import { Edge } from "../Edges/edge_manager";
 
 export class Vertex extends Konva.Circle {
-  constructor(config: Konva.CircleConfig, public edges: Edge[] = []) {
+  constructor(
+    config: Konva.CircleConfig, 
+    public layer: Konva.Layer,       
+    public edges: Edge[] = [],
+  ){
     super(config);
   }
 }
@@ -49,7 +53,7 @@ export class VertexManager {
   public create(config: VertexConfig): Vertex {
     config.name = "Vertex" + this.vertexCount.toString();
     this.vertexCount += 1;
-    const vertex: Vertex = new Vertex(config);
+    const vertex: Vertex = new Vertex(config, this.layer);
     this.vertexes.push(vertex);
     return vertex;
   }

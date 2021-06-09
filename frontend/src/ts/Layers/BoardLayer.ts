@@ -27,6 +27,7 @@ export class LayerManager {
   }  
 
   public addLayerToTop(): BoardLayer{
+    this.layerCount = this.layerCount + 1;
     var newLayer = new BoardLayer("Layer " + this.layerCount);
     
     this.stage.add(newLayer.pencilLayer);
@@ -37,7 +38,6 @@ export class LayerManager {
 
     this.boardLayers.push(newLayer);
     this.currentLayer = this.boardLayers[this.boardLayers.length - 1];
-    this.layerCount = this.layerCount + 1;
 
     return this.currentLayer;
   }

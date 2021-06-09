@@ -1,23 +1,47 @@
-export class toolbarObj {
-    selected_tool: String = "Select"
-    tools: Array<String> = [
+export class ToolbarObj {
+  selectedTool: string
+  tools: Array<string>
+
+  vertexStyles: Array<string>
+  vertexStyle: string
+
+  edgeStyles: Array<string>
+  edgeStyle: string
+
+  directions: Array<string>
+  direction: string
+
+  layers: Array<string>
+  currentLayer: string
+
+  pushedButton: string
+
+  constructor(){
+    this.selectedTool = "Select"
+
+    this.tools = [
       "Select",
       "Vertex",
       "Edge",
       "Custom",
-      "Path",
-      "Star",
+      // "Path",
+      // "Star",
       "Erase",
-      "Label",
-      "Pencil"
+      // "Label",
+      "Pencil",
+      // "Layer"
     ]
 
-    vertex_styles: Array<String> = ["circle", "smallcircle"]
-    vertex_style: String = "circle"
+    this.layers = ["Layer 1"]
+    this.currentLayer = "Layer 1"
 
-    edge_styles: Array<String> = ["line", "dashed"]
-    edge_style: String ="line"
-
-    directions: Array<String> = ["undirected", "forward", "backwords"]
-    direction: String ="undirected"
+    // this.vertexStyles = ["circle", "smallcircle"]
+    // this.vertexStyle = "circle"
+  
+    // this.edgeStyles = ["line", "dashed"]
+    // this.edgeStyle = "line"
+  
+    // this.directions = ["undirected", "forward", "backwords"]
+    // this.direction ="undirected"
+  }
 }
