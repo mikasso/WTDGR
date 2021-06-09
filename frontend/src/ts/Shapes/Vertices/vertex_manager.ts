@@ -4,11 +4,7 @@ import { Vector2d } from "konva/types/types";
 import { Edge } from "../Edges/edge_manager";
 
 export class Vertex extends Konva.Circle {
-  constructor(
-    config: Konva.CircleConfig, 
-    public layer: Konva.Layer,       
-    public edges: Edge[] = [],
-  ){
+  constructor(config: Konva.CircleConfig, public edges: Edge[] = []) {
     super(config);
   }
 }
@@ -18,9 +14,8 @@ export class VertexManager {
   private dragging: boolean;
   private vertexCount: number;
   private vertexes: Vertex[];
-  public layer: Konva.Layer;
 
-  constructor() {
+  constructor(private layer: Konva.Layer) {
     this.vertexCount = 0;
     this.vertexes = [];
     this.defualtConfig = {
@@ -53,7 +48,7 @@ export class VertexManager {
   public create(config: VertexConfig): Vertex {
     config.name = "Vertex" + this.vertexCount.toString();
     this.vertexCount += 1;
-    const vertex: Vertex = new Vertex(config, this.layer);
+    const vertex: Vertex = new Vertex(config);
     this.vertexes.push(vertex);
     return vertex;
   }
