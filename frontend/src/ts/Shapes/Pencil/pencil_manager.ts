@@ -3,7 +3,10 @@ import { Vector2d } from "konva/types/types";
 import { LineConfig } from "konva/types/shapes/Line";
 
 export class Pencil extends Konva.Line {
-  constructor(config: Konva.LineConfig) {
+  constructor(
+      config: Konva.LineConfig,
+      public layer: Konva.Layer
+    ) {
     super(config);
   }
 }
@@ -18,7 +21,7 @@ export class PencilManager {
       this.defualtConfig = {
         points: [],
         stroke: "red",
-        strokeWidth: 2,
+        strokeWidth: 3,
         lineCap: "round",
         lineJoin: "round",
       };
@@ -29,7 +32,7 @@ export class PencilManager {
         const x = mousePos!.x;
         const y = mousePos!.y;
         config.points = [x, y];
-        const pencil: Pencil = new Pencil(config);
+        const pencil: Pencil = new Pencil(config, this.layer);
         this.drawing = true;
         this.currentDrawing = pencil;
         this.draw();

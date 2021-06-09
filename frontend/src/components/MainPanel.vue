@@ -1,18 +1,19 @@
 <template>
     <b-container fluid class='main-panel'>
       <b-row class='mainrow'>
-        <b-col>
-          <b-row >
+        <b-col class="boardcol">
+          <b-row>
             <Toolbar
               @stateChanged='toolbarState($event)'
-              v-model='toolbar'>
+              class="toolbar"
+              ref='ToolbarComponent'>
             </Toolbar>
           </b-row>
           <b-row>
             <Board 
+              @layersChanged='layersChanged($event)'
               class='board'
-              ref='BoardComponent'
-              :toolbar="toolbar">          
+              ref='BoardComponent'>          
             </Board>
           </b-row>
         </b-col>
@@ -32,7 +33,6 @@
 import { Component, Vue } from "vue-property-decorator";
 import Board from './Board.vue'
 import Toolbar from './Toolbar.vue'
-import {toolbarObj} from "../ts/Helpers/toolbar"
 
 @Component({
   components: {
@@ -45,32 +45,14 @@ export default class MainPanel extends Vue {
   name: string = "MainPanel";
   mounted(){
   }
-  toolbar: toolbarObj = {
-    selected_tool: "Select",
-    tools: [
-      "Select",
-      "Vertex",
-      "Edge",
-      "Custom",
-      "Path",
-      "Star",
-      "Erase",
-      "Label",
-      "Pencil"
-    ],
-
-    vertex_styles: ["circle", "smallcircle"],
-    vertex_style: "circle",
-
-    edge_styles: ["line", "dashed"],
-    edge_style: "line",
-
-    directions: [],
-    direction: "",
-  }
 
   $refs!: {
-    BoardComponent: HTMLFormElement
+    BoardComponent: HTMLFormElement,
+    ToolbarComponent: HTMLFormElement,
+  }
+
+  layersChanged(state: string){
+    this.$refs.ToolbarComponent.layersChanged(state);
   }
 
   toolbarState(state: string){
@@ -83,6 +65,12 @@ export default class MainPanel extends Vue {
     .main-panel{
         height: 100%;
         padding: 0px;
+        .boardcol{
+          min-width: 83%;
+        }
+        .toolbar{
+          width: 100%;
+        }
         .row{
           margin: 0px 0px;
         }
