@@ -62,6 +62,7 @@ export class EdgeManager {
   public create(event: KonvaMouseEvent) {
     const v1 = event.currentTarget as Vertex;
     const v2 = this.currentVertex as Vertex;
+    if(v1 == v2) return;
     const cord = v1.attrs;
     this.currentLine?.redraw(cord);
     const edge = new Edge(v1, v2, this.currentLine!.attrs, this.layer);
