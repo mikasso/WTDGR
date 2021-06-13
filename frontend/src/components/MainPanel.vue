@@ -1,18 +1,19 @@
 <template>
     <b-container fluid class='main-panel'>
       <b-row class='mainrow'>
-        <b-col>
-          <b-row >
+        <b-col class="boardcol">
+          <b-row>
             <Toolbar
               @stateChanged='toolbarState($event)'
-              v-model='toolbar'>
+              class="toolbar"
+              ref='ToolbarComponent'>
             </Toolbar>
           </b-row>
           <b-row>
             <Board 
+              @layersChanged='layersChanged($event)'
               class='board'
-              ref='BoardComponent'
-              :toolbar="toolbar">          
+              ref='BoardComponent'>          
             </Board>
           </b-row>
         </b-col>
@@ -46,17 +47,16 @@ export default class MainPanel extends Vue {
   }
 
   $refs!: {
-    BoardComponent: HTMLFormElement
+    BoardComponent: HTMLFormElement,
+    ToolbarComponent: HTMLFormElement,
   }
 
-  data () {
-    return {
-      toolbar: null,
-    }
+  layersChanged(state: string){
+    this.$refs.ToolbarComponent.layersChanged(state);
   }
 
   toolbarState(state: string){
-      this.$refs.BoardComponent.toolbarStateChanged(state);
+    this.$refs.BoardComponent.toolbarStateChanged(state);
   }
 }
 </script>
@@ -65,6 +65,12 @@ export default class MainPanel extends Vue {
     .main-panel{
         height: 100%;
         padding: 0px;
+        .boardcol{
+          min-width: 83%;
+        }
+        .toolbar{
+          width: 100%;
+        }
         .row{
           margin: 0px 0px;
         }
