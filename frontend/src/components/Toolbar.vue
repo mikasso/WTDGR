@@ -5,9 +5,9 @@
         v-for="(tool, index) in toolbar.tools"
         v-bind:key="index"
         class="tool"
-        :class="{ selected: tool == toolbar.selected_tool }"
+        :class="{ selected: tool == toolbar.selectedTool }"
         @click="
-          toolbar.selected_tool = tool;
+          toolbar.selectedTool = tool;
           stateChanged();
         "
       >
@@ -15,23 +15,37 @@
         {{ tool }}
       </div>
 
-      <div class="tool" style="margin-left:15px;" @click="stateChanged()">
-        <img src="../assets/buttons/undo.png" />
-        Undo
+      <div class="tool" style="margin-left:15px;" @click='toolbar.pushedButton = "Layer"; stateChanged(); toolbar.pushedButton = ""'>
+        Add layer
       </div>
-      <div class="tool" style="margin-right:15px;" @click="stateChanged()">
+      <!-- <div class="tool" style="margin-right:15px;" @click="stateChanged()">
         <img src="../assets/buttons/redo.png" />
         Redo
-      </div>
+      </div> -->
 
-      Vertex style:
+      Layer:
       <select
         class="select"
-        v-model="toolbar.vertex_style"
+        v-model="toolbar.currentLayer"
         @change="stateChanged()"
       >
         <option
-          v-for="(style, index) in toolbar.vertex_styles"
+          v-for="(layer, index) in toolbar.layers"
+          v-bind:key="index"
+          :value="layer"
+        >          
+          {{ layer }}
+        </option>
+      </select>
+
+      <!-- Vertex style:
+      <select
+        class="select"
+        v-model="toolbar.vertexStyle"
+        @change="stateChanged()"
+      >
+        <option
+          v-for="(style, index) in toolbar.vertexStyles"
           v-bind:key="index"
           :value="style"
         >
@@ -42,11 +56,11 @@
       Edge style:
       <select
         class="select"
-        v-model="toolbar.edge_style"
+        v-model="toolbar.edgeStyle"
         @change="stateChanged()"
       >
         <option
-          v-for="(style, index) in toolbar.edge_styles"
+          v-for="(style, index) in toolbar.edgeStyles"
           v-bind:key="index"
           :value="style"
         >
@@ -66,50 +80,38 @@
         >
           {{ style }}
         </option>
-      </select>
+      </select> -->
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Watch, Emit, Vue } from "vue-property-decorator";
+import {ToolbarObj} from "../ts/Helpers/toolbar"
+import { LayerManager, BoardLayer } from "../ts/Layers/BoardLayer";
 
 @Component
 export default class Toolbar extends Vue {
   myProperty: string
   name: string =  "Toolbar"
-
-  toolbar: {
-    selected_tool: "Select",
-    tools: [
-      "Select",
-      "Vertex",
-      "Edge",
-      "Custom",
-      "Path",
-      "Star",
-      "Erase",
-      "Label",
-      "Pencil"
-    ],
-
-    vertex_styles: ["circle", "smallcircle"],
-    vertex_style: "circle",
-
-    edge_styles: ["line", "dashed"],
-    edge_style: "line",
-
-    directions: ["undirected", "forward", "backwords"],
-    direction: "undirected",
+  mounted(){
   }
 
-  @Watch('myProperty')
-  onPropertyChanged(value: string, oldValue: string) {
-    this.$emit("imput", this.toolbar);
-  }
+  toolbar: ToolbarObj = new ToolbarObj();
+
   @Emit('stateChanged')
-  stateChanged(stateChanged: { state: string }) {
-    return {state: this.toolbar.selected_tool};
+  stateChanged(stateChanged: { state: ToolbarObj }) {
+    return {state: this.toolbar};
+  }
+
+  layersChanged(layerManager: LayerManager){
+    this.toolbar.layers = []
+    for(var layer of layerManager.boardLayers){
+      this.toolbar.layers.push(layer.name)
+      
+      if(layerManager.currentLayer == layer)
+        this.toolbar.currentLayer = layer.name;
+    }
   }
 }
 </script>
@@ -128,7 +130,7 @@ export default class Toolbar extends Vue {
     height: 30%;
   }
   .tools {
-    width: 100%;
+    min-width: 100%;
     padding: 5px;
 
     display: flex;

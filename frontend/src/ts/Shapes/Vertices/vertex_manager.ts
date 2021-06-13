@@ -2,9 +2,14 @@ import { VertexConfig } from "@/ts/Aliases/aliases";
 import Konva from "konva";
 import { Vector2d } from "konva/types/types";
 import { Edge } from "../Edges/edge_manager";
+import { LayerManager, BoardLayer } from "../../Layers/BoardLayer";
 
 export class Vertex extends Konva.Circle {
-  constructor(config: Konva.CircleConfig, public edges: Edge[] = []) {
+  constructor(
+    config: Konva.CircleConfig, 
+    public layer: Konva.Layer,       
+    public edges: Edge[] = [],
+  ){
     super(config);
   }
 }
@@ -14,8 +19,9 @@ export class VertexManager {
   private dragging: boolean;
   private vertexCount: number;
   private vertexes: Vertex[];
+  public layer: Konva.Layer;
 
-  constructor(private layer: Konva.Layer) {
+  constructor() {
     this.vertexCount = 0;
     this.vertexes = [];
     this.defualtConfig = {
@@ -48,7 +54,7 @@ export class VertexManager {
   public create(config: VertexConfig): Vertex {
     config.name = "Vertex" + this.vertexCount.toString();
     this.vertexCount += 1;
-    const vertex: Vertex = new Vertex(config);
+    const vertex: Vertex = new Vertex(config, this.layer);
     this.vertexes.push(vertex);
     return vertex;
   }
@@ -58,21 +64,23 @@ export class VertexManager {
     this.layer.draw();
   }
 
-  public enableDrag() {
+  public enableDrag(boardLayers: BoardLayer[]) {
     this.dragging = true;
-    this.updateDragProp();
+    this.updateDragProp(boardLayers);
   }
 
-  public disableDrag() {
+  public disableDrag(boardLayers: BoardLayer[]) {
     this.dragging = false;
-    this.updateDragProp();
+    this.updateDragProp(boardLayers);
   }
 
-  private updateDragProp() {
-    const items = this.layer.getChildren();
-    items.each((x) => {
-      if (x.getClassName() === "Circle") x.setDraggable(this.dragging);
-    });
+  private updateDragProp(boardLayers: BoardLayer[]) {
+    for(var layer of boardLayers){
+      const items = layer.vertexLayer.getChildren();
+      items.each((x) => {
+        if (x.getClassName() === "Circle") x.setDraggable(this.dragging);
+      });
+    }
   }
   public remove(vertex: Konva.Circle) {
     vertex.remove();
