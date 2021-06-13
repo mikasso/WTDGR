@@ -120,7 +120,7 @@ export default class Board extends Vue {
     const selectedTool = stateChanged.state.selectedTool;
     this.clearHandlers();
 
-    this.vertexManager.disableDrag();
+    this.vertexManager.disableDrag(this.layerManager.boardLayers);
     this.edgeManager.disableRemove();
 
     if (selectedTool == "Vertex") {
@@ -146,23 +146,28 @@ export default class Board extends Vue {
     } 
     
     else if (selectedTool == "Custom") {
-      this.vertexManager.enableDrag();
+      this.vertexManager.enableDrag(this.layerManager.boardLayers);
       this.handleClick = this.createVertex;
       this.handleMouseUp = () => this.edgeManager.removeCurrentEdge();
       this.handleMouseMove = (event: KonvaMouseEvent) => {
         this.edgeManager.moveCurrentEdge(event);
       };
       this.handleVertexMouseDown = (event: KonvaMouseEvent) => {
+        const vertex = event.target as Vertex;
+        if (this.layerManager.currentLayer.vertexLayer != vertex.layer) return;
         if (!isLeftClick(event)) this.edgeManager.startDrawing(event);
       };
-      this.handleVertexMouseUp = (event: KonvaMouseEvent) =>
+      this.handleVertexMouseUp = (event: KonvaMouseEvent) =>{
+        const vertex = event.target as Vertex;
+        if (this.layerManager.currentLayer.vertexLayer != vertex.layer) return;
         this.edgeManager.create(event);
+      }
       this.handleVertexDrag = (event: KonvaMouseEvent) =>
         this.edgeManager.dragEdges(event);
     } 
     
     else if (selectedTool == "Select") {
-      this.vertexManager.enableDrag();
+      this.vertexManager.enableDrag(this.layerManager.boardLayers);
       this.handleVertexDrag = (event: KonvaMouseEvent) => {
         this.edgeManager.dragEdges(event);
       }
