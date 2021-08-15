@@ -1,12 +1,7 @@
 ﻿using Backend.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Backend.Services
 {
@@ -37,7 +32,7 @@ namespace Backend.Services
         public User Create(User owner)
         {
             Room room = new Room() { Id = ObjectId.GenerateNewId().ToString() };
-            owner = userService.CreateOwner(owner,room.Id);
+            owner = userService.CreateOwner(owner, room.Id);
             room.OwnerId = owner.Name;
             room.CreationTime = DateTime.UtcNow.ToString();
             rooms.InsertOne(room);

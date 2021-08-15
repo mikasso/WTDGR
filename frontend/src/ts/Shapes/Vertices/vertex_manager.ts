@@ -6,10 +6,10 @@ import { LayerManager, BoardLayer } from "../../Layers/BoardLayer";
 
 export class Vertex extends Konva.Circle {
   constructor(
-    config: Konva.CircleConfig, 
-    public layer: Konva.Layer,       
-    public edges: Edge[] = [],
-  ){
+    config: Konva.CircleConfig,
+    public layer: Konva.Layer,
+    public edges: Edge[] = []
+  ) {
     super(config);
   }
 }
@@ -75,7 +75,7 @@ export class VertexManager {
   }
 
   private updateDragProp(boardLayers: BoardLayer[]) {
-    for(var layer of boardLayers){
+    for (var layer of boardLayers) {
       const items = layer.vertexLayer.getChildren();
       items.each((x) => {
         if (x.getClassName() === "Circle") x.setDraggable(this.dragging);

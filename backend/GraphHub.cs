@@ -1,10 +1,9 @@
 ﻿using Backend.Models;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
-using Backend.DTO;
-using MongoDB.Bson;
 using Backend.Helpers;
 using System;
+using Backend.Models.RoomItems;
 
 namespace Backend.Hubs
 {
@@ -90,7 +89,7 @@ namespace Backend.Hubs
             await MyGroup.ReceiveVertex(vertex);
         }
 
-        private bool CanJoinToRoom(User user)
+        private static bool CanJoinToRoom(User user)
         {
             try
             {
