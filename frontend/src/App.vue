@@ -1,29 +1,24 @@
 <template>
   <div id="app">
-    <MainPanel msg="Welcome to Your Vue.js App" />
+    <MainPanel msg="Welcome to Your Vue.js App"/>
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import MainPanel from "./components/MainPanel.vue";
+<script>
 
-@Component({
+import MainPanel from './components/MainPanel.vue'
+export default {
+  name: 'App',
   components: {
-    MainPanel,
-  },
-})
-export default class App extends Vue {}
+    MainPanel
+  }
+}
 </script>
 
-<style lang="scss">
-@import 'node_modules/bootstrap/scss/bootstrap.scss';
-@import 'node_modules/bootstrap-vue/src/index.scss';
-body{
-  margin: 0px;
-  min-height: 100%;
+<style>
+html, body{
   height: 100%;
-  overflow: hidden;
+  margin: 0;
 }
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
@@ -32,6 +27,6 @@ body{
   text-align: center;
   color: #2c3e50;
   width: 100%;
-  height: 100vh;
+  height: 100%;
 }
 </style>
