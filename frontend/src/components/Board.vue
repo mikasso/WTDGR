@@ -12,10 +12,10 @@ import { VertexManager, Vertex } from "../ts/Shapes/Vertices/vertex_manager";
 import { PencilManager, Pencil } from "../ts/Shapes/Pencil/pencil_manager";
 import { KonvaMouseEvent } from "@/ts/Aliases/aliases";
 import Konva from "konva";
-import { Component, Vue, Emit} from "vue-property-decorator";
+import { Component, Vue, Emit } from "vue-property-decorator";
 import { VertexConfig } from "../ts/Aliases/aliases";
 import { isLeftClick, isRightClick } from "../ts/Helpers/functions";
-import {ToolbarObj} from "../ts/Helpers/toolbar"
+import { ToolbarObj } from "../ts/Helpers/toolbar";
 @Component({
   props: ["toolbar"],
 })
@@ -45,8 +45,9 @@ export default class Board extends Vue {
   ) => void;
   private handleVertexDrag!: (event: KonvaMouseEvent, vertex: Vertex) => void;
   mounted() {
+    var a = 5;
     this.hub = new Hub(this);
-    // this.hub.joinRoom(this.getRandomUserName(), "1");
+    this.hub.joinRoom(this.getRandomUserName(), "1");
 
     this.stage = new Konva.Stage({
       container: "board",
@@ -63,7 +64,7 @@ export default class Board extends Vue {
     this.bindLayers();
 
     const defaultTb = new ToolbarObj();
-    defaultTb.selectedTool = "Select" ;
+    defaultTb.selectedTool = "Select";
     this.toolbarStateChanged({ state: defaultTb });
     this.bindStage();
   }
@@ -125,9 +126,7 @@ export default class Board extends Vue {
 
     if (selectedTool == "Vertex") {
       this.handleClick = this.createVertex;
-    } 
-    
-    else if (selectedTool == "Edge") {
+    } else if (selectedTool == "Edge") {
       this.handleMouseUp = () => this.edgeManager.removeCurrentEdge();
       this.handleMouseMove = (event: KonvaMouseEvent) => {
         this.edgeManager.moveCurrentEdge(event);
@@ -138,14 +137,12 @@ export default class Board extends Vue {
         if (!isLeftClick(event)) return;
         else this.edgeManager.startDrawing(event);
       };
-      this.handleVertexMouseUp = (event: KonvaMouseEvent) =>{
+      this.handleVertexMouseUp = (event: KonvaMouseEvent) => {
         const vertex = event.target as Vertex;
         if (this.layerManager.currentLayer.vertexLayer != vertex.layer) return;
         this.edgeManager.create(event);
-      }
-    } 
-    
-    else if (selectedTool == "Custom") {
+      };
+    } else if (selectedTool == "Custom") {
       this.vertexManager.enableDrag(this.layerManager.boardLayers);
       this.handleClick = this.createVertex;
       this.handleMouseUp = () => this.edgeManager.removeCurrentEdge();
@@ -157,36 +154,30 @@ export default class Board extends Vue {
         if (this.layerManager.currentLayer.vertexLayer != vertex.layer) return;
         if (!isLeftClick(event)) this.edgeManager.startDrawing(event);
       };
-      this.handleVertexMouseUp = (event: KonvaMouseEvent) =>{
+      this.handleVertexMouseUp = (event: KonvaMouseEvent) => {
         const vertex = event.target as Vertex;
         if (this.layerManager.currentLayer.vertexLayer != vertex.layer) return;
         this.edgeManager.create(event);
-      }
+      };
       this.handleVertexDrag = (event: KonvaMouseEvent) =>
         this.edgeManager.dragEdges(event);
-    } 
-    
-    else if (selectedTool == "Select") {
+    } else if (selectedTool == "Select") {
       this.vertexManager.enableDrag(this.layerManager.boardLayers);
       this.handleVertexDrag = (event: KonvaMouseEvent) => {
         this.edgeManager.dragEdges(event);
-      }
-    } 
-    
-    else if (selectedTool == "Erase") {
+      };
+    } else if (selectedTool == "Erase") {
       this.handleVertexMouseDown = (__, vertex: Vertex) => {
         if (this.layerManager.currentLayer.vertexLayer != vertex.layer) return;
         this.edgeManager.remove(vertex.edges);
         this.vertexManager.remove(vertex);
       };
-      this.handlePencilMouseDown = (__, pencil: Pencil) =>{
+      this.handlePencilMouseDown = (__, pencil: Pencil) => {
         if (this.layerManager.currentLayer.pencilLayer != pencil.layer) return;
         this.pencilManager.remove(pencil);
-      }
+      };
       this.edgeManager.enableRemove();
-    } 
-    
-    else if (selectedTool == "Pencil") {
+    } else if (selectedTool == "Pencil") {
       this.handleMouseDown = (event: KonvaMouseEvent) => {
         this.startPencil(event);
       };
@@ -198,23 +189,25 @@ export default class Board extends Vue {
       };
     }
 
-    if(stateChanged.state.pushedButton){
-      if(stateChanged.state.pushedButton == "Layer"){
+    if (stateChanged.state.pushedButton) {
+      if (stateChanged.state.pushedButton == "Layer") {
         this.layerManager.addLayerToTop();
-        this.bindLayers()
+        this.bindLayers();
         this.layersChanged();
       }
     }
-    if(stateChanged.state.currentLayer != this.layerManager.currentLayer.name){      
-      for(var layer of this.layerManager.boardLayers){
-        if(stateChanged.state.currentLayer == layer.name)
+    if (
+      stateChanged.state.currentLayer != this.layerManager.currentLayer.name
+    ) {
+      for (var layer of this.layerManager.boardLayers) {
+        if (stateChanged.state.currentLayer == layer.name)
           this.layerManager.currentLayer = layer;
       }
       this.bindLayers();
     }
   }
 
-  @Emit('layersChanged')
+  @Emit("layersChanged")
   layersChanged() {
     return this.layerManager;
   }

@@ -1,6 +1,4 @@
-﻿using Backend.Models;
-using MongoDB.Bson;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Backend.Helpers
@@ -23,7 +21,7 @@ namespace Backend.Helpers
             return true;
         }
 
-        internal static RoomManager GetRoom(string roomId)
+        public static RoomManager GetRoom(string roomId)
         {
             if (!_rooms.ContainsKey(roomId))
                 throw new Exception("Room doesnt exists");

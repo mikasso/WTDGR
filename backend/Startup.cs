@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using Backend.Hubs;
 using Backend.Configuration;
 using Backend.Helpers;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 
 namespace Backend
 {
@@ -32,7 +31,6 @@ namespace Backend
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
-            //Signleton for database
             services.AddSingleton<IDatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
             //Dependency inversion for this classes
 

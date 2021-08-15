@@ -1,17 +1,9 @@
-﻿using System;
+﻿using Backend.Models;
+using System;
 using System.Collections.Generic;
-
-
-
-
 namespace Backend.Helpers
 {
-
-    public interface IName
-    {
-        public string Name { get; set; }
-    }
-    public abstract class RoomObjectsManager<T> where T : IName
+    public abstract class RoomItemsManager<T> where T : IName
     {
         public int Count { get => objects.Count; }
         protected Dictionary<String, T> objects = new();
