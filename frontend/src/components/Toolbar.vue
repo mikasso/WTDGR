@@ -1,193 +1,176 @@
 <template>
-  <div class="toolbar" v-if="toolbar">
-    <div class="tools">
-      <div
-        v-for="(tool, index) in toolbar.tools"
-        v-bind:key="index"
-        class="tool"
-        :class="{ selected: tool == toolbar.selectedTool }"
-        @click="
-          toolbar.selectedTool = tool;
-          stateChanged();
-        "
-      >
-        <img :src="require('../assets/tools/' + tool + '.png')" />
-        {{ tool }}
+    <div class='toolbar'>
+          <div class='tools'>
+            <div v-for='(tool, index) in toolbar.tools' v-bind:key='index' 
+              class='tool' :class="{selected: tool == selected_tool}"
+              @click='selected_tool = tool'>
+
+                <img :src="require('../assets/tools/' + tool + '.png')">
+                {{tool}}
+            </div>
+
+            <div class="tool" style="margin-left:15px" 
+              @click='handleButton("Layer")'>
+                Add layer
+            </div>
+
+            Layer:
+            <select
+                class="select"
+                v-if="toolbar.currentLayer"
+                v-model="toolbar.currentLayer"
+                @change='handleSelect("layer", toolbar.currentLayer)'
+            >
+                <option
+                v-for="(layer, index) in toolbar.layers"
+                v-bind:key="index"
+                :value="layer"
+                >          
+                {{ layer }}
+                </option>
+            </select>
+          </div>
       </div>
-
-      <div class="tool" style="margin-left:15px;" @click='toolbar.pushedButton = "Layer"; stateChanged(); toolbar.pushedButton = ""'>
-        Add layer
-      </div>
-      <!-- <div class="tool" style="margin-right:15px;" @click="stateChanged()">
-        <img src="../assets/buttons/redo.png" />
-        Redo
-      </div> -->
-
-      Layer:
-      <select
-        class="select"
-        v-model="toolbar.currentLayer"
-        @change="stateChanged()"
-      >
-        <option
-          v-for="(layer, index) in toolbar.layers"
-          v-bind:key="index"
-          :value="layer"
-        >          
-          {{ layer }}
-        </option>
-      </select>
-
-      <!-- Vertex style:
-      <select
-        class="select"
-        v-model="toolbar.vertexStyle"
-        @change="stateChanged()"
-      >
-        <option
-          v-for="(style, index) in toolbar.vertexStyles"
-          v-bind:key="index"
-          :value="style"
-        >
-          <img :src="require('../assets/vertex_styles/' + style + '.png')" />
-          {{ style }}
-        </option>
-      </select>
-      Edge style:
-      <select
-        class="select"
-        v-model="toolbar.edgeStyle"
-        @change="stateChanged()"
-      >
-        <option
-          v-for="(style, index) in toolbar.edgeStyles"
-          v-bind:key="index"
-          :value="style"
-        >
-          {{ style }}
-        </option>
-      </select>
-      Direction:
-      <select
-        class="select"
-        v-model="toolbar.direction"
-        @change="stateChanged()"
-      >
-        <option
-          v-for="(style, index) in toolbar.directions"
-          v-bind:key="index"
-          :value="style"
-        >
-          {{ style }}
-        </option>
-      </select> -->
-    </div>
-  </div>
 </template>
 
-<script lang="ts">
-import { Component, Watch, Emit, Vue } from "vue-property-decorator";
-import {ToolbarObj} from "../ts/Helpers/toolbar"
-import { LayerManager, BoardLayer } from "../ts/Layers/BoardLayer";
+<script>
+export default {
+    name: 'Toolbar',
+    data: () => ({
+        selected_tool: 'Select',
+        toolbar: {
+            tools: [
+                'Select',
+                'Vertex',
+                'Edge',
+                'Pencil',
+                'Erase'
+            ],
 
-@Component
-export default class Toolbar extends Vue {
-  myProperty: string
-  name: string =  "Toolbar"
-  mounted(){
-  }
+            vertex_styles: [
+                'circle',
+            ],
+            vertex_style: 'circle',
 
-  toolbar: ToolbarObj = new ToolbarObj();
+            edge_styles: [
+                'line',
+            ],
+            edge_style: 'line',
 
-  @Emit('stateChanged')
-  stateChanged(stateChanged: { state: ToolbarObj }) {
-    return {state: this.toolbar};
-  }
+            currentLayer: null,
+            layers: []
 
-  layersChanged(layerManager: LayerManager){
-    this.toolbar.layers = []
-    for(var layer of layerManager.boardLayers){
-      this.toolbar.layers.push(layer.name)
-      
-      if(layerManager.currentLayer == layer)
-        this.toolbar.currentLayer = layer.name;
+            // directions: [
+            //     'undirected',
+            //     'forward',
+            //     'backwords',
+            // ],
+            // direction: 'undirected',      
+        }  
+    }),
+
+    watch: {
+        selected_tool: function(){
+            this.$emit('toolSelected', this.selected_tool)
+        }
+    },
+
+    methods: {
+        handleButton(buttonName) {
+            this.$emit('buttonPressed', buttonName)
+        },
+        handleSelect(type, value) {
+            this.$emit('select', {type: type, value: value})
+        },
+        layerStateChanged(layerState){
+            this.toolbar.currentLayer = layerState.currentLayer.attrs.name
+            this.toolbar.layers = []
+            for(const layer of layerState.layers){
+                if(layer.attrs)
+                    this.toolbar.layers.push(layer.attrs.name)
+            }
+        }
     }
-  }
+    
 }
 </script>
 
-<style scoped lang="scss">
-.toolbar {
-  white-space: nowrap;
-  color: black;
+<style scoped lang='scss'>
+.toolbar{
+    grid-column-start: 1;
+    grid-column-end: 1;
+    grid-row-start: 1;            
+    grid-row-end: 1;     
 
-  padding: 5px;
-  background-color: rgb(250, 250, 250);
-  border-bottom: rgb(180, 180, 180) 1px solid;
+    height: 7vh;
+    white-space: nowrap;
+    color: black;
 
-  .menu {
-    width: 100%;
-    height: 30%;
-  }
-  .tools {
-    min-width: 100%;
     padding: 5px;
+    background-color: rgb(250, 250, 250);
+    border-bottom: rgb(180, 180, 180) 1px solid ;
+    
+    .tools{
+        width: 100%;
+        height: 100%;
 
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+        padding: 5px;
 
-    .tool {
-      margin-right: 5px;
-      min-width: 50px;
-      min-height: 30px;
-      padding: 0px 10px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
 
-      background-color: white;
-      cursor: pointer;
-      &:hover {
-        background: rgb(240, 240, 240);
-      }
+        .tool{
+            margin-right: 5px;
+            min-width: 50px;
+            min-height: 30px;
+            padding: 0px 10px;
 
-      border: rgb(180, 180, 180) 1px solid;
-      border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            &:hover{
+                background: rgb(240, 240, 240);
+            }
 
-      display: flex;
-      justify-content: center;
-      align-items: center;
+            border: rgb(180, 180, 180) 1px solid;
+            border-radius: 4px;
 
-      img {
-        max-height: 22px;
-        max-width: 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
-        margin-right: 3px;
-      }
+            img{
+                max-height: 22px;
+                max-width: 22px;
+
+                margin-right: 3px;
+            }
+        }
+
+        .selected{
+            background: rgb(230, 230, 230);
+            &:hover{
+                background: rgb(230, 230, 230);
+            }
+        }
+
+        .select{
+            border: rgb(170, 170, 170) 1px solid;
+            border-radius: 5px;
+
+            min-width: 50px;
+            min-height: 30px;
+
+            margin-right: 15px;
+            margin-left: 3px;
+
+            img{
+                max-height: 18px;
+                max-width: 18px;
+
+                margin-right: 3px;
+            }
+        }
     }
-
-    .selected {
-      background: rgb(230, 230, 230);
-      &:hover {
-        background: rgb(230, 230, 230);
-      }
-    }
-
-    .select {
-      border: rgb(170, 170, 170) 1px solid;
-      border-radius: 5px;
-
-      min-width: 50px;
-      min-height: 30px;
-
-      margin-right: 15px;
-      margin-left: 3px;
-
-      img {
-        max-height: 18px;
-        max-width: 18px;
-
-        margin-right: 3px;
-      }
-    }
-  }
 }
 </style>

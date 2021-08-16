@@ -1,90 +1,82 @@
 <template>
-    <b-container fluid class='main-panel'>
-      <b-row class='mainrow'>
-        <b-col class="boardcol">
-          <b-row>
-            <Toolbar
-              @stateChanged='toolbarState($event)'
-              class="toolbar"
-              ref='ToolbarComponent'>
-            </Toolbar>
-          </b-row>
-          <b-row>
-            <Board 
-              @layersChanged='layersChanged($event)'
-              class='board'
-              ref='BoardComponent'>          
-            </Board>
-          </b-row>
-        </b-col>
-        <b-col class='usercol'>
-          <div class='users'>
-            userzy
-            <button v-on:click="createRoom()">Create room</button>
-            <button v-on:click="joinRoom()">Join room</button>  
-          </div>
-        </b-col>
-      </b-row>
-    </b-container>
+  <div class="main-panel">
+      <Toolbar
+        ref='ToolbarComponent'
+        @buttonPressed='toolbarButton($event)'
+        @toolSelected='toolSelected($event)'
+        @select='toolbarSelect($event)'>
+      </Toolbar>
+
+      <Board 
+        class='Board'
+        ref='BoardComponent'
+        @layerStateChange='layerStateChange($event)'>          
+      </Board>
+
+      <div class='users'>
+          userzy
+      </div>
+  </div>
 </template>
 
 
-<script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+<script>
 import Board from './Board.vue'
 import Toolbar from './Toolbar.vue'
 
-@Component({
-  components: {
-    Board,
-    Toolbar,
-  }
-})
+export default {
+    name: 'MainPanel',
+    mounted(){
+    },
 
-export default class MainPanel extends Vue {
-  name: string = "MainPanel";
-  mounted(){
-  }
+    components: {
+        Board,
+        Toolbar,
+    },
 
-  $refs!: {
-    BoardComponent: HTMLFormElement,
-    ToolbarComponent: HTMLFormElement,
-  }
-
-  layersChanged(state: string){
-    this.$refs.ToolbarComponent.layersChanged(state);
-  }
-
-  toolbarState(state: string){
-    this.$refs.BoardComponent.toolbarStateChanged(state);
-  }
+    methods: {
+        toolbarButton(name){
+            this.$refs.BoardComponent.toolbarButton(name)
+        },
+        toolbarSelect(selected){
+            this.$refs.BoardComponent.toolbarSelect(selected)
+        },
+        toolSelected(toolName){
+            this.$refs.BoardComponent.toolChanged(toolName)
+        },
+        layerStateChange(layerState){
+            this.$refs.ToolbarComponent.layerStateChanged(layerState)
+        }
+    },
 }
 </script>
 
+
 <style scoped lang='scss'>
     .main-panel{
-        height: 100%;
-        padding: 0px;
-        .boardcol{
-          min-width: 83%;
+        width: 100%;
+        min-height: 100%;
+
+        display: inline-grid;
+        grid-template-columns: auto 20%;
+        grid-template-rows: 8% auto;
+
+        .Board{
+            grid-column-start: 1;
+            grid-column-end: 1;
+            grid-row-start: 2;            
+            grid-row-end: 2;       
+
+            height: 100%;
+            width: 100%;
         }
-        .toolbar{
-          width: 100%;
-        }
-        .row{
-          margin: 0px 0px;
-        }
-        .col{
-          padding: 0px;
-        }
-        .mainrow{
-          height: 100%;
-        }
-        .board{
-          width: 100%;
-        }
-        .usercol{
-          min-height: 100%;
+
+        .users{
+            grid-column-start: 2;
+            grid-column-end: 2;
+            grid-row-start: 1;
+            grid-row-end: span 2;
+
             border-left: rgb(140, 140, 140) 2px solid ;
         }
     }
