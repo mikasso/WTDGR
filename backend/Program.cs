@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Backend
 {
@@ -8,6 +9,10 @@ namespace Backend
     {
         public static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .WriteTo.File("C:\\WTDGR_logs.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
             CreateHostBuilder(args).Build().Run();
         }
 
