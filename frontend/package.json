@@ -10,48 +10,36 @@
   "dependencies": {
     "@latelier/vue-signalr": "^2.0.4",
     "@microsoft/signalr": "^5.0.3",
-    "@vector-js/library": "0.0.1",
-    "animejs": "^3.2.1",
     "axios": "^0.21.1",
-    "bootstrap-vue": "^2.21.2",
     "core-js": "^3.6.5",
     "konva": "^7.2.5",
     "node-sass": "^4.14.1",
-    "vector-js": "0.0.0",
-    "vectors-js": "^1.1.1",
-    "vue": "^2.6.11",
-    "vue-class-component": "^7.2.3",
-    "vue-property-decorator": "^9.1.2"
+    "vue": "^2.6.11"
   },
   "devDependencies": {
     "@aspnet/signalr": "^1.1.4",
-    "@typescript-eslint/eslint-plugin": "^2.33.0",
-    "@typescript-eslint/parser": "^2.33.0",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-plugin-typescript": "^4.5.12",
     "@vue/cli-service": "~4.5.0",
-    "@vue/eslint-config-typescript": "^5.0.2",
     "babel-eslint": "^10.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
     "sass-loader": "^10.1.1",
-    "ts-loader": "^8.1.0",
-    "typescript": "^4.2.3",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
-    "parser": "@typescript-eslint/parser",
+    "root": true,
+    "env": {
+      "node": true
+    },
     "extends": [
-      "plugin:@typescript-eslint/recommended"
+      "plugin:vue/essential",
+      "eslint:recommended"
     ],
-    "rules": {
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "no-use-before-define": "off",
-      "generator-star-spacing": "off",
-      "no-var": "off"
-    }
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
   },
   "browserslist": [
     "> 1%",
