@@ -1,6 +1,5 @@
 import Vue from "vue";
 import App from "./App.vue";
-import { BootstrapVue } from 'bootstrap-vue'
 
 Vue.config.productionTip = false;
 Vue.prototype.$config = {
@@ -13,8 +12,6 @@ Vue.prototype.$config = {
     }
   }
 };
-
-Vue.use(BootstrapVue)
 
 Vue.prototype.Konva = require("konva");
 new Vue({
