@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Backend.Helpers;
 using System;
 using Backend.Models.RoomItems;
+using Serilog;
 
 namespace Backend.Hubs
 {
@@ -41,22 +42,27 @@ namespace Backend.Hubs
             await AssignUserToContext(owner);
             await ReplyForJoin(owner);
         }
-        public async Task JoinRoom(User user)
+        public async Task<bool> JoinRoom(User user)
         {
             if (CanJoinToRoom(user))
             {
                 await AssignUserToContext(user);
                 await ReplyForJoin(user);
+                return true;
             }
-            else await Clients.Caller.ReceiveText("Error: User cannot join this room");
+            else
+            {
+                await Clients.Caller.ReceiveText("Error: User cannot join this room");
+                return false;
+            }
         }
 
-        private async Task AssignUserToContext(User user)
+        private async Task<bool> AssignUserToContext(User user)
         {
             MyUser = user;
             await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
             MyGroup = Clients.Group(user.RoomId);
-            Room.Users.Add(user);
+            return Room.Users.Add(user);
         }
 
         private async Task ReplyForJoin(User user)
@@ -79,6 +85,7 @@ namespace Backend.Hubs
         }
         public async Task SendVertex(Vertex vertex)
         {
+            Log.Debug($"Send vertex. {vertex.Name}");
             if (MyGroup == null)
             {
                 await Clients.Caller.ReceiveText("You are not in any room");

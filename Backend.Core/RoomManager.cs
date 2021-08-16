@@ -1,4 +1,5 @@
 ﻿using Backend.Models;
+using Serilog;
 using System;
 
 namespace Backend.Helpers
@@ -6,6 +7,12 @@ namespace Backend.Helpers
     public class RoomManager
     {
         public string Id { get; init; }
+
+        public RoomManager(string id)
+        {
+            Log.Information($"Starting new room. Id: {id}");
+            Id = id;
+        }
         public User Owner { get; private set; }
         public readonly UsersManager Users = new();
         public readonly VerticesManager Vertices = new();

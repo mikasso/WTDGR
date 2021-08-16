@@ -8,7 +8,7 @@ namespace Backend.Helpers
         private static readonly Dictionary<string, RoomManager> _rooms = new();
         public static RoomManager CreateRoom()
         {
-            var room = new RoomManager() { Id = "1" }; //ObjectId.GenerateNewId().ToString() };
+            var room = new RoomManager("1"); //ObjectId.GenerateNewId().ToString() };
             _rooms.Add(room.Id, room);
             return room;
         }

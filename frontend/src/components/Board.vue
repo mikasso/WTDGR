@@ -6,7 +6,9 @@
 
 <script>
 import BoardEventManager from "../js/board_event_manager";
-
+import BoardManager from "../js/board_manager";
+import ApiManager from "../js/api_manager";
+import BoardHub from "../js/SignalR/hub";
 export default {
   name: "Board",
   props: {
@@ -18,10 +20,23 @@ export default {
     return {
       boardManager: null,
       eventManager: null,
+      apiManager: null,
     };
   },
   mounted() {
-    this.eventManager = new BoardEventManager(this);
+    this.boardManager = new BoardManager(this);
+    this.eventManager = new BoardEventManager(this.boardManager);
+    this.boardManager.boardEventManager = this.eventManager;
+
+    this.boardManager.boardEventManager.bindStageEvents(
+      this.boardManager.stage
+    );
+
+    this.apiManager = new ApiManager(this.boardManager);
+
+    this.hub = new BoardHub(this.apiManager);
+    this.eventManager.hub = this.hub;
+    this.hub.joinRoom(Math.random().toString(), "1");
   },
   methods: {
     toolbarButton(buttonName) {
