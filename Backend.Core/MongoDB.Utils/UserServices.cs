@@ -59,7 +59,7 @@ namespace Backend.Services
         private bool UserWithThisNameExistsInRoom(User user)
         {
             var found = Users.Find<User>
-            (u => u.Name == user.Name)
+            (u => u.Id == user.Id)
             .FirstOrDefault();
             return found != null;
         }
@@ -88,9 +88,9 @@ namespace Backend.Services
         }
 
         public void Update(string id, User userIn) =>
-            Users.ReplaceOne(user => user.Name == id, userIn);
+            Users.ReplaceOne(user => user.Id == id, userIn);
 
         public void Remove(string id) =>
-            Users.DeleteOne(user => user.Name == id);
+            Users.DeleteOne(user => user.Id == id);
     }
 }

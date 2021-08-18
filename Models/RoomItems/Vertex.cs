@@ -1,8 +1,8 @@
 ﻿namespace Backend.Models.RoomItems
 {
-    public class Vertex : IName
+    public class Vertex : IRoomItem
     {
-        public string Name { get; set; }
+        public string Id { get; set; }
         public string Type { get; set; }
         public float Y { get; set; }
         public float X { get; set; }

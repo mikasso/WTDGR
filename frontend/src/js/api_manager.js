@@ -3,10 +3,27 @@ export default class ApiManager {
     this.boardManager = boardManager;
   }
 
-  receiveVertex(vertexAttrs) {
-    this.boardManager.createVertex(
-      { x: vertexAttrs.x, y: vertexAttrs.y },
-      vertexAttrs
-    );
+  receiveAction(action) {
+    console.log(action);
+    switch (action.actionType) {
+      case "Add":
+        this.receiveAddAction(action);
+        break;
+      default:
+        throw Error(`Not implement action type ${action.actionType}`);
+    }
+  }
+
+  receiveAddAction(action) {
+    switch (action.item.type) {
+      case "v-circle":
+        this.boardManager.createVertex(
+          { x: action.item.x, y: action.item.y },
+          action.item
+        );
+        break;
+      default:
+        throw Error(`Not implement add for ${action.item.type}`);
+    }
   }
 }

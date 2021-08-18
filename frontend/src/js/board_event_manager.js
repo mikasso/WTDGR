@@ -1,6 +1,9 @@
+import Action from "./action.js";
+
 export default class BoardEventManager {
-  constructor(boardManager) {
+  constructor(boardManager, user) {
     this.boardManager = boardManager;
+    this.user = user;
     this.handlers = null;
     this.hub = null;
     this.clearHandlers();
@@ -88,7 +91,7 @@ export default class BoardEventManager {
       if (!this.isLeftClick(event)) return;
       const mousePos = this.boardManager.stage.getPointerPosition();
       const vertex = this.boardManager.createVertex(mousePos);
-      this.hub.sendVertex(vertex);
+      this.hub.sendAction(new Action("Add", this.user.id, vertex.attrs));
     };
   }
 
