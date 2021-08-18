@@ -12,20 +12,22 @@ export default class BoardHub {
       this.user = user;
       console.log(user);
     });
-    this.connection.on("ReceiveVertex", (vertex) => {
-      this.apiManager.receiveVertex(vertex);
+    this.connection.on("ReceiveAction", (action) => {
+      this.apiManager.receiveAction(action);
     });
     this.connection.on("ReceiveText", (text) => {
       console.log(text);
     });
   }
-  sendVertex(vertex) {
-    console.log("sending vertex ");
-    console.log(vertex);
+
+  sendAction(action) {
+    console.log("sending action");
+    console.log(action);
     this.connection
-      .invoke("SendVertex", vertex.attrs)
+      .invoke("SendAction", action)
       .catch((err) => alert(err.toString()));
   }
+
   createRoom(username) {
     this.connection.start().then(() => {
       const request = { Name: username };
@@ -35,14 +37,14 @@ export default class BoardHub {
     });
   }
 
-  joinRoom(username, roomId) {
+  joinRoom({ id, roomId }) {
     this.connection
       .start()
       .then(() => {
         roomId = roomId.toString();
         console.log("Joining room id=" + roomId);
         const request = {
-          Name: username,
+          Id: id,
           Role: "Owner",
           RoomId: roomId,
         };

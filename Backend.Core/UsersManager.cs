@@ -25,7 +25,7 @@ namespace Backend.Helpers
 
         public bool Exists(User user)
         {
-            return this.objects.ContainsKey(user.Name);
+            return this.objects.ContainsKey(user.Id);
         }
 
         public bool Exists(String userName)

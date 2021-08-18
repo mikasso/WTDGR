@@ -33,7 +33,7 @@ namespace Backend.Services
         {
             Room room = new Room() { Id = ObjectId.GenerateNewId().ToString() };
             owner = userService.CreateOwner(owner, room.Id);
-            room.OwnerId = owner.Name;
+            room.OwnerId = owner.Id;
             room.CreationTime = DateTime.UtcNow.ToString();
             rooms.InsertOne(room);
             return owner;

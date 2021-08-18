@@ -8,6 +8,9 @@ using Microsoft.Extensions.Options;
 using Backend.Hubs;
 using Backend.Configuration;
 using Backend.Helpers;
+using Backend.Models;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Backend
 {
@@ -54,13 +57,16 @@ namespace Backend
             });
 
 
-            services.AddSignalR();
-            services.AddMvc(option => option.EnableEndpointRouting = false);
+            services.AddSignalR().AddNewtonsoftJsonProtocol((x) =>
+            {
+                x.PayloadSerializerSettings.Converters.Add(new RoomItemConverter());
+            });
+            services.AddMvc(option => option.EnableEndpointRouting = false).AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {  
+        {
             app.UseRouting();
 
             app.UseCors(vue.CorsPolicyName);

@@ -9,7 +9,7 @@ namespace Backend.Helpers
         public static RoomManager CreateRoom()
         {
             var room = new RoomManager("1"); //ObjectId.GenerateNewId().ToString() };
-            _rooms.Add(room.Id, room);
+            _rooms.Add(room.RoomId, room);
             return room;
         }
 

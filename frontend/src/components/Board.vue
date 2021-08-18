@@ -21,11 +21,12 @@ export default {
       boardManager: null,
       eventManager: null,
       apiManager: null,
+      user: { id: Math.random().toString(), roomId: "1" },
     };
   },
   mounted() {
     this.boardManager = new BoardManager(this);
-    this.eventManager = new BoardEventManager(this.boardManager);
+    this.eventManager = new BoardEventManager(this.boardManager, this.user);
     this.boardManager.boardEventManager = this.eventManager;
 
     this.boardManager.boardEventManager.bindStageEvents(
@@ -36,7 +37,7 @@ export default {
 
     this.hub = new BoardHub(this.apiManager);
     this.eventManager.hub = this.hub;
-    this.hub.joinRoom(Math.random().toString(), "1");
+    this.hub.joinRoom(this.user);
   },
   methods: {
     toolbarButton(buttonName) {

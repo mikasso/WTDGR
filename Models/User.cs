@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System;
 
 namespace Backend.Models
 {
@@ -10,14 +11,15 @@ namespace Backend.Models
         public const string Admin = "Admin";
     }
 
-    public class User : IName
+    public class User : IIdentifiable
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Name { get; set; }
+        public string Id { get; set; }
         [BsonRequired]
         public string Role { get; set; } 
         [BsonRequired]
         public string RoomId { get; set; }
+        public string Type { get => "User"; set  { throw new Exception(); } }
     }
 }

@@ -21,6 +21,8 @@ namespace Backend
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
+                logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
+                logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
                 logging.AddConsole();
             })
             .ConfigureWebHostDefaults(webBuilder =>
