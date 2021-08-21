@@ -22,9 +22,9 @@ export default class BoardEventManager {
       edgeClick: () => {},
       edgeMouseEnter: () => {},
       edgeMouseLeave: () => {},
-      edgeMouseUp: () => {},
-      edgeMouseDown: () => {},
-      edgeMouseMove: () => {},
+      edgeDragStart: () => {},
+      edgeDrag: () => {},
+      edgeDragStop: () => {},
       pencilClick: () => {},
     };
   }
@@ -64,14 +64,14 @@ export default class BoardEventManager {
     edge.on("mouseleave", (event) => {
       this.handlers.edgeMouseLeave(event);
     });
-    edge.on("mousedown", (event) => {
-      this.handlers.edgeMouseDown(event);
+    edge.on("dragstart", (event) => {
+      this.handlers.edgeDragStart(event);
     });
-    edge.on("mousemove", (event) => {
-      this.handlers.edgeMouseMove(event);
+    edge.on("dragmove", (event) => {
+      this.handlers.edgeDrag(event);
     });
-    edge.on("mouseup", (event) => {
-      this.handlers.edgeMouseUp(event);
+    edge.on("dragstop", (event) => {
+      this.handlers.edgeDrag(event);
     });
   }
 
@@ -82,9 +82,7 @@ export default class BoardEventManager {
   }
 
   toolChanged(toolName) {
-    this.boardManager.vertexManager.disableDrag(
-      this.boardManager.layerManager.layers
-    );
+    this.boardManager.disableDrag();
     this.clearHandlers();
     switch (toolName) {
       case "Select":
@@ -107,10 +105,6 @@ export default class BoardEventManager {
 
   setSelectToolHandlers() {
     this.boardManager.enableDrag();
-    this.handlers.mouseMove = () => {
-      const mousePos = this.boardManager.stage.getPointerPosition();
-      this.boardManager.dragEdge(mousePos);
-    };
     this.handlers.mouseUp = () => {
       this.boardManager.stopDraggingEdge();
     };
@@ -129,15 +123,13 @@ export default class BoardEventManager {
     this.handlers.edgeMouseLeave = (event) => {
       this.boardManager.setHighlight("edge", event.target, false);
     };
-    this.handlers.edgeMouseDown = (event) => {
-      const mousePos = this.boardManager.stage.getPointerPosition();
-      this.boardManager.startDraggingEdge(event.target, mousePos);
+    this.handlers.edgeDragStart = (event) => {
+      this.boardManager.startDraggingEdge(event.target);
     };
-    this.handlers.edgeMouseMove = () => {
-      const mousePos = this.boardManager.stage.getPointerPosition();
-      this.boardManager.dragEdge(mousePos);
+    this.handlers.edgeDrag = () => {
+      this.boardManager.dragEdge();
     };
-    this.handlers.edgeMouseUp = () => {
+    this.handlers.edgeDragStop = () => {
       this.boardManager.stopDraggingEdge();
     };
   }
@@ -169,6 +161,14 @@ export default class BoardEventManager {
     this.handlers.vertexMouseUp = (event) => {
       const vertex = event.target;
       this.boardManager.connectVertexes(vertex);
+    };
+
+    this.handlers.vertexMouseEnter = (event) => {
+      this.boardManager.setHighlight("vertex", event.target, true);
+    };
+
+    this.handlers.vertexMouseLeave = (event) => {
+      this.boardManager.setHighlight("vertex", event.target, false);
     };
   }
 

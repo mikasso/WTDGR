@@ -22,14 +22,18 @@ export default class BoardManager {
     width: window.innerWidth * 0.8,
     height: window.innerHeight * 0.92,
   };
-
-  //select functions
   enableDrag() {
-    this.vertexManager.enableDrag(this.layerManager.layers);
+    this.layerManager.enableDrag();
   }
 
+  disableDrag() {
+    this.layerManager.disableDrag();
+  }
+
+  //select functions
+
   dragEdges(vertex) {
-    this.edgeManager.dragEdges(vertex);
+    vertex.dragEdges();
   }
 
   setHighlight(targetType, target, isHighlithed, checkLayer = false) {
@@ -73,12 +77,12 @@ export default class BoardManager {
     this.edgeManager.tryToConnectVertices(vertex);
   }
 
-  startDraggingEdge(edge, pos) {
-    this.edgeManager.startDraggingEdge(edge, pos);
+  startDraggingEdge(edge) {
+    this.edgeManager.startDraggingEdge(edge);
   }
 
-  dragEdge(pos) {
-    this.edgeManager.dragVertexes(pos);
+  dragEdge() {
+    this.edgeManager.updateDragged();
   }
 
   stopDraggingEdge() {

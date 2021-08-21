@@ -12,6 +12,17 @@ class Vertex extends Konva.Circle {
     this.layer = layer;
   }
 
+  dragEdges(redraw = true, excludedEdge = null) {
+    if (!this.edges.length) return;
+    for (const edge of this.edges) {
+      if (edge == excludedEdge) {
+        continue;
+      }
+      edge.updatePosition(false);
+    }
+    if (redraw) this.edges[0].layer.draw();
+  }
+
   redraw() {
     this.layer.draw();
   }
@@ -19,7 +30,7 @@ class Vertex extends Konva.Circle {
 
 export default class VertexManager {
   constructor() {
-    this.dragEnabled = true;
+    this.dragEnabled = false;
     this.vertexes = [];
   }
 
@@ -56,25 +67,6 @@ export default class VertexManager {
   draw(vertex) {
     vertex.layer.add(vertex);
     vertex.layer.draw();
-  }
-
-  enableDrag(layers) {
-    this.dragEnabled = true;
-    this.updateDragProp(layers);
-  }
-
-  disableDrag(layers) {
-    this.dragEnabled = false;
-    this.updateDragProp(layers);
-  }
-
-  updateDragProp(layers) {
-    for (var layer of layers) {
-      const items = layer.getChildren();
-      items.each((x) => {
-        if (x.getClassName() === "Circle") x.setDraggable(this.dragEnabled);
-      });
-    }
   }
 
   setHiglight(vertex, isHighlithed) {
