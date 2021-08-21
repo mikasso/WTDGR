@@ -1,11 +1,11 @@
 export default class BoardEventManager {
-  constructor(boardManager, actionFactory) {
+  constructor(boardManager, actionFactory, isOffline) {
     this.boardManager = boardManager;
     this.actionFactory = actionFactory;
     this.hub = null;
     this.clearHandlers();
     this.setSelectToo();
-    this.isOffline = false;
+    this.isOffline = isOffline;
   }
 
   clearHandlers() {
@@ -36,6 +36,15 @@ export default class BoardEventManager {
     });
     vertex.on("dragmove", (event) => {
       this.vertexDrag(event);
+      const x = event.evt.layerX;
+      const y = event.evt.layerY;
+      if (
+        !this.isOffline &&
+        (Math.abs(x - vertex.attrs.x) > 5 || Math.abs(y - vertex.attrs.y) > 5)
+      ) {
+        const action = this.actionFactory.create("Edit", event.target.attrs);
+        this.hub.sendAction(action);
+      }
     });
   }
 

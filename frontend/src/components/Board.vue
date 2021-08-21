@@ -26,10 +26,12 @@ export default {
     };
   },
   mounted() {
+    const isOffline = false;
     this.boardManager = new BoardManager(this);
     this.eventManager = new BoardEventManager(
       this.boardManager,
-      new ActionFactory(this.user.userId)
+      new ActionFactory(this.user.userId),
+      isOffline
     );
     this.boardManager.boardEventManager = this.eventManager;
 
@@ -41,7 +43,7 @@ export default {
 
     this.hub = new BoardHub(this.apiManager, this.user);
     this.eventManager.hub = this.hub;
-    this.hub.joinRoom();
+    if (isOffline === false) this.hub.joinRoom();
   },
   methods: {
     toolbarButton(buttonName) {

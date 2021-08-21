@@ -21,6 +21,10 @@ export default class BoardManager {
     height: window.innerHeight * 0.92,
   };
 
+  update(attrs) {
+    const item = this.stage.findOne(`#${attrs.id}`);
+    item.setAttrs(attrs);
+  }
   //select functions
   enableDrag() {
     this.vertexManager.enableDrag(this.layerManager.layers);

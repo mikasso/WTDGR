@@ -87,7 +87,12 @@ namespace Backend.Core
 
         private Func<bool> DispatchEditAction(UserAction userAction)
         {
-            throw new NotImplementedException();
+            switch (userAction.Item.Type)
+            {
+                case "v-circle":
+                    return () => _verticesManager.Update(userAction.Item as Vertex);
+                default: throw new NotImplementedException();
+            }
         }
 
         public Func<bool> DispatchAddAction(UserAction userAction)
