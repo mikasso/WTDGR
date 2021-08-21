@@ -13,10 +13,14 @@ export default class ApiManager {
       case "Add":
         this.receiveAdd(action);
         break;
-      default:
-        throw Error(`Not implement action type ${action.actionType}`);
+      case "Edit":
+        this.receiveEdit(action);
+        break;
       case "Delete":
         this.receiveDelete(action);
+        break;
+      default:
+        throw Error(`Not implement action type ${action.actionType}`);
     }
   }
 
@@ -38,6 +42,16 @@ export default class ApiManager {
     switch (action.item.type) {
       case "v-circle":
         this.boardManager.eraseVertexById(action.item.id);
+        break;
+      default:
+        throw Error(`Not implement add for ${action.item.type}`);
+    }
+  }
+
+  receiveEdit(action) {
+    switch (action.item.type) {
+      case "v-circle":
+        this.boardManager.update(action.item);
         break;
       default:
         throw Error(`Not implement add for ${action.item.type}`);
