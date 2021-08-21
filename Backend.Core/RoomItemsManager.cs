@@ -1,25 +1,17 @@
-﻿using System;
+﻿using Backend.Models;
+using System;
 using System.Collections.Generic;
-
-
-
-
 namespace Backend.Helpers
 {
-
-    public interface IName
-    {
-        public string Name { get; set; }
-    }
-    public abstract class RoomObjectsManager<T> where T : IName
+    public abstract class RoomItemsManager<T> where T : IIdentifiable
     {
         public int Count { get => objects.Count; }
         protected Dictionary<String, T> objects = new();
         public bool Add(T obj)
         {
-            if (objects.ContainsKey(obj.Name))
+            if (objects.ContainsKey(obj.Id))
                 return false;
-            objects.Add(obj.Name, obj);
+            objects.Add(obj.Id, obj);
             return true;
         }
 
@@ -33,9 +25,9 @@ namespace Backend.Helpers
 
         public bool Update(T obj)
         {
-            if (!objects.ContainsKey(obj.Name))
+            if (!objects.ContainsKey(obj.Id))
                 return false;
-            objects[obj.Name] = obj;
+            objects[obj.Id] = obj;
             return true;
         }
 

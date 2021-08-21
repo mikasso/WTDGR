@@ -1,10 +1,7 @@
 ﻿using Backend.Helpers;
 using Backend.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace BackendTests
@@ -29,7 +26,7 @@ namespace BackendTests
             //Arange
             var Users = new UsersManager();
             var Added = NewUser;
-            Added.Name = "XXX";
+            Added.Id = "XXX";
             Users.Add(Added);
             //Act
             var exists = Users.Exists(NewUser);
@@ -58,7 +55,7 @@ namespace BackendTests
             Added.Role = "Owner";
             //Act
             Users.Update(Added);
-            var newRole = Users.Get(Added.Name).Role;
+            var newRole = Users.Get(Added.Id).Role;
             //Assert
             Assert.True(newRole == Added.Role);
         }
@@ -72,9 +69,9 @@ namespace BackendTests
             var Given = NewUser;
             Users.Add(Given);
             //Act
-            var Founded = Users.Get(Given.Name);
+            var Founded = Users.Get(Given.Id);
             //Assert
-            Assert.Equal(Founded.Name, Given.Name);
+            Assert.Equal(Founded.Id, Given.Id);
             Assert.Equal(Founded.Role, Given.Role);
         }
 
@@ -85,7 +82,7 @@ namespace BackendTests
             var Users = new UsersManager();
             Users.Add(NewUser);
             //Act
-            Users.Delete(NewUser.Name);
+            Users.Delete(NewUser.Id);
             //Assert
             Assert.False(Users.Exists(NewUser));
         }
@@ -104,7 +101,7 @@ namespace BackendTests
             int id = 1;
             foreach (var user in myUsers)
             {
-                user.Name = id.ToString();
+                user.Id = id.ToString();
                 id++;
                 Users.Add(user);
             }
@@ -121,12 +118,12 @@ namespace BackendTests
                });
             foreach(var item in allUsers)
             {
-                Assert.Equal(item.Founded.Name, item.ShouldFound.Name);
+                Assert.Equal(item.Founded.Id, item.ShouldFound.Id);
             }
         }
 
 
-        private User NewUser
+        private static User NewUser
         {
             get
             {
@@ -134,7 +131,7 @@ namespace BackendTests
                     return new User
                     {
                         Role = "User",
-                        Name = "User_1",
+                        Id = "User_1",
                         RoomId = "130139"
                     };
                 }
