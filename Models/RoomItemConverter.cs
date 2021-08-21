@@ -28,12 +28,35 @@ namespace Backend.Models
 
         private IRoomItem Create(Type objectType, JObject jObject)
         {
-            return new Vertex();
+            if (!jObject.ContainsKey("type")) throw new InvalidCastException("Cannot cast object which doesnt type property!");
+            var value = jObject["type"].ToString();
+            switch (value)
+            {
+                case "v-circle":
+                    return new Vertex();
+                    break;
+                default:
+                    throw new InvalidCastException($"Cant cast when type value is {value}");
+            }
         }
 
         public override void WriteJson(JsonWriter writer, IRoomItem value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            JObject obj = new JObject();
+            Type type = value.GetType();
+
+            foreach (var prop in type.GetProperties())
+            {
+                if (prop.CanRead)
+                {
+                    object propVal = prop.GetValue(value, null);
+                    if (propVal != null)
+                    {
+                        obj.Add(prop.Name, JToken.FromObject(propVal, serializer));
+                    }
+                }
+            }
+            obj.WriteTo(writer);
         }
     }
 }

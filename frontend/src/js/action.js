@@ -3,6 +3,16 @@ export default class Action {
     this.actionType = actionType;
     this.userId = userId;
     this.item = item;
-    this.item.id = actionType === "Add" ? null : this.item.name;
+    this.item.id = actionType === "Add" ? null : item.id;
+  }
+}
+
+export class ActionFactory {
+  constructor(userId) {
+    this.userId = userId;
+  }
+
+  create(actionType, item) {
+    return new Action(actionType, this.userId, item);
   }
 }

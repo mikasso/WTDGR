@@ -9,6 +9,7 @@ import BoardEventManager from "../js/board_event_manager";
 import BoardManager from "../js/board_manager";
 import ApiManager from "../js/api_manager";
 import BoardHub from "../js/SignalR/hub";
+import { ActionFactory } from "../js/action";
 export default {
   name: "Board",
   props: {
@@ -21,12 +22,15 @@ export default {
       boardManager: null,
       eventManager: null,
       apiManager: null,
-      user: { id: Math.random().toString(), roomId: "1" },
+      user: { userId: Math.random().toString(), roomId: "1" },
     };
   },
   mounted() {
     this.boardManager = new BoardManager(this);
-    this.eventManager = new BoardEventManager(this.boardManager, this.user);
+    this.eventManager = new BoardEventManager(
+      this.boardManager,
+      new ActionFactory(this.user.userId)
+    );
     this.boardManager.boardEventManager = this.eventManager;
 
     this.boardManager.boardEventManager.bindStageEvents(
@@ -35,9 +39,9 @@ export default {
 
     this.apiManager = new ApiManager(this.boardManager);
 
-    this.hub = new BoardHub(this.apiManager);
+    this.hub = new BoardHub(this.apiManager, this.user);
     this.eventManager.hub = this.hub;
-    this.hub.joinRoom(this.user);
+    this.hub.joinRoom();
   },
   methods: {
     toolbarButton(buttonName) {
