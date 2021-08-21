@@ -1,5 +1,5 @@
-import EdgeManager from "./Shapes/edge_manager";
-import VertexManager from "./Shapes/vertex_manager";
+import EdgeManager, { Edge } from "./Shapes/edge_manager";
+import VertexManager, { Vertex } from "./Shapes/vertex_manager";
 import LayerManager from "./layer_manager";
 import PencilManager from "./Shapes/pencil_manager.js";
 import Konva from "konva";
@@ -38,9 +38,15 @@ export default class BoardManager {
       attrs
     );
     this.boardEventManager.bindVertexEvents(vertex);
-    this.layerManager.sortItems();
-    this.vertexManager.draw(vertex);
     return vertex;
+  }
+
+  draw(konvaObject) {
+    this.layerManager.sortItems();
+    if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
+    else if (konvaObject instanceof Edge) this.edgeManager.draw(konvaObject);
+    else if (konvaObject instanceof Konva.PencilLine)
+      console.error("Piotr popraw to bo ni chuja jak teraz mozna to zrobic");
   }
 
   //edge functions
@@ -70,6 +76,11 @@ export default class BoardManager {
     if (this.layerManager.currentLayer != vertex.layer) return;
     this.edgeManager.remove(vertex.edges);
     this.vertexManager.remove(vertex);
+  }
+
+  eraseVertexById(vertexId) {
+    const vertex = this.vertexManager.getVertexById(vertexId);
+    this.eraseVertex(vertex);
   }
 
   eraseEdge(edge) {

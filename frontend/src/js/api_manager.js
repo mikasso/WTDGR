@@ -3,24 +3,41 @@ export default class ApiManager {
     this.boardManager = boardManager;
   }
 
+  receiveActionResponse(response) {
+    console.log(response);
+  }
+
   receiveAction(action) {
-    console.log(action);
+    console.debug(action);
     switch (action.actionType) {
       case "Add":
-        this.receiveAddAction(action);
+        this.receiveAdd(action);
         break;
       default:
         throw Error(`Not implement action type ${action.actionType}`);
+      case "Delete":
+        this.receiveDelete(action);
     }
   }
 
-  receiveAddAction(action) {
+  receiveAdd(action) {
     switch (action.item.type) {
       case "v-circle":
-        this.boardManager.createVertex(
+        var vertex = this.boardManager.createVertex(
           { x: action.item.x, y: action.item.y },
           action.item
         );
+        this.boardManager.draw(vertex);
+        break;
+      default:
+        throw Error(`Not implement add for ${action.item.type}`);
+    }
+  }
+
+  receiveDelete(action) {
+    switch (action.item.type) {
+      case "v-circle":
+        this.boardManager.eraseVertexById(action.item.id);
         break;
       default:
         throw Error(`Not implement add for ${action.item.type}`);

@@ -3,7 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 
-namespace Backend.Services
+namespace Backend.Core.MongoUtils
 {
     public interface IRoomService
     {

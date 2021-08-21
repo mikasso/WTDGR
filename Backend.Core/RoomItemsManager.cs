@@ -1,7 +1,7 @@
 ﻿using Backend.Models;
 using System;
 using System.Collections.Generic;
-namespace Backend.Helpers
+namespace Backend.Core
 {
     public abstract class RoomItemsManager<T> where T : IIdentifiable
     {

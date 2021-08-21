@@ -1,57 +1,53 @@
-import Action from "./action.js";
-
 export default class BoardEventManager {
-  constructor(boardManager, user) {
+  constructor(boardManager, actionFactory) {
     this.boardManager = boardManager;
-    this.user = user;
-    this.handlers = null;
+    this.actionFactory = actionFactory;
     this.hub = null;
     this.clearHandlers();
-    this.setSelectToolHandlers();
+    this.setSelectToo();
+    this.isOffline = false;
   }
 
   clearHandlers() {
-    this.handlers = {
-      click: () => {},
-      mouseMove: () => {},
-      mouseDown: () => {},
-      mouseUp: () => {},
-      vertexMouseUp: () => {},
-      vertexMouseDown: () => {},
-      vertexDrag: () => {},
-      edgeClick: () => {},
-      pencilClick: () => {},
-    };
+    this.click = () => {};
+    this.mouseMove = () => {};
+    this.mouseDown = () => {};
+    this.mouseUp = () => {};
+    this.vertexMouseUp = () => {};
+    this.vertexMouseDown = () => {};
+    this.vertexDrag = () => {};
+    this.edgeClick = () => {};
+    this.pencilClick = () => {};
   }
 
   bindStageEvents(stage) {
-    stage.on("click", (event) => this.handlers.click(event));
-    stage.on("mousedown", (event) => this.handlers.mouseDown(event));
-    stage.on("mouseup", (event) => this.handlers.mouseUp(event));
-    stage.on("mousemove", (event) => this.handlers.mouseMove(event));
+    stage.on("click", (event) => this.click(event));
+    stage.on("mousedown", (event) => this.mouseDown(event));
+    stage.on("mouseup", (event) => this.mouseUp(event));
+    stage.on("mousemove", (event) => this.mouseMove(event));
   }
 
   bindVertexEvents(vertex) {
     vertex.on("mousedown", (event) => {
-      this.handlers.vertexMouseDown(event);
+      this.vertexMouseDown(event);
     });
     vertex.on("mouseup", (event) => {
-      this.handlers.vertexMouseUp(event);
+      this.vertexMouseUp(event);
     });
     vertex.on("dragmove", (event) => {
-      this.handlers.vertexDrag(event);
+      this.vertexDrag(event);
     });
   }
 
   bindEdgeEvents(edge) {
     edge.on("click", (event) => {
-      this.handlers.edgeClick(event);
+      this.edgeClick(event);
     });
   }
 
   bindPencilEvents(pencil) {
     pencil.on("click", (event) => {
-      this.handlers.pencilClick(event);
+      this.pencilClick(event);
     });
   }
 
@@ -62,90 +58,100 @@ export default class BoardEventManager {
     this.clearHandlers();
     switch (toolName) {
       case "Select":
-        this.setSelectToolHandlers();
+        this.setSelectToo();
         break;
       case "Vertex":
-        this.setVertexToolHandlers();
+        this.setVertexToo();
         break;
       case "Edge":
-        this.setEdgeToolHandlers();
+        this.setEdgeToo();
         break;
       case "Erase":
-        this.setEraseToolHandlers();
+        this.setEraseToo();
         break;
       case "Pencil":
-        this.setPencilToolHandlers();
+        this.setPencilToo();
         break;
     }
   }
 
-  setSelectToolHandlers() {
+  setSelectToo() {
     this.boardManager.enableDrag();
-    this.handlers.vertexDrag = (event) => {
+    this.vertexDrag = (event) => {
       this.boardManager.dragEdges(event.target);
     };
   }
 
-  setVertexToolHandlers() {
-    this.handlers.click = (event) => {
+  setVertexToo() {
+    this.click = (event) => {
       if (!this.isLeftClick(event)) return;
       const mousePos = this.boardManager.stage.getPointerPosition();
       const vertex = this.boardManager.createVertex(mousePos);
-      this.hub.sendAction(new Action("Add", this.user.id, vertex.attrs));
+      if (this.isOffline) {
+        this.boardManager.draw(vertex);
+      } else {
+        const action = this.actionFactory.create("Add", vertex.attrs);
+        this.hub.sendAction(action);
+      }
     };
   }
 
-  setEdgeToolHandlers() {
-    this.handlers.mouseUp = () => {
+  setEdgeToo() {
+    this.mouseUp = () => {
       this.boardManager.stopDrawingEdge();
     };
 
-    this.handlers.mouseMove = (event) => {
+    this.mouseMove = (event) => {
       const point = this.getPointFromEvent(event);
       this.boardManager.moveCurrentEdge(point);
     };
 
-    this.handlers.vertexMouseDown = (event) => {
+    this.vertexMouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const vertex = event.target;
       this.boardManager.startDrawingEdge(vertex);
     };
 
-    this.handlers.vertexMouseUp = (event) => {
+    this.vertexMouseUp = (event) => {
       const vertex = event.target;
       this.boardManager.connectVertexes(vertex);
     };
   }
 
-  setEraseToolHandlers() {
-    this.handlers.vertexMouseDown = (event) => {
+  setEraseToo() {
+    this.vertexMouseDown = (event) => {
       const vertex = event.target;
-      this.boardManager.eraseVertex(vertex);
+      if (this.isOffline) {
+        this.boardManager.eraseVertex(vertex);
+      } else {
+        const action = this.actionFactory.create("Delete", vertex.attrs);
+        this.hub.sendAction(action);
+      }
     };
 
-    this.handlers.edgeClick = (event) => {
+    this.edgeClick = (event) => {
       const edge = event.target;
       this.boardManager.eraseEdge(edge);
     };
 
-    this.handlers.pencilClick = (event) => {
+    this.pencilClick = (event) => {
       const drawing = event.target;
       this.boardManager.eraseDrawing(drawing);
     };
   }
 
-  setPencilToolHandlers() {
-    this.handlers.mouseDown = (event) => {
+  setPencilToo() {
+    this.mouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const mousePos = this.boardManager.stage.getPointerPosition();
       this.boardManager.startPencil(mousePos);
     };
-    this.handlers.mouseMove = (event) => {
+    this.mouseMove = (event) => {
       if (!this.isLeftClick(event)) return;
       const mousePos = this.boardManager.stage.getPointerPosition();
       this.boardManager.movePencil(mousePos);
     };
-    this.handlers.mouseUp = () => {
+    this.mouseUp = () => {
       this.boardManager.finishPencilDrawing();
     };
   }

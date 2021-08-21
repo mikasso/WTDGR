@@ -1,8 +1,10 @@
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 
 export default class BoardHub {
-  constructor(apiManager) {
+  constructor(apiManager, credentials) {
     this.apiManager = apiManager;
+    this.userId = credentials.userId;
+    this.roomId = credentials.roomId;
     this.connection = new HubConnectionBuilder()
       .withUrl("https://localhost:5001/graphHub")
       .configureLogging(LogLevel.Information)
@@ -15,15 +17,37 @@ export default class BoardHub {
     this.connection.on("ReceiveAction", (action) => {
       this.apiManager.receiveAction(action);
     });
+    this.connection.on("ReceiveActionResponse", (actionResponse) => {
+      this.apiManager.receiveActionResponse(actionResponse);
+    });
     this.connection.on("ReceiveText", (text) => {
       console.log(text);
+    });
+
+    //Reconnection with exponential time
+    let attempt = 0;
+    const start = async () => {
+      attempt++;
+      console.warn("SignalR: attemp to reconnect");
+      try {
+        this.joinRoom();
+      } catch (err) {
+        console.error(err);
+        setTimeout(start, Math.pow(2, attempt) * 1000);
+      }
+    };
+    this.connection.onclose(async () => {
+      await start();
+    });
+    this.connection.onreconnected((connectionId) => {
+      console.log("Download the room image " + connectionId); ///TODO
     });
   }
 
   sendAction(action) {
     console.log("sending action");
     console.log(action);
-    this.connection
+    return this.connection
       .invoke("SendAction", action)
       .catch((err) => alert(err.toString()));
   }
@@ -37,14 +61,14 @@ export default class BoardHub {
     });
   }
 
-  joinRoom({ id, roomId }) {
+  joinRoom() {
     this.connection
       .start()
       .then(() => {
-        roomId = roomId.toString();
+        const roomId = this.roomId.toString();
         console.log("Joining room id=" + roomId);
         const request = {
-          Id: id,
+          Id: this.userId,
           Role: "Owner",
           RoomId: roomId,
         };
