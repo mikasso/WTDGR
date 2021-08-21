@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Backend
 {
@@ -13,6 +9,10 @@ namespace Backend
     {
         public static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .WriteTo.File("C:\\WTDGR_logs.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -21,6 +21,8 @@ namespace Backend
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
+                logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
+                logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
                 logging.AddConsole();
             })
             .ConfigureWebHostDefaults(webBuilder =>
