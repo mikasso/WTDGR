@@ -11,9 +11,11 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     vertex.on("mousedown", (event) => {
       this.vertexMouseDown(event);
     });
+    // dragstart zablokuj wierzcholek do edycji
     vertex.on("mouseup", (event) => {
       this.vertexMouseUp(event);
     });
+    // interval js https://developer.mozilla.org/pl/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
     vertex.on("dragmove", (event) => {
       this.vertexDrag(event);
     });
