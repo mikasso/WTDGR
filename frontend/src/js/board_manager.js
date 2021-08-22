@@ -24,6 +24,7 @@ export default class BoardManager {
   update(attrs) {
     const item = this.stage.findOne(`#${attrs.id}`);
     item.setAttrs(attrs);
+    this.stage.draw();
   }
   //select functions
   enableDrag() {
@@ -50,7 +51,9 @@ export default class BoardManager {
     if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
     else if (konvaObject instanceof Edge) this.edgeManager.draw(konvaObject);
     else if (konvaObject instanceof Konva.PencilLine)
-      console.error("Piotr popraw to bo ni chuja jak teraz mozna to zrobic");
+      console.error(
+        "Piotr popraw to bo nie ma jak teraz to zrobic, fajnie jakby tam tez byla metoda draw()"
+      );
   }
 
   //edge functions
