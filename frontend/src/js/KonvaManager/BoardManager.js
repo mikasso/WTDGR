@@ -1,14 +1,14 @@
-import EdgeManager from "./Shapes/edge_manager";
-import VertexManager from "./Shapes/vertex_manager";
-import LayerManager from "./layer_manager";
-import PencilManager from "./Shapes/pencil_manager.js";
+import EdgeManager, { Edge } from "./EdgeManager";
+import VertexManager, { Vertex } from "./VertexManager";
+import LayerManager from "./LayerManager";
+import PencilManager from "./PencilManager.js";
 import Konva from "konva";
 
 export default class BoardManager {
   constructor(parentComponent) {
     this.parentComponent = parentComponent;
     this.stage = new Konva.Stage(this.stageConfig);
-    this.boardEventManager = null;
+    this.eventManager = null;
     this.layerManager = new LayerManager(this.stage, this.parentComponent);
     this.edgeManager = new EdgeManager();
     this.vertexManager = new VertexManager();
@@ -21,7 +21,12 @@ export default class BoardManager {
     height: window.innerHeight * 0.92,
   };
 
-  //select functions
+  update(attrs) {
+    const item = this.stage.findOne(`#${attrs.id}`); //konva uses id as selector so # is required
+    item.setAttrs(attrs);
+    this.stage.draw();
+  }
+
   enableDrag() {
     this.vertexManager.enableDrag(this.layerManager.layers);
   }
@@ -30,24 +35,30 @@ export default class BoardManager {
     this.edgeManager.dragEdges(vertex);
   }
 
-  //vertex functions
   createVertex(position, attrs) {
     const vertex = this.vertexManager.create(
       this.layerManager.currentLayer,
       position,
       attrs
     );
-    this.boardEventManager.bindVertexEvents(vertex);
-    this.layerManager.sortItems();
-    this.vertexManager.draw(vertex);
+    this.eventManager.bindVertexEvents(vertex);
     return vertex;
   }
 
-  //edge functions
+  draw(konvaObject) {
+    this.layerManager.sortItems();
+    if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
+    else if (konvaObject instanceof Edge) this.edgeManager.draw(konvaObject);
+    else if (konvaObject instanceof Konva.PencilLine)
+      console.error(
+        "Piotr popraw to bo nie ma jak teraz to zrobic, fajnie jakby tam tez byla metoda draw()"
+      );
+  }
+
   startDrawingEdge(vertex) {
     if (this.layerManager.currentLayer != vertex.layer) return;
     this.edgeManager.startDrawing(vertex);
-    this.boardEventManager.bindEdgeEvents(this.edgeManager.currentEdge);
+    this.eventManager.bindEdgeEvents(this.edgeManager.currentEdge);
     this.layerManager.sortItems();
   }
 
@@ -65,11 +76,15 @@ export default class BoardManager {
     this.edgeManager.tryToConnectVertices(vertex);
   }
 
-  //erase functions
   eraseVertex(vertex) {
     if (this.layerManager.currentLayer != vertex.layer) return;
     this.edgeManager.remove(vertex.edges);
     this.vertexManager.remove(vertex);
+  }
+
+  eraseVertexById(vertexId) {
+    const vertex = this.vertexManager.getVertexById(vertexId);
+    this.eraseVertex(vertex);
   }
 
   eraseEdge(edge) {
@@ -77,13 +92,12 @@ export default class BoardManager {
     this.edgeManager.remove([edge]);
   }
 
-  //pencil functions
   startPencil(position) {
     const pencilDrawing = this.pencilManager.create(
       position,
       this.layerManager.currentLayer
     );
-    this.boardEventManager.bindPencilEvents(pencilDrawing);
+    this.eventManager.bindPencilEvents(pencilDrawing);
   }
 
   movePencil(position) {

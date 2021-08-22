@@ -1,7 +1,7 @@
 ﻿using Backend.Models;
 using System;
 
-namespace Backend.Helpers
+namespace Backend.Core
 {
     public class UsersManager : RoomItemsManager<User>
     {

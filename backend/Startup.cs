@@ -3,16 +3,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Backend.Services;
 using Microsoft.Extensions.Options;
-using Backend.Hubs;
-using Backend.Configuration;
-using Backend.Helpers;
+using Backend.Core;
 using Backend.Models;
-using Newtonsoft.Json;
-using System.Collections.Generic;
+using Backend.Core.MongoUtils;
 
-namespace Backend
+namespace Backend.Service
 {
     public class Startup
     {
