@@ -1,7 +1,12 @@
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 
 export default class BoardHub {
-  constructor(apiManager, credentials) {
+  constructor(
+    apiManager,
+    credentials,
+    disconnectedCallback,
+    connectedCallback
+  ) {
     this.apiManager = apiManager;
     this.userId = credentials.userId;
     this.roomId = credentials.roomId;
@@ -37,10 +42,12 @@ export default class BoardHub {
       }
     };
     this.connection.onclose(async () => {
+      disconnectedCallback();
       await start();
     });
     this.connection.onreconnected((connectionId) => {
       console.log("Download the room image " + connectionId); ///TODO
+      connectedCallback();
     });
   }
 
@@ -79,7 +86,7 @@ export default class BoardHub {
       })
       .catch((err) => {
         alert(err.toString());
-        console.error("Error during joing the hub \n" + err);
+        console.log("Error during joing the hub \n" + err);
       });
   }
 }
