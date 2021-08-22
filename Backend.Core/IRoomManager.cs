@@ -1,7 +1,7 @@
 ﻿using Backend.Models;
 using System.Threading.Tasks;
 
-namespace Backend.Helpers
+namespace Backend.Core
 {
     public interface IRoomManager
     {

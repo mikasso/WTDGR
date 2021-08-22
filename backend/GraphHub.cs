@@ -1,22 +1,23 @@
 ﻿using Backend.Models;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
-using Backend.Helpers;
 using System;
-using Backend.Models.RoomItems;
 using Serilog;
+using Backend.Core;
 
-namespace Backend.Hubs
+namespace Backend.Service
 {
 
     public interface IGraphHub
     {
         Task SendAction(UserAction userAction);
         Task ReceiveAction(UserAction userAction);
+
+        Task ReceiveActionResponse(ActionResponse actionResponse);
         Task SendText(string message);
         Task ReceiveText(string message);
         Task ReceiveJoinResponse(User user);
-        Task GetGraph();
+        Task  GetGraph();
     }
 
     public partial class GraphHub : Hub<IGraphHub>
@@ -42,18 +43,17 @@ namespace Backend.Hubs
             await AssignUserToContext(owner);
             await ReplyForJoin(owner);
         }
-        public async Task<bool> JoinRoom(User user)
+        public async Task JoinRoom(User user)
         {
             if (CanJoinToRoom(user))
             {
                 await AssignUserToContext(user);
                 await ReplyForJoin(user);
-                return true;
             }
             else
             {
                 await Clients.Caller.ReceiveText("Error: User cannot join this room");
-                return false;
+                Context.Abort();
             }
         }
 
@@ -87,11 +87,11 @@ namespace Backend.Hubs
         }
         public async Task SendAction(UserAction userAction)
         {
-            Log.Debug($"Received action.");
+            Log.Information($"Received action.");
+            userAction.UserId = MyUser.Id;
             if (MyGroup == null)
             {
-                await Clients.Caller.ReceiveText("You are not in any room");
-                return;
+                await Clients.Caller.ReceiveActionResponse(new ActionResponse() { Succeded=false,Information="You re not in any group"});
             }
             var result = await Room.ExecuteAction(userAction);
             if (result)
@@ -101,7 +101,7 @@ namespace Backend.Hubs
             else
             {
                 Log.Error($"Cannot execut action for user {userAction.UserId}");
-                await Clients.Caller.ReceiveText("Error occured during execution demanded action");
+                await Clients.Caller.ReceiveActionResponse(new ActionResponse() { Succeded = false, Information = "Error occured during execution demanded action" });
             }
         }
 

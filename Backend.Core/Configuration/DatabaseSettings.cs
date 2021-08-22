@@ -1,4 +1,4 @@
-namespace Backend
+namespace Backend.Core
 {
     public class DatabaseSettings : IDatabaseSettings
     {

@@ -1,11 +1,12 @@
-﻿using Backend.Models;
+﻿using Backend.Core;
+using Backend.Models;
 using Backend.Models.RoomItems;
 using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Backend.Helpers
+namespace Backend.Core
 {
     public class RoomManager : IRoomManager
     {
@@ -55,28 +56,54 @@ namespace Backend.Helpers
 
         public Func<bool> DispatchAction(UserAction userAction)
         {
+            Log.Information($"Dispatching Action, Room Id: {RoomId}, Action type:{userAction.ActionType}\n{userAction.Item.ToJsonString()}");
             switch (userAction.ActionType)
             {
                 case "Add":
                     userAction.Item.Id = Guid.NewGuid().ToString();
-                    switch (userAction.Item.Type)
-                    {
-                        case "v-circle":
-                            Func<bool> result = () => _verticesManager.Add(userAction.Item as Vertex);
-                            return result;
-                        default: throw new NotImplementedException(); ;
-                    }
+                    return DispatchAddAction(userAction);
                     break;
                 case "Edit":
-                    throw new NotImplementedException();
+                    return DispatchEditAction(userAction);
                     break;
                 case "Delete":
-                    throw new NotImplementedException();
+                    return DispatchDeleteAction(userAction);
                     break;
                 default:
                     throw new ArgumentException("Cannot dispatch user action message!");
             }
+        }
 
+        private Func<bool> DispatchDeleteAction(UserAction userAction)
+        {
+            switch (userAction.Item.Type)
+            {
+                case "v-circle":
+                    var vertexId = userAction.Item.Id;
+                    return () => _verticesManager.Delete(vertexId);
+                default: throw new NotImplementedException();
+            }
+        }
+
+        private Func<bool> DispatchEditAction(UserAction userAction)
+        {
+            switch (userAction.Item.Type)
+            {
+                case "v-circle":
+                    return () => _verticesManager.Update(userAction.Item as Vertex);
+                default: throw new NotImplementedException();
+            }
+        }
+
+        public Func<bool> DispatchAddAction(UserAction userAction)
+        {
+            switch (userAction.Item.Type)
+            {
+                case "v-circle":
+                    var vertex = userAction.Item as Vertex;
+                    return () => _verticesManager.Add(vertex);
+                default: throw new NotImplementedException();
+            }
         }
     }
 }

@@ -1,9 +1,9 @@
-import Konva from "konva"
+import Konva from "konva";
 
 export class PencilLine extends Konva.Line {
   constructor(config, layer) {
-    super(config)
-    this.layer = layer
+    super(config);
+    this.layer = layer;
   }
 
   redraw() {
@@ -12,10 +12,9 @@ export class PencilLine extends Konva.Line {
 }
 
 export default class PencilManager {
-
   constructor() {
-    this.currentDrawing = null
-    this.isDrawing = false
+    this.currentDrawing = null;
+    this.isDrawing = false;
   }
 
   defualtConfig = {
@@ -26,7 +25,7 @@ export default class PencilManager {
     lineJoin: "round",
   };
 
-  create(position, layer, config=this.defualtConfig) {
+  create(position, layer, config = this.defualtConfig) {
     config.points = [position.x, position.y];
     const newLine = new PencilLine(config, layer);
     this.isDrawing = true;
@@ -36,8 +35,8 @@ export default class PencilManager {
     return newLine;
   }
 
-  appendPoint(position){
-    if(!this.isDrawing) return;
+  appendPoint(position) {
+    if (!this.isDrawing) return;
     const points = this.currentDrawing.attrs.points;
     points.push(position.x);
     points.push(position.y);
@@ -46,13 +45,13 @@ export default class PencilManager {
   }
 
   finishDrawing() {
-    this.isDrawing = false
-    this.currentDrawing = null
-  }  
+    this.isDrawing = false;
+    this.currentDrawing = null;
+  }
 
   removeDrawing(drawing) {
-    const removedDrawingLayer = drawing.layer
-    drawing.destroy()
-    removedDrawingLayer.draw()
+    const removedDrawingLayer = drawing.layer;
+    drawing.destroy();
+    removedDrawingLayer.draw();
   }
 }
