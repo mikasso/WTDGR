@@ -35,6 +35,14 @@ export default class BoardManager {
     this.edgeManager.dragEdges(vertex);
   }
 
+  setHighlight(targetType, target, isHighlithed, checkLayer = false) {
+    if (checkLayer && target.layer != this.layerManager.currentLayer) return;
+    if (targetType == "vertex")
+      this.vertexManager.setHiglight(target, isHighlithed);
+    else if (targetType == "edge")
+      this.edgeManager.setHiglight(target, isHighlithed);
+  }
+
   createVertex(position, attrs) {
     const vertex = this.vertexManager.create(
       this.layerManager.currentLayer,
@@ -55,6 +63,12 @@ export default class BoardManager {
       );
   }
 
+  connectVertexes(vertex) {
+    if (this.layerManager.currentLayer != vertex.layer)
+      this.edgeManager.removeCurrentEdge();
+    this.edgeManager.tryToConnectVertices(vertex);
+  }
+
   startDrawingEdge(vertex) {
     if (this.layerManager.currentLayer != vertex.layer) return;
     this.edgeManager.startDrawing(vertex);
@@ -70,10 +84,16 @@ export default class BoardManager {
     this.edgeManager.removeCurrentEdge();
   }
 
-  connectVertexes(vertex) {
-    if (this.layerManager.currentLayer != vertex.layer)
-      this.edgeManager.removeCurrentEdge();
-    this.edgeManager.tryToConnectVertices(vertex);
+  startDraggingEdge(edge, pos) {
+    this.edgeManager.startDraggingEdge(edge, pos);
+  }
+
+  dragEdge(pos) {
+    this.edgeManager.dragVertexes(pos);
+  }
+
+  stopDraggingEdge() {
+    this.edgeManager.stopDraggingEdge();
   }
 
   eraseVertex(vertex) {
