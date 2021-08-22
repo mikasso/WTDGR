@@ -36,12 +36,11 @@ export default class BoardEventManager {
     });
     vertex.on("dragmove", (event) => {
       this.vertexDrag(event);
-      const x = event.evt.layerX;
-      const y = event.evt.layerY;
-      if (
-        !this.isOffline &&
-        (Math.abs(x - vertex.attrs.x) > 5 || Math.abs(y - vertex.attrs.y) > 5)
-      ) {
+    });
+
+    vertex.on("dragend", (event) => {
+      this.vertexDrag(event);
+      if (!this.isOffline) {
         const action = this.actionFactory.create("Edit", event.target.attrs);
         this.hub.sendAction(action);
       }
