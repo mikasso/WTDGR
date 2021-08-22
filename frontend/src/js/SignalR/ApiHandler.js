@@ -44,7 +44,7 @@ export default class ApiManager {
         this.boardManager.eraseVertexById(action.item.id);
         break;
       default:
-        throw Error(`Not implement add for ${action.item.type}`);
+        throw Error(`Not implement delete for ${action.item.type}`);
     }
   }
 
@@ -54,7 +54,7 @@ export default class ApiManager {
         this.boardManager.update(action.item);
         break;
       default:
-        throw Error(`Not implement add for ${action.item.type}`);
+        throw Error(`Not implement edit for ${action.item.type}`);
     }
   }
 }

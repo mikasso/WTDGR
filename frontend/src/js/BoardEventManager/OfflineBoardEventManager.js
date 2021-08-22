@@ -1,30 +1,8 @@
-export default class BoardEventManager {
-  constructor(boardManager, actionFactory, isOffline) {
-    this.boardManager = boardManager;
-    this.actionFactory = actionFactory;
-    this.hub = null;
-    this.clearHandlers();
-    this.setSelectToo();
-    this.isOffline = isOffline;
-  }
+import BaseBoardEventManager from "./BaseBoardEventManager";
 
-  clearHandlers() {
-    this.click = () => {};
-    this.mouseMove = () => {};
-    this.mouseDown = () => {};
-    this.mouseUp = () => {};
-    this.vertexMouseUp = () => {};
-    this.vertexMouseDown = () => {};
-    this.vertexDrag = () => {};
-    this.edgeClick = () => {};
-    this.pencilClick = () => {};
-  }
-
-  bindStageEvents(stage) {
-    stage.on("click", (event) => this.click(event));
-    stage.on("mousedown", (event) => this.mouseDown(event));
-    stage.on("mouseup", (event) => this.mouseUp(event));
-    stage.on("mousemove", (event) => this.mouseMove(event));
+export default class OffLineBoardEventManager extends BaseBoardEventManager {
+  constructor(boardManager) {
+    super(boardManager);
   }
 
   bindVertexEvents(vertex) {
@@ -36,14 +14,6 @@ export default class BoardEventManager {
     });
     vertex.on("dragmove", (event) => {
       this.vertexDrag(event);
-    });
-
-    vertex.on("dragend", (event) => {
-      this.vertexDrag(event);
-      if (!this.isOffline) {
-        const action = this.actionFactory.create("Edit", event.target.attrs);
-        this.hub.sendAction(action);
-      }
     });
   }
 
@@ -59,52 +29,24 @@ export default class BoardEventManager {
     });
   }
 
-  toolChanged(toolName) {
-    this.boardManager.vertexManager.disableDrag(
-      this.boardManager.layerManager.layers
-    );
-    this.clearHandlers();
-    switch (toolName) {
-      case "Select":
-        this.setSelectToo();
-        break;
-      case "Vertex":
-        this.setVertexToo();
-        break;
-      case "Edge":
-        this.setEdgeToo();
-        break;
-      case "Erase":
-        this.setEraseToo();
-        break;
-      case "Pencil":
-        this.setPencilToo();
-        break;
-    }
-  }
-
-  setSelectToo() {
+  setSelectTool() {
     this.boardManager.enableDrag();
     this.vertexDrag = (event) => {
       this.boardManager.dragEdges(event.target);
     };
   }
 
-  setVertexToo() {
+  setVertexTool() {
     this.click = (event) => {
       if (!this.isLeftClick(event)) return;
       const mousePos = this.boardManager.stage.getPointerPosition();
       const vertex = this.boardManager.createVertex(mousePos);
-      if (this.isOffline) {
-        this.boardManager.draw(vertex);
-      } else {
-        const action = this.actionFactory.create("Add", vertex.attrs);
-        this.hub.sendAction(action);
-      }
+
+      this.boardManager.draw(vertex);
     };
   }
 
-  setEdgeToo() {
+  setEdgeTool() {
     this.mouseUp = () => {
       this.boardManager.stopDrawingEdge();
     };
@@ -126,15 +68,10 @@ export default class BoardEventManager {
     };
   }
 
-  setEraseToo() {
+  setEraseTool() {
     this.vertexMouseDown = (event) => {
       const vertex = event.target;
-      if (this.isOffline) {
-        this.boardManager.eraseVertex(vertex);
-      } else {
-        const action = this.actionFactory.create("Delete", vertex.attrs);
-        this.hub.sendAction(action);
-      }
+      this.boardManager.eraseVertex(vertex);
     };
 
     this.edgeClick = (event) => {
@@ -148,7 +85,7 @@ export default class BoardEventManager {
     };
   }
 
-  setPencilToo() {
+  setPencilTool() {
     this.mouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const mousePos = this.boardManager.stage.getPointerPosition();
@@ -178,20 +115,5 @@ export default class BoardEventManager {
         this.boardManager.selectLayer(selected.value);
         break;
     }
-  }
-
-  isLeftClick(event) {
-    return event.evt.which === 1;
-  }
-
-  isRightClick(event) {
-    return event.evt.which === 3;
-  }
-
-  getPointFromEvent(event) {
-    return {
-      x: event.evt.layerX,
-      y: event.evt.layerY,
-    };
   }
 }

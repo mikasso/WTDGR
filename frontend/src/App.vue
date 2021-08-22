@@ -1,22 +1,23 @@
 <template>
   <div id="app">
-    <MainPanel msg="Welcome to Your Vue.js App"/>
+    <MainPanel msg="Welcome to Your Vue.js App" />
   </div>
 </template>
 
 <script>
+import MainPanel from "./components/MainPanel.vue";
 
-import MainPanel from './components/MainPanel.vue'
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    MainPanel
-  }
-}
+    MainPanel,
+  },
+};
 </script>
 
 <style>
-html, body{
+html,
+body {
   height: 100%;
   margin: 0;
 }
