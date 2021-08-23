@@ -11,13 +11,9 @@ import BoardManager from "../js/KonvaManager/BoardManager";
 import ApiManager from "../js/SignalR/ApiHandler";
 import BoardHub from "../js/SignalR/Hub";
 import { ActionFactory } from "../js/SignalR/Action";
+import { mapGetters } from "vuex";
 export default {
   name: "Board",
-  props: {
-    toolbar: {
-      default: null,
-    },
-  },
   data() {
     return {
       eventManager: null,
@@ -26,7 +22,61 @@ export default {
       user: { userId: Math.random().toString(), roomId: "1" },
     };
   },
+  computed: {
+    ...mapGetters(["isOnline"]),
+  },
+  watch: {
+    isOnline: {
+      deep: true,
+      handler(isOnline) {
+        this.handleConnectionChange(isOnline);
+      },
+    },
+  },
+  mounted() {
+    this.handleConnectionChange(this.isOnline);
+  },
   methods: {
+    handleConnectionChange(isOnline) {
+      const boardManager = new BoardManager(this);
+      if (isOnline) {
+        this.eventManager = this.getOnlineEventManager(boardManager);
+        this.switchToOnline(this);
+      } else {
+        this.eventManager = new OfflineBoardEventManager(boardManager);
+        this.switchToOffline(this);
+      }
+      boardManager.eventManager = this.eventManager;
+
+      if (this.lastToolSelected !== null)
+        this.eventManager.toolbarSelect(this.lastToolSelected);
+    },
+    getOnlineEventManager(boardManager) {
+      const apiManager = new ApiManager(boardManager);
+      this.hub = new BoardHub(
+        apiManager,
+        this.user,
+        () => this.$store.commit("setOffline"),
+        () => this.$store.commit("setOnline")
+      );
+      return new OnlineBoardEventManager(
+        boardManager,
+        this.hub,
+        new ActionFactory(this.user.userId)
+      );
+    },
+    async switchToOnline(that) {
+      await that.hub.joinRoomPromise().catch(async () => {
+        alert("Failed to connect with hub, switching to ofline");
+        await that.connectionChanged(false);
+      });
+    },
+    async switchToOffline(that) {
+      if (that.hub !== null) {
+        await that.hub.disconnectPromise();
+        that.hub = null;
+      }
+    },
     toolbarButton(buttonName) {
       this.eventManager.toolbarButton(buttonName);
     },
@@ -37,41 +87,11 @@ export default {
     toolChanged(toolName) {
       this.eventManager.toolChanged(toolName);
     },
-    blockContextMenu: function(e) {
+    blockContextMenu(e) {
       e.preventDefault(); //disable context menu when right click
     },
     sendLayerStateToToolbar(layerState) {
       this.$emit("layerStateChange", layerState);
-    },
-    async connectionChanged(isOnline) {
-      const boardManager = new BoardManager(this);
-      if (isOnline) {
-        const apiManager = new ApiManager(boardManager);
-        this.hub = new BoardHub(
-          apiManager,
-          this.user,
-          () => {},
-          () => {}
-        );
-        this.eventManager = new OnlineBoardEventManager(
-          boardManager,
-          this.hub,
-          new ActionFactory(this.user.userId)
-        );
-        await this.hub.joinRoomPromise().catch(async () => {
-          alert("Failed to connect with hub, switching to ofline");
-          await this.connectionChanged(false);
-        });
-      } else {
-        if (this.hub != null) {
-          await this.hub.disconnectPromise();
-          this.hub = null;
-        }
-        this.eventManager = new OfflineBoardEventManager(boardManager);
-      }
-      boardManager.eventManager = this.eventManager;
-      if (this.lastToolSelected !== null)
-        this.eventManager.toolbarSelect(this.lastToolSelected);
     },
   },
 };
