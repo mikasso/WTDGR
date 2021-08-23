@@ -5,11 +5,13 @@ export default class BoardHub {
     apiManager,
     credentials,
     disconnectedCallback,
-    connectedCallback
+    reconnectedCallback
   ) {
     this.apiManager = apiManager;
     this.userId = credentials.userId;
     this.roomId = credentials.roomId;
+    this.disconnectedCallback = disconnectedCallback;
+    this.reconnectedCallback = reconnectedCallback;
     this.connection = new HubConnectionBuilder()
       .withUrl("https://localhost:5001/graphHub")
       .configureLogging(LogLevel.Information)
@@ -30,15 +32,11 @@ export default class BoardHub {
     });
 
     this.onCloseMethod = this.reJoinRoom;
-    this.connection.onclose(async () => {
-      disconnectedCallback();
-      await this.onCloseMethod(0);
-    });
-
-    this.connection.onreconnected((connectionId) => {
-      console.log("Download the room image " + connectionId); ///TODO
-      connectedCallback();
-    });
+    const closeHandler = async (that) => {
+      that.disconnectedCallback();
+      await that.onCloseMethod(0);
+    };
+    this.connection.onclose(async () => closeHandler(this));
   }
 
   sendAction(action) {
@@ -57,16 +55,19 @@ export default class BoardHub {
         .catch((err) => alert(err.toString()));
     });
   }
-
   async reJoinRoom(attempt) {
     console.warn("SignalR: attemp to reconnect");
-    await this.joinRoomPromise().catch((err) => {
-      console.error(err);
-      setTimeout(
-        async () => this.reJoinRoom(attempt + 1),
-        Math.pow(2, attempt) * 1000
-      );
-    });
+    await this.joinRoomPromise()
+      .then(() => {
+        this.reconnectedCallback();
+      })
+      .catch((err) => {
+        console.error(err);
+        setTimeout(
+          async () => this.reJoinRoom(attempt + 1),
+          Math.pow(2, attempt) * 1000
+        );
+      });
   }
 
   joinRoomPromise() {
