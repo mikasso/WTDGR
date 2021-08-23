@@ -2,7 +2,6 @@ export default class BaseBoardEventManager {
   constructor(boardManager) {
     this.boardManager = boardManager;
     this.clearHandlers();
-    this.setSelectTool();
     this.bindStageEvents(boardManager.stage);
   }
 
@@ -13,8 +12,15 @@ export default class BaseBoardEventManager {
     this.mouseUp = () => {};
     this.vertexMouseUp = () => {};
     this.vertexMouseDown = () => {};
+    this.vertexMouseEnter = () => {};
+    this.vertexMouseLeave = () => {};
     this.vertexDrag = () => {};
     this.edgeClick = () => {};
+    this.edgeMouseEnter = () => {};
+    this.edgeMouseLeave = () => {};
+    this.edgeMouseUp = () => {};
+    this.edgeMouseDown = () => {};
+    this.edgeMouseMove = () => {};
     this.pencilClick = () => {};
   }
 
@@ -25,43 +31,43 @@ export default class BaseBoardEventManager {
     stage.on("mousemove", (event) => this.mouseMove(event));
   }
 
-  toolChanged(ToolName) {
+  toolChanged(toolName) {
     this.boardManager.vertexManager.disableDrag(
       this.boardManager.layerManager.layers
     );
     this.clearHandlers();
-    switch (ToolName) {
+    switch (toolName) {
       case "Select":
-        this.setSelectTool();
+        this.setSelectToolHandlers();
         break;
       case "Vertex":
-        this.setVertexTool();
+        this.setVertexToolHandlers();
         break;
       case "Edge":
-        this.setEdgeTool();
+        this.setEdgeToolHandlers();
         break;
       case "Erase":
-        this.setEraseTool();
+        this.setEraseToolHandlers();
         break;
       case "Pencil":
-        this.setPencilTool();
+        this.setPencilToolHandlers();
         break;
     }
   }
 
-  setSelectTool() {
+  setSelectToolHandlers() {
     throw new Error("Not implemented");
   }
-  setVertexTool() {
+  setVertexToolHandlers() {
     throw new Error("Not implemented");
   }
-  setEdgeTool() {
+  setEdgeToolHandlers() {
     throw new Error("Not implemented");
   }
-  setEraseTool() {
+  setEraseToolHandlers() {
     throw new Error("Not implemented");
   }
-  setPencilTool() {
+  setPencilToolHandlers() {
     throw new Error("Not implemented");
   }
 
