@@ -29,22 +29,12 @@ export default class BoardHub {
       console.log(text);
     });
 
-    //Reconnection with exponential time
-    let attempt = 0;
-    const start = async () => {
-      attempt++;
-      console.warn("SignalR: attemp to reconnect");
-      try {
-        this.joinRoom();
-      } catch (err) {
-        console.error(err);
-        setTimeout(start, Math.pow(2, attempt) * 1000);
-      }
-    };
+    this.onCloseMethod = this.reJoinRoom;
     this.connection.onclose(async () => {
       disconnectedCallback();
-      await start();
+      await this.onCloseMethod(0);
     });
+
     this.connection.onreconnected((connectionId) => {
       console.log("Download the room image " + connectionId); ///TODO
       connectedCallback();
@@ -68,25 +58,34 @@ export default class BoardHub {
     });
   }
 
-  joinRoom() {
-    this.connection
-      .start()
-      .then(() => {
-        const roomId = this.roomId.toString();
-        console.log("Joining room id=" + roomId);
-        const request = {
-          Id: this.userId,
-          Role: "Owner",
-          RoomId: roomId,
-        };
-        this.connection.invoke("JoinRoom", request).catch((err) => {
-          alert(err.toString());
-          console.log("Error durign joining the room \n" + err);
-        });
-      })
-      .catch((err) => {
-        alert(err.toString());
-        console.log("Error during joing the hub \n" + err);
+  async reJoinRoom(attempt) {
+    console.warn("SignalR: attemp to reconnect");
+    await this.joinRoomPromise().catch((err) => {
+      console.error(err);
+      setTimeout(
+        async () => this.reJoinRoom(attempt + 1),
+        Math.pow(2, attempt) * 1000
+      );
+    });
+  }
+
+  joinRoomPromise() {
+    return this.connection.start().then(() => {
+      const roomId = this.roomId.toString();
+      console.log("Joining room id=" + roomId);
+      const request = {
+        Id: this.userId,
+        Role: "Owner",
+        RoomId: roomId,
+      };
+      this.connection.invoke("JoinRoom", request).catch((err) => {
+        throw new Error("Error during joinning the room: " + err);
       });
+    });
+  }
+
+  disconnectPromise() {
+    this.onCloseMethod = () => {};
+    return this.connection.stop();
   }
 }

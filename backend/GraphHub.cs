@@ -8,7 +8,7 @@ using Backend.Core;
 namespace Backend.Service
 {
 
-    public interface IGraphHub
+    public interface IGraphHub 
     {
         Task SendAction(UserAction userAction);
         Task ReceiveAction(UserAction userAction);
@@ -34,7 +34,7 @@ namespace Backend.Service
         }
         private RoomManager Room
         {
-            get { return RoomsContainer.GetRoom(MyUser.RoomId); }
+            get { return MyUser != null ? RoomsContainer.GetRoom(MyUser.RoomId) : null; }
         }
         public async Task CreateRoom(User owner)
         {
@@ -57,6 +57,16 @@ namespace Backend.Service
             }
         }
 
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "SignalR Users");
+            await base.OnDisconnectedAsync(exception);
+            if (Room != null && MyUser != null)
+            {
+                Room.Users.Delete(MyUser.Id);
+                Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId}");
+            }
+        }
         private async Task<bool> AssignUserToContext(User user)
         {
             MyUser = user;
