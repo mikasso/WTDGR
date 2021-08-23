@@ -32,10 +32,7 @@
         </option>
       </select>
       Connection:
-      <toggle-button
-        v-model="toolbar.isOnline"
-        @change="handleConnectionSwitch()"
-      />
+      <toggle-button v-model="isOnline" :sync="true" />
     </div>
   </div>
 </template>
@@ -56,20 +53,19 @@ export default {
 
       currentLayer: null,
       layers: [],
-      isOnline: false,
-      // directions: [
-      //     'undirected',
-      //     'forward',
-      //     'backwords',
-      // ],
-      // direction: 'undirected',
     },
   }),
-
-  mounted() {
-    this.$emit("toggleConnectionButton", false);
+  computed: {
+    isOnline: {
+      get() {
+        return this.$store.state.isOnline;
+      },
+      set(value) {
+        if (value) this.$store.commit("setOnline");
+        else this.$store.commit("setOffline");
+      },
+    },
   },
-
   watch: {
     selectedTool: function() {
       this.$emit("toolSelected", this.selectedTool);
@@ -89,9 +85,6 @@ export default {
       for (const layer of layerState.layers) {
         if (layer.attrs) this.toolbar.layers.push(layer.attrs.name);
       }
-    },
-    handleConnectionSwitch() {
-      this.$emit("toggleConnectionButton", this.toolbar.isOnline);
     },
   },
 };

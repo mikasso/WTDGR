@@ -5,7 +5,6 @@
       @buttonPressed="toolbarButton($event)"
       @toolSelected="toolSelected($event)"
       @select="toolbarSelect($event)"
-      @toggleConnectionButton="toggleConnectionButton($event)"
     >
     </Toolbar>
 
@@ -47,10 +46,6 @@ export default {
     },
     layerStateChange(layerState) {
       this.$refs.ToolbarComponent.layerStateChanged(layerState);
-    },
-    toggleConnectionButton(isOnline) {
-      console.log("toggle isOnline" + isOnline);
-      this.$refs.BoardComponent.connectionChanged(isOnline);
     },
   },
 };
