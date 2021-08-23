@@ -1,13 +1,19 @@
 import Konva from "konva";
 
 export class Vertex extends Konva.Circle {
-  constructor(layer, pos, config) {
+  constructor(layer, pos, config, highlightConfig) {
+    let baseConfig = Object.assign({}, config);
     config.x = pos.x;
     config.y = pos.y;
     super(config);
+    this.baseConfig = baseConfig;
+    this.highlightConfig = highlightConfig;
     this.edges = [];
     this.layer = layer;
-    this.pos = pos;
+  }
+
+  redraw() {
+    this.layer.draw();
   }
 }
 
@@ -20,15 +26,29 @@ export default class VertexManager {
   defaultConfig = {
     type: "v-circle",
     name: "unnamed",
-    radius: 10,
-    fill: "gray",
+    radius: 12,
+    fill: "#A8A8A8",
     stroke: "black",
     strokeWidth: 2,
     draggeble: this.dragEnabled,
   };
 
-  create(layer, pos, config = this.defaultConfig) {
-    const newVertex = new Vertex(layer, pos, config);
+  highlightConfig = {
+    strokeWidth: 3,
+  };
+
+  create(
+    layer,
+    pos,
+    config = this.defaultConfig,
+    highlightConfig = this.highlightConfig
+  ) {
+    const newVertex = new Vertex(
+      layer,
+      pos,
+      Object.assign({}, config),
+      Object.assign({}, highlightConfig)
+    );
     this.vertexes.push(newVertex);
     return newVertex;
   }
@@ -59,6 +79,16 @@ export default class VertexManager {
         if (x.getClassName() === "Circle") x.setDraggable(this.dragEnabled);
       });
     }
+  }
+
+  setHiglight(vertex, isHighlithed) {
+    let config;
+    if (isHighlithed) config = vertex.highlightConfig;
+    else config = vertex.baseConfig;
+    delete config.x;
+    delete config.y;
+    vertex.setAttrs(config);
+    vertex.redraw();
   }
 
   remove(vertex) {

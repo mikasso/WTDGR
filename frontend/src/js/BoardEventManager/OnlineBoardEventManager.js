@@ -11,7 +11,12 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     vertex.on("mousedown", (event) => {
       this.vertexMouseDown(event);
     });
-    // dragstart zablokuj wierzcholek do edycji
+    vertex.on("mouseenter", (event) => {
+      this.vertexMouseEnter(event);
+    });
+    vertex.on("mouseleave", (event) => {
+      this.vertexMouseLeave(event);
+    });
     vertex.on("mouseup", (event) => {
       this.vertexMouseUp(event);
     });
@@ -31,6 +36,21 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     edge.on("click", (event) => {
       this.edgeClick(event);
     });
+    edge.on("mouseenter", (event) => {
+      this.edgeMouseEnter(event);
+    });
+    edge.on("mouseleave", (event) => {
+      this.edgeMouseLeave(event);
+    });
+    edge.on("mousedown", (event) => {
+      this.edgeMouseDown(event);
+    });
+    edge.on("mousemove", (event) => {
+      this.edgeMouseMove(event);
+    });
+    edge.on("mouseup", (event) => {
+      this.edgeMouseUp(event);
+    });
   }
 
   bindPencilEvents(pencil) {
@@ -39,14 +59,68 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     });
   }
 
-  setSelectTool() {
+  toolChanged(toolName) {
+    this.boardManager.vertexManager.disableDrag(
+      this.boardManager.layerManager.layers
+    );
+    this.clearHandlers();
+    switch (toolName) {
+      case "Select":
+        this.setSelectToolHandlers();
+        break;
+      case "Vertex":
+        this.setVertexToolHandlers();
+        break;
+      case "Edge":
+        this.setEdgeToolHandlers();
+        break;
+      case "Erase":
+        this.setEraseToolHandlers();
+        break;
+      case "Pencil":
+        this.setPencilToolHandlers();
+        break;
+    }
+  }
+
+  setSelectToolHandlers() {
     this.boardManager.enableDrag();
+    this.mouseMove = () => {
+      const mousePos = this.boardManager.stage.getPointerPosition();
+      this.boardManager.dragEdge(mousePos);
+    };
+    this.mouseUp = () => {
+      this.boardManager.stopDraggingEdge();
+    };
     this.vertexDrag = (event) => {
       this.boardManager.dragEdges(event.target);
     };
+    this.vertexMouseEnter = (event) => {
+      this.boardManager.setHighlight("vertex", event.target, true);
+    };
+    this.vertexMouseLeave = (event) => {
+      this.boardManager.setHighlight("vertex", event.target, false);
+    };
+    this.edgeMouseEnter = (event) => {
+      this.boardManager.setHighlight("edge", event.target, true);
+    };
+    this.edgeMouseLeave = (event) => {
+      this.boardManager.setHighlight("edge", event.target, false);
+    };
+    this.edgeMouseDown = (event) => {
+      const mousePos = this.boardManager.stage.getPointerPosition();
+      this.boardManager.startDraggingEdge(event.target, mousePos);
+    };
+    this.edgeMouseMove = () => {
+      const mousePos = this.boardManager.stage.getPointerPosition();
+      this.boardManager.dragEdge(mousePos);
+    };
+    this.edgeMouseUp = () => {
+      this.boardManager.stopDraggingEdge();
+    };
   }
 
-  setVertexTool() {
+  setVertexToolHandlers() {
     this.click = (event) => {
       if (!this.isLeftClick(event)) return;
       const mousePos = this.boardManager.stage.getPointerPosition();
@@ -56,8 +130,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.hub.sendAction(action);
     };
   }
-
-  setEdgeTool() {
+  setEdgeToolHandlers() {
     this.mouseUp = () => {
       this.boardManager.stopDrawingEdge();
     };
@@ -79,7 +152,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     };
   }
 
-  setEraseTool() {
+  setEraseToolHandlers() {
     this.vertexMouseDown = (event) => {
       const vertex = event.target;
       const action = this.actionFactory.create("Delete", vertex.attrs);
@@ -95,9 +168,25 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       const drawing = event.target;
       this.boardManager.eraseDrawing(drawing);
     };
+
+    this.vertexMouseEnter = (event) => {
+      this.boardManager.setHighlight("vertex", event.target, true, true);
+    };
+
+    this.vertexMouseLeave = (event) => {
+      this.boardManager.setHighlight("vertex", event.target, false, true);
+    };
+
+    this.edgeMouseEnter = (event) => {
+      this.boardManager.setHighlight("edge", event.target, true, true);
+    };
+
+    this.edgeMouseLeave = (event) => {
+      this.boardManager.setHighlight("edge", event.target, false, true);
+    };
   }
 
-  setPencilTool() {
+  setPencilToolHandlers() {
     this.mouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const mousePos = this.boardManager.stage.getPointerPosition();
