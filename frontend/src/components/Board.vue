@@ -21,6 +21,7 @@ export default {
   data() {
     return {
       eventManager: null,
+      hub: null,
       lastToolSelected: null,
       user: { userId: Math.random().toString(), roomId: "1" },
     };
@@ -42,11 +43,11 @@ export default {
     sendLayerStateToToolbar(layerState) {
       this.$emit("layerStateChange", layerState);
     },
-    connectionChanged(isOnline) {
+    async connectionChanged(isOnline) {
       const boardManager = new BoardManager(this);
       if (isOnline) {
         const apiManager = new ApiManager(boardManager);
-        const hub = new BoardHub(
+        this.hub = new BoardHub(
           apiManager,
           this.user,
           () => {},
@@ -54,11 +55,18 @@ export default {
         );
         this.eventManager = new OnlineBoardEventManager(
           boardManager,
-          hub,
+          this.hub,
           new ActionFactory(this.user.userId)
         );
-        hub.joinRoom();
+        await this.hub.joinRoomPromise().catch(async () => {
+          alert("Failed to connect with hub, switching to ofline");
+          await this.connectionChanged(false);
+        });
       } else {
+        if (this.hub != null) {
+          await this.hub.disconnectPromise();
+          this.hub = null;
+        }
         this.eventManager = new OfflineBoardEventManager(boardManager);
       }
       boardManager.eventManager = this.eventManager;
