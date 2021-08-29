@@ -31,6 +31,10 @@ export default class BoardManager {
     this.vertexManager.enableDrag(this.layerManager.layers);
   }
 
+  setDraggableVertexById(vertexId, value) {
+    this.vertexManager.setDraggableById(vertexId, value);
+  }
+
   dragEdges(vertex) {
     this.edgeManager.dragEdges(vertex);
   }
@@ -138,5 +142,9 @@ export default class BoardManager {
 
   selectLayer(layerID) {
     this.layerManager.selectLayer(layerID);
+  }
+
+  getCurrentLayer() {
+    return this.layerManager.currentLayer;
   }
 }

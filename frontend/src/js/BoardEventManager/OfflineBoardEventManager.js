@@ -5,51 +5,6 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     super(boardManager);
   }
 
-  bindVertexEvents(vertex) {
-    vertex.on("mousedown", (event) => {
-      this.vertexMouseDown(event);
-    });
-    vertex.on("mouseenter", (event) => {
-      this.vertexMouseEnter(event);
-    });
-    vertex.on("mouseleave", (event) => {
-      this.vertexMouseLeave(event);
-    });
-    vertex.on("mouseup", (event) => {
-      this.vertexMouseUp(event);
-    });
-    vertex.on("dragmove", (event) => {
-      this.vertexDrag(event);
-    });
-  }
-
-  bindEdgeEvents(edge) {
-    edge.on("click", (event) => {
-      this.edgeClick(event);
-    });
-    edge.on("mouseenter", (event) => {
-      this.edgeMouseEnter(event);
-    });
-    edge.on("mouseleave", (event) => {
-      this.edgeMouseLeave(event);
-    });
-    edge.on("mousedown", (event) => {
-      this.edgeMouseDown(event);
-    });
-    edge.on("mousemove", (event) => {
-      this.edgeMouseMove(event);
-    });
-    edge.on("mouseup", (event) => {
-      this.edgeMouseUp(event);
-    });
-  }
-
-  bindPencilEvents(pencil) {
-    pencil.on("click", (event) => {
-      this.pencilClick(event);
-    });
-  }
-
   toolChanged(toolName) {
     this.boardManager.vertexManager.disableDrag(
       this.boardManager.layerManager.layers

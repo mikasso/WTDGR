@@ -32,26 +32,45 @@ namespace Backend.Core
             return owner;
         }
 
-        public async Task<bool> ExecuteAction(UserAction userAction)
+        public async Task<ActionResult> ExecuteAction(UserAction userAction)
         {
+            var actionResult = new ActionResult() { IsSucceded = false, Receviers = Receviers.caller};
             try
             {
                 var action = DispatchAction(userAction);
                 await _semaphore.WaitAsync();
                 try
                 {
-                    return action();
+                    actionResult.IsSucceded = action();
                 }
                 finally
                 {
                     _semaphore.Release();
                 }
+                actionResult.Receviers = dispatchReceivers(actionResult.IsSucceded, userAction.ActionType);
+                actionResult.UserAction = userAction;
+                return actionResult;
             }
             catch (Exception e)
             {
                 Log.Error("Cannot dispatch user action message!", e);
-                return false;
+                return actionResult;
             }
+
+        }
+
+        private Receviers dispatchReceivers(bool isSucceded, string actionType)
+        {
+            switch (actionType) { 
+                case "RequestToEdit":
+                case "ReleaseItem":
+                    return Receviers.caller;
+                default:
+                    if (isSucceded)
+                        return Receviers.all;
+                    else
+                        return Receviers.caller;
+             }
         }
 
         public Func<bool> DispatchAction(UserAction userAction)
@@ -62,15 +81,40 @@ namespace Backend.Core
                 case "Add":
                     userAction.Item.Id = Guid.NewGuid().ToString();
                     return DispatchAddAction(userAction);
-                    break;
+                case "RequestToEdit":
+                    return DispatchRequestToEditAction(userAction);
+                case "ReleaseItem":
+                    return DispatchReleaseItemAction(userAction);
                 case "Edit":
                     return DispatchEditAction(userAction);
-                    break;
                 case "Delete":
                     return DispatchDeleteAction(userAction);
-                    break;
                 default:
                     throw new ArgumentException("Cannot dispatch user action message!");
+            }
+        }
+
+        private Func<bool> DispatchReleaseItemAction(UserAction userAction)
+        {
+            switch (userAction.Item.Type)
+            {
+                case "v-circle":
+                    var item = userAction.Item as Vertex;
+                    item.EditorId = null;
+                    return () => _verticesManager.Update(item);
+                default: throw new NotImplementedException();
+            }
+        }
+
+        private Func<bool> DispatchRequestToEditAction(UserAction userAction)
+        {
+            switch (userAction.Item.Type)
+            {
+                case "v-circle":
+                    var item = userAction.Item as Vertex;
+                    item.EditorId = userAction.UserId;
+                    return () => _verticesManager.Update(item);
+                default: throw new NotImplementedException();
             }
         }
 
@@ -84,6 +128,7 @@ namespace Backend.Core
                 default: throw new NotImplementedException();
             }
         }
+
 
         private Func<bool> DispatchEditAction(UserAction userAction)
         {

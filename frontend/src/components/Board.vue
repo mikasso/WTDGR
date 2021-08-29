@@ -62,13 +62,12 @@ export default {
       return new OnlineBoardEventManager(
         boardManager,
         this.hub,
-        new ActionFactory(this.user.userId)
+        new ActionFactory(this.user.userId, boardManager)
       );
     },
     async switchToOnline(that) {
-      await that.hub.joinRoomPromise().catch(async () => {
+      that.hub.joinRoomPromise().catch(async () => {
         alert("Failed to connect with hub, switching to ofline");
-        await that.connectionChanged(false);
       });
     },
     async switchToOffline(that) {

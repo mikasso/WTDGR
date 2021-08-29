@@ -7,14 +7,19 @@ export default class ApiManager {
     console.log(response);
   }
 
-  receiveAction(action) {
-    console.debug(action);
+  receiveAction(action, isSucceded) {
     switch (action.actionType) {
       case "Add":
         this.receiveAdd(action);
         break;
       case "Edit":
         this.receiveEdit(action);
+        break;
+      case "RequestToEdit":
+        this.receiveRequestToEdit(action, isSucceded);
+        break;
+      case "ReleaseItem":
+        console.log("Realeas item" + action.item.id);
         break;
       case "Delete":
         this.receiveDelete(action);
@@ -52,6 +57,18 @@ export default class ApiManager {
     switch (action.item.type) {
       case "v-circle":
         this.boardManager.update(action.item);
+        break;
+      default:
+        throw Error(`Not implement edit for ${action.item.type}`);
+    }
+  }
+
+  receiveRequestToEdit(action, isSucceded) {
+    switch (action.item.type) {
+      case "v-circle":
+        if (isSucceded)
+          this.boardManager.setDraggableVertexById(action.item.id, true);
+        else console.error("cannot edit vertex" + action.item.id);
         break;
       default:
         throw Error(`Not implement edit for ${action.item.type}`);
