@@ -10,6 +10,8 @@ namespace Backend.Models
     {
         Add,
         Edit,
+        RequestToEdit,
+        ReleaseItem,
         Delete,
     }
 }

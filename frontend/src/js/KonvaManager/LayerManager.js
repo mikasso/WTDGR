@@ -12,16 +12,16 @@ export default class LayerManager {
   addLayer() {
     this.layerCount += 1;
     const layerID = "Layer " + this.layerCount;
-    const newLayer = new Konva.Layer({ name: layerID });
+    const newLayer = new Konva.Layer({ id: layerID });
     this.currentLayer = newLayer;
     this.layers.push(newLayer);
     this.stage.add(newLayer);
     this.sendLayersStateToToolbar();
   }
 
-  selectLayer(layerName) {
+  selectLayer(layerId) {
     for (const layer of this.layers) {
-      if (layer.attrs.name == layerName) {
+      if (layer.attrs.id == layerId) {
         this.currentLayer = layer;
         break;
       }

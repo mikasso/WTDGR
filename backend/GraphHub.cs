@@ -11,9 +11,9 @@ namespace Backend.Service
     public interface IGraphHub 
     {
         Task SendAction(UserAction userAction);
-        Task ReceiveAction(UserAction userAction);
+        Task ReceiveAction(UserAction userAction, bool isSucceded = true);
 
-        Task ReceiveActionResponse(ActionResponse actionResponse);
+        Task ReceiveActionResponse(UserActionFailure actionResponse);
         Task SendText(string message);
         Task ReceiveText(string message);
         Task ReceiveJoinResponse(User user);
@@ -101,17 +101,14 @@ namespace Backend.Service
             userAction.UserId = MyUser.Id;
             if (MyGroup == null)
             {
-                await Clients.Caller.ReceiveActionResponse(new ActionResponse() { Succeded=false,Information="You re not in any group"});
+                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason="You re not in any group"});
             }
-            var result = await Room.ExecuteAction(userAction);
-            if (result)
+            var actionResult = await Room.ExecuteAction(userAction);
+            var receiver = actionResult.Receviers == Receviers.all ? MyGroup : Clients.Caller;
+            await receiver.ReceiveAction(actionResult.UserAction, actionResult.IsSucceded);
+            if (!actionResult.IsSucceded)
             {
-                await MyGroup.ReceiveAction(userAction);
-            }
-            else
-            {
-                Log.Error($"Cannot execut action for user {userAction.UserId}");
-                await Clients.Caller.ReceiveActionResponse(new ActionResponse() { Succeded = false, Information = "Error occured during execution demanded action" });
+                Log.Error($"Cannot execut action for user {userAction.UserId}\n" + userAction.ToString());
             }
         }
 

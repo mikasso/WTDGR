@@ -7,58 +7,6 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     this.hub = hub;
   }
 
-  bindVertexEvents(vertex) {
-    vertex.on("mousedown", (event) => {
-      this.vertexMouseDown(event);
-    });
-    vertex.on("mouseenter", (event) => {
-      this.vertexMouseEnter(event);
-    });
-    vertex.on("mouseleave", (event) => {
-      this.vertexMouseLeave(event);
-    });
-    vertex.on("mouseup", (event) => {
-      this.vertexMouseUp(event);
-    });
-    // interval js https://developer.mozilla.org/pl/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
-    vertex.on("dragmove", (event) => {
-      this.vertexDrag(event);
-    });
-
-    vertex.on("dragend", (event) => {
-      this.vertexDrag(event);
-      const action = this.actionFactory.create("Edit", event.target.attrs);
-      this.hub.sendAction(action);
-    });
-  }
-
-  bindEdgeEvents(edge) {
-    edge.on("click", (event) => {
-      this.edgeClick(event);
-    });
-    edge.on("mouseenter", (event) => {
-      this.edgeMouseEnter(event);
-    });
-    edge.on("mouseleave", (event) => {
-      this.edgeMouseLeave(event);
-    });
-    edge.on("mousedown", (event) => {
-      this.edgeMouseDown(event);
-    });
-    edge.on("mousemove", (event) => {
-      this.edgeMouseMove(event);
-    });
-    edge.on("mouseup", (event) => {
-      this.edgeMouseUp(event);
-    });
-  }
-
-  bindPencilEvents(pencil) {
-    pencil.on("click", (event) => {
-      this.pencilClick(event);
-    });
-  }
-
   toolChanged(toolName) {
     this.boardManager.vertexManager.disableDrag(
       this.boardManager.layerManager.layers
@@ -84,7 +32,6 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   setSelectToolHandlers() {
-    this.boardManager.enableDrag();
     this.mouseMove = () => {
       const mousePos = this.boardManager.stage.getPointerPosition();
       this.boardManager.dragEdge(mousePos);
@@ -97,10 +44,35 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     };
     this.vertexMouseEnter = (event) => {
       this.boardManager.setHighlight("vertex", event.target, true);
+      const action = this.actionFactory.create(
+        "RequestToEdit",
+        event.target.attrs
+      );
+      this.hub.sendAction(action);
     };
     this.vertexMouseLeave = (event) => {
       this.boardManager.setHighlight("vertex", event.target, false);
     };
+    const sendVertexEdit = (vertex) => {
+      const action = this.actionFactory.create("Edit", vertex.attrs);
+      this.hub.sendAction(action);
+    };
+    let intervalId;
+    this.vertexMouseDown = (event) => {
+      const vertex = event.target;
+      if (vertex.attrs.draggable)
+        intervalId = setInterval(sendVertexEdit, 33, vertex);
+    };
+    this.vertexDragend = (event) => {
+      const vertex = event.target;
+      clearInterval(intervalId);
+      this.boardManager.setDraggableVertexById(vertex.attrs.id, false);
+      sendVertexEdit(vertex);
+      this.hub.sendAction(
+        this.actionFactory.create("ReleaseItem", vertex.attrs)
+      );
+    };
+
     this.edgeMouseEnter = (event) => {
       this.boardManager.setHighlight("edge", event.target, true);
     };
