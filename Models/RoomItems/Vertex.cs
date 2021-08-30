@@ -3,7 +3,7 @@
     public class Vertex : IRoomItem
     {
         public string Id { get; set; }
-        public string Type { get; set; }
+        public KonvaType Type { get; set; }
         public float Y { get; set; }
         public float X { get; set; }
         public int Radius { get; set; }
