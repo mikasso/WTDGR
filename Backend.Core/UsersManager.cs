@@ -25,12 +25,12 @@ namespace Backend.Core
 
         public bool Exists(User user)
         {
-            return this.objects.ContainsKey(user.Id);
+            return this._objects.ContainsKey(user.Id);
         }
 
         public bool Exists(String userName)
         {
-            return this.objects.ContainsKey(userName);
+            return this._objects.ContainsKey(userName);
         }
     }
 }
