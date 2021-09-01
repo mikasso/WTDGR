@@ -4,8 +4,6 @@
     {
         public KonvaType Type { get; set; }
 
-        public string Layer { get; set; }
-
         public string? EditorId { get; set; }
     }
 }

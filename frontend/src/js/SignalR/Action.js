@@ -14,7 +14,7 @@ export class ActionFactory {
   }
 
   create(actionType, item) {
-    item.layer = this.layerProvider.getCurrentLayer().attrs.id;
+    item.layer = this.layerProvider.currentLayer.attrs.id;
     return new Action(actionType, this.userId, item);
   }
 }

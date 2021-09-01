@@ -1,6 +1,7 @@
 export default class BaseBoardEventManager {
-  constructor(boardManager) {
+  constructor(boardManager, store) {
     this.boardManager = boardManager;
+    this.store = store;
     this.clearHandlers();
     this.bindStageEvents(boardManager.stage);
   }
@@ -16,6 +17,7 @@ export default class BaseBoardEventManager {
     this.vertexMouseLeave = () => {};
     this.vertexDrag = () => {};
     this.vertexDragend = () => {};
+    this.vertexDragstart = () => {};
     this.edgeClick = () => {};
     this.edgeMouseEnter = () => {};
     this.edgeMouseLeave = () => {};
@@ -47,6 +49,9 @@ export default class BaseBoardEventManager {
     });
     vertex.on("dragmove", (event) => {
       this.vertexDrag(event);
+    });
+    vertex.on("dragstart", (event) => {
+      this.vertexDragstart(event);
     });
     vertex.on("dragend", (event) => {
       this.vertexDragend(event);
@@ -80,9 +85,7 @@ export default class BaseBoardEventManager {
   }
 
   toolChanged(toolName) {
-    this.boardManager.vertexManager.disableDrag(
-      this.boardManager.layerManager.layers
-    );
+    this.boardManager.vertexManager.disableDrag(this.store.state.layers);
     this.clearHandlers();
     switch (toolName) {
       case "Select":

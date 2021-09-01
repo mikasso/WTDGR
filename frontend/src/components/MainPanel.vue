@@ -2,18 +2,13 @@
   <div class="main-panel">
     <Toolbar
       ref="ToolbarComponent"
-      @buttonPressed="toolbarButton($event)"
+      @addLayer="addLayer()"
       @toolSelected="toolSelected($event)"
       @select="toolbarSelect($event)"
     >
     </Toolbar>
 
-    <Board
-      class="Board"
-      ref="BoardComponent"
-      @layerStateChange="layerStateChange($event)"
-    >
-    </Board>
+    <Board class="Board" ref="BoardComponent"> </Board>
 
     <div class="users">
       userzy
@@ -35,17 +30,14 @@ export default {
   },
 
   methods: {
-    toolbarButton(name) {
-      this.$refs.BoardComponent.toolbarButton(name);
+    addLayer(name) {
+      this.$refs.BoardComponent.addLayer(name);
     },
     toolbarSelect(selected) {
       this.$refs.BoardComponent.toolbarSelect(selected);
     },
     toolSelected(toolName) {
       this.$refs.BoardComponent.toolChanged(toolName);
-    },
-    layerStateChange(layerState) {
-      this.$refs.ToolbarComponent.layerStateChanged(layerState);
     },
   },
 };
