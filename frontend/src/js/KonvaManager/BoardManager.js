@@ -104,7 +104,7 @@ export default class BoardManager {
   }
 
   eraseVertex(vertex) {
-    if (this.layerManager.currentLayer != vertex.layer) return;
+    if (this.currentLayer != vertex.layer) return;
     this.edgeManager.remove(vertex.edges);
     this.vertexManager.remove(vertex);
   }
@@ -115,14 +115,14 @@ export default class BoardManager {
   }
 
   eraseEdge(edge) {
-    if (this.layerManager.currentLayer != edge.layer) return;
+    if (this.currentLayer != edge.layer) return;
     this.edgeManager.remove([edge]);
   }
 
   startPencil(position) {
     const pencilDrawing = this.pencilManager.create(
       position,
-      this.layerManager.currentLayer
+      this.currentLayer
     );
     this.eventManager.bindPencilEvents(pencilDrawing);
   }
@@ -140,7 +140,7 @@ export default class BoardManager {
   }
 
   selectLayer(layerID) {
-    this.layerManager.selectLayer(layerID);
+    this.selectLayer(layerID);
   }
 
   receiveAddLayer(layerId) {
