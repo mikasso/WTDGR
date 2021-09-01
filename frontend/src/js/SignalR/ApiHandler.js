@@ -38,6 +38,11 @@ export default class ApiManager {
         );
         this.boardManager.draw(vertex);
         break;
+      case "layer":
+        this.boardManager.receiveAddLayer(action.item.id);
+        // if (action.userId === this.store.state.user)
+        this.boardManager.setCurrentLayer(action.item.id);
+        break;
       default:
         throw Error(`Not implement add for ${action.item.type}`);
     }

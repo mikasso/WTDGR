@@ -35,6 +35,9 @@ namespace Backend.Models
                 case "v-circle":
                     return new Vertex();
                     break;
+                case "layer":
+                    return new Layer();
+                    break;
                 default:
                     throw new InvalidCastException($"Cant cast when type value is {value}");
             }

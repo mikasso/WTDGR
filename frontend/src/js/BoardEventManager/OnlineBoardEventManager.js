@@ -1,34 +1,9 @@
 import BaseBoardEventManager from "./BaseBoardEventManager";
-
 export default class OnlineBoardEventManager extends BaseBoardEventManager {
-  constructor(boardManager, hub, actionFactory) {
-    super(boardManager);
+  constructor(boardManager, store, hub, actionFactory) {
+    super(boardManager, store);
     this.actionFactory = actionFactory;
     this.hub = hub;
-  }
-
-  toolChanged(toolName) {
-    this.boardManager.vertexManager.disableDrag(
-      this.boardManager.layerManager.layers
-    );
-    this.clearHandlers();
-    switch (toolName) {
-      case "Select":
-        this.setSelectToolHandlers();
-        break;
-      case "Vertex":
-        this.setVertexToolHandlers();
-        break;
-      case "Edge":
-        this.setEdgeToolHandlers();
-        break;
-      case "Erase":
-        this.setEraseToolHandlers();
-        break;
-      case "Pencil":
-        this.setPencilToolHandlers();
-        break;
-    }
   }
 
   setSelectToolHandlers() {
@@ -51,26 +26,32 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.hub.sendAction(action);
     };
     this.vertexMouseLeave = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, false);
+      const vertex = event.target;
+      this.boardManager.setHighlight("vertex", vertex, false);
+      this.hub.sendAction(
+        this.actionFactory.create("ReleaseItem", vertex.attrs)
+      );
+      this.boardManager.setDraggableVertexById(vertex.attrs.id, false);
     };
+
+    let intervalId;
     const sendVertexEdit = (vertex) => {
       const action = this.actionFactory.create("Edit", vertex.attrs);
       this.hub.sendAction(action);
     };
-    let intervalId;
-    this.vertexMouseDown = (event) => {
-      const vertex = event.target;
-      if (vertex.attrs.draggable)
-        intervalId = setInterval(sendVertexEdit, 33, vertex);
-    };
     this.vertexDragend = (event) => {
       const vertex = event.target;
-      clearInterval(intervalId);
-      this.boardManager.setDraggableVertexById(vertex.attrs.id, false);
+      if (intervalId !== null) clearInterval(intervalId);
+      intervalId = null;
       sendVertexEdit(vertex);
-      this.hub.sendAction(
-        this.actionFactory.create("ReleaseItem", vertex.attrs)
+    };
+    this.vertexDragstart = (event) => {
+      const vertex = event.target;
+      console.log(
+        "vertex mouse down " + vertex.attrs.draggable + vertex.attrs.id
       );
+      if (vertex.attrs.draggable)
+        intervalId = setInterval(sendVertexEdit, 33, vertex);
     };
 
     this.edgeMouseEnter = (event) => {
@@ -174,19 +155,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     };
   }
 
-  toolbarButton(buttonName) {
-    switch (buttonName) {
-      case "Layer":
-        this.boardManager.addLayer();
-        break;
-    }
-  }
-
-  toolbarSelect(selected) {
-    switch (selected.type) {
-      case "layer":
-        this.boardManager.selectLayer(selected.value);
-        break;
-    }
+  addLayer() {
+    this.hub.sendAction(this.actionFactory.create("Add", { type: "layer" }));
   }
 }

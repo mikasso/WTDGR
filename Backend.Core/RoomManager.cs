@@ -12,17 +12,17 @@ namespace Backend.Core
     public class RoomManager : IRoomManager
     {
         public string RoomId { get; init; }
-
-
+        public User Owner { get; private set; }
+        public readonly UsersManager Users = new();
+        private readonly VerticesManager _verticesManager = new();
+        private readonly LayersManager _layersManager = new LayersManager();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         public RoomManager(string id)
         {
             Log.Information($"Starting new room. Id: {id}");
             RoomId = id;
+            _layersManager.Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer });
         }
-        public User Owner { get; private set; }
-        public readonly UsersManager Users = new();
-        private readonly VerticesManager _verticesManager = new();
         public User CreateOwner(User owner)
         {
             if (Owner != default)
@@ -98,7 +98,6 @@ namespace Backend.Core
             switch (userAction.ActionType)
             {
                 case ActionType.Add:
-                    userAction.Item.Id = Guid.NewGuid().ToString();
                     return DispatchAddAction(userAction);
                 case ActionType.RequestToEdit:
                     return DispatchRequestToEditAction(userAction);
@@ -155,8 +154,12 @@ namespace Backend.Core
             switch (userAction.Item.Type)
             {
                 case KonvaType.Vertex:
-                    var vertexId = userAction.Item.Id;
-                    return () => _verticesManager.Delete(vertexId);
+                    var vertex = userAction.Item as Vertex;
+                    return () => {
+                        if (_layersManager.Get(vertex.Layer) == null) return false;
+                        if (_verticesManager.Get(vertex.Id)?.Layer != vertex.Layer) return false;
+                        return _verticesManager.Delete(vertex.Id);
+                    };
                 default: throw new NotImplementedException();
             }
         }
@@ -167,7 +170,12 @@ namespace Backend.Core
             switch (userAction.Item.Type)
             {
                 case KonvaType.Vertex:
-                    return () => _verticesManager.Update(userAction.Item as Vertex);
+                    var vertex = userAction.Item as Vertex;
+                    return () => {
+                        if (_layersManager.Get(vertex.Layer) == null) return false;
+                        if (_verticesManager.Get(vertex.Id)?.Layer != vertex.Layer) return false;
+                        return _verticesManager.Update(userAction.Item as Vertex);
+                    };
                 default: throw new NotImplementedException();
             }
         }
@@ -177,8 +185,13 @@ namespace Backend.Core
             switch (userAction.Item.Type)
             {
                 case KonvaType.Vertex:
+                    userAction.Item.Id = Guid.NewGuid().ToString();
                     var vertex = userAction.Item as Vertex;
                     return () => _verticesManager.Add(vertex);
+                case KonvaType.Layer:
+                    var layer = userAction.Item as Layer;
+                    layer.Id = $"Layer {_layersManager.Count + 1}";
+                    return () => _layersManager.Add(layer);
                 default: throw new NotImplementedException();
             }
         }

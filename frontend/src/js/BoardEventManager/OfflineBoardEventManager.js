@@ -1,32 +1,9 @@
 import BaseBoardEventManager from "./BaseBoardEventManager";
+import Konva from "konva";
 
 export default class OffLineBoardEventManager extends BaseBoardEventManager {
-  constructor(boardManager) {
-    super(boardManager);
-  }
-
-  toolChanged(toolName) {
-    this.boardManager.vertexManager.disableDrag(
-      this.boardManager.layerManager.layers
-    );
-    this.clearHandlers();
-    switch (toolName) {
-      case "Select":
-        this.setSelectToolHandlers();
-        break;
-      case "Vertex":
-        this.setVertexToolHandlers();
-        break;
-      case "Edge":
-        this.setEdgeToolHandlers();
-        break;
-      case "Erase":
-        this.setEraseToolHandlers();
-        break;
-      case "Pencil":
-        this.setPencilToolHandlers();
-        break;
-    }
+  constructor(boardManager, store) {
+    super(boardManager, store);
   }
 
   setSelectToolHandlers() {
@@ -146,19 +123,11 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     };
   }
 
-  toolbarButton(buttonName) {
-    switch (buttonName) {
-      case "Layer":
-        this.boardManager.addLayer();
-        break;
-    }
-  }
-
-  toolbarSelect(selected) {
-    switch (selected.type) {
-      case "layer":
-        this.boardManager.selectLayer(selected.value);
-        break;
-    }
+  addLayer() {
+    const newLayer = new Konva.Layer({
+      id: `Layer ${this.store.state.layers.length + 1}`,
+    });
+    this.store.commit("addLayer", newLayer);
+    this.store.commit("setCurrentLayer", newLayer);
   }
 }

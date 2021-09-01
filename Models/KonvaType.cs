@@ -11,6 +11,8 @@ namespace Backend.Models
         Vertex,
         [EnumMember(Value = "v-line")]
         Edge,
+        [EnumMember(Value = "layer")]
+        Layer,
         [EnumMember(Value = "unknown?")]
         PencilLine,
     }
