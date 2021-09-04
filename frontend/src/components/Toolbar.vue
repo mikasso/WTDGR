@@ -33,7 +33,7 @@
         </option>
       </select>
       Connection:
-      <toggle-button v-model="isOnline" :sync="true" />
+      <Toggle v-model="isOnline" v-bind="isOnline"></Toggle>
     </div>
   </div>
 </template>

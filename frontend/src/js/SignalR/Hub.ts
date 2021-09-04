@@ -1,11 +1,21 @@
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import UserAction from "./Action";
+import ApiManager from "./ApiHandler";
 
 export default class BoardHub {
+  apiManager: any;
+  userId: any;
+  roomId: any;
+  disconnectedCallback: any;
+  reconnectedCallback: any;
+  connection: any;
+  user: any;
+  onCloseMethod: (attempt: any) => Promise<void>;
   constructor(
-    apiManager,
-    credentials,
-    disconnectedCallback,
-    reconnectedCallback
+    apiManager: ApiManager,
+    credentials: { roomId: string; userId: string },
+    disconnectedCallback: () => void,
+    reconnectedCallback: () => void
   ) {
     this.apiManager = apiManager;
     this.userId = credentials.userId;
@@ -17,49 +27,49 @@ export default class BoardHub {
       .configureLogging(LogLevel.Information)
       .build();
 
-    this.connection.on("ReceiveJoinResponse", (user) => {
+    this.connection.on("ReceiveJoinResponse", (user: any) => {
       this.user = user;
       console.log(user);
     });
-    this.connection.on("ReceiveAction", (action, isSucceded) => {
-      this.apiManager.receiveAction(action, isSucceded);
-    });
-    this.connection.on("ReceiveActionResponse", (actionResponse) => {
+    this.connection.on(
+      "ReceiveAction",
+      (action: UserAction, isSucceded: boolean) => {
+        this.apiManager.receiveAction(action, isSucceded);
+      }
+    );
+    this.connection.on("ReceiveActionResponse", (actionResponse: string) => {
       this.apiManager.receiveActionResponse(actionResponse);
-    });
-    this.connection.on("ReceiveText", (text) => {
-      console.log(text);
     });
 
     this.onCloseMethod = this.reJoinRoom;
-    const closeHandler = async (that) => {
+    const closeHandler = async (that: BoardHub) => {
       that.disconnectedCallback();
       await that.onCloseMethod(0);
     };
     this.connection.onclose(async () => closeHandler(this));
   }
 
-  sendAction(action) {
+  sendAction(action: UserAction) {
     return this.connection
       .invoke("SendAction", action)
-      .catch((err) => alert(err.toString()));
+      .catch((err: Error) => alert(err.toString()));
   }
 
-  createRoom(username) {
+  createRoom(username: string) {
     this.connection.start().then(() => {
       const request = { Name: username };
       this.connection
         .invoke("CreateRoom", request)
-        .catch((err) => alert(err.toString()));
+        .catch((err: Error) => alert(err.toString()));
     });
   }
-  async reJoinRoom(attempt) {
+  async reJoinRoom(attempt: number) {
     console.warn("SignalR: attemp to reconnect");
     await this.joinRoomPromise()
       .then(() => {
         this.reconnectedCallback();
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error(err);
         setTimeout(
           async () => this.reJoinRoom(attempt + 1),
@@ -77,14 +87,14 @@ export default class BoardHub {
         Role: "Owner",
         RoomId: roomId,
       };
-      this.connection.invoke("JoinRoom", request).catch((err) => {
+      this.connection.invoke("JoinRoom", request).catch((err: Error) => {
         throw new Error("Error during joinning the room: " + err);
       });
     });
   }
 
   disconnectPromise() {
-    this.onCloseMethod = () => {};
+    this.onCloseMethod = () => Promise.resolve();
     return this.connection.stop();
   }
 }

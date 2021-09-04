@@ -1,15 +1,17 @@
 import BaseBoardEventManager from "./BaseBoardEventManager";
-export default class OnlineBoardEventManager extends BaseBoardEventManager {
-  constructor(boardManager, store, hub, actionFactory) {
+import Konva from "konva";
+import BoardManager from "../KonvaManager/BoardManager";
+
+export default class OffLineBoardEventManager extends BaseBoardEventManager {
+  constructor(boardManager: BoardManager, store: any) {
     super(boardManager, store);
-    this.actionFactory = actionFactory;
-    this.hub = hub;
   }
 
   setSelectToolHandlers() {
+    this.boardManager.enableDrag();
     this.mouseMove = () => {
-      const mousePos = this.boardManager.stage.getPointerPosition();
-      this.boardManager.dragEdge(mousePos);
+      const mousePos = this.boardManager.getMousePosition();
+      if (mousePos !== null) this.boardManager.dragEdge(mousePos);
     };
     this.mouseUp = () => {
       this.boardManager.stopDraggingEdge();
@@ -19,41 +21,10 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     };
     this.vertexMouseEnter = (event) => {
       this.boardManager.setHighlight("vertex", event.target, true);
-      const action = this.actionFactory.create(
-        "RequestToEdit",
-        event.target.attrs
-      );
-      this.hub.sendAction(action);
     };
     this.vertexMouseLeave = (event) => {
-      const vertex = event.target;
-      this.boardManager.setHighlight("vertex", vertex, false);
-      this.hub.sendAction(
-        this.actionFactory.create("ReleaseItem", vertex.attrs)
-      );
-      this.boardManager.setDraggableVertexById(vertex.attrs.id, false);
+      this.boardManager.setHighlight("vertex", event.target, false);
     };
-
-    let intervalId;
-    const sendVertexEdit = (vertex) => {
-      const action = this.actionFactory.create("Edit", vertex.attrs);
-      this.hub.sendAction(action);
-    };
-    this.vertexDragend = (event) => {
-      const vertex = event.target;
-      if (intervalId !== null) clearInterval(intervalId);
-      intervalId = null;
-      sendVertexEdit(vertex);
-    };
-    this.vertexDragstart = (event) => {
-      const vertex = event.target;
-      console.log(
-        "vertex mouse down " + vertex.attrs.draggable + vertex.attrs.id
-      );
-      if (vertex.attrs.draggable)
-        intervalId = setInterval(sendVertexEdit, 33, vertex);
-    };
-
     this.edgeMouseEnter = (event) => {
       this.boardManager.setHighlight("edge", event.target, true);
     };
@@ -61,12 +32,13 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.boardManager.setHighlight("edge", event.target, false);
     };
     this.edgeMouseDown = (event) => {
-      const mousePos = this.boardManager.stage.getPointerPosition();
-      this.boardManager.startDraggingEdge(event.target, mousePos);
+      const mousePos = this.boardManager.getMousePosition();
+      if (mousePos !== null)
+        this.boardManager.startDraggingEdge(event.target, mousePos);
     };
     this.edgeMouseMove = () => {
-      const mousePos = this.boardManager.stage.getPointerPosition();
-      this.boardManager.dragEdge(mousePos);
+      const mousePos = this.boardManager.getMousePosition();
+      if (mousePos !== null) this.boardManager.dragEdge(mousePos);
     };
     this.edgeMouseUp = () => {
       this.boardManager.stopDraggingEdge();
@@ -76,13 +48,14 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   setVertexToolHandlers() {
     this.click = (event) => {
       if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.stage.getPointerPosition();
-      const vertex = this.boardManager.createVertex(mousePos);
-
-      const action = this.actionFactory.create("Add", vertex.attrs);
-      this.hub.sendAction(action);
+      const mousePos = this.boardManager.getMousePosition();
+      if (mousePos !== null) {
+        const vertex = this.boardManager.createVertex(mousePos);
+        this.boardManager.draw(vertex);
+      }
     };
   }
+
   setEdgeToolHandlers() {
     this.mouseUp = () => {
       this.boardManager.stopDrawingEdge();
@@ -108,8 +81,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   setEraseToolHandlers() {
     this.vertexMouseDown = (event) => {
       const vertex = event.target;
-      const action = this.actionFactory.create("Delete", vertex.attrs);
-      this.hub.sendAction(action);
+      this.boardManager.eraseVertex(vertex);
     };
 
     this.edgeClick = (event) => {
@@ -142,12 +114,12 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   setPencilToolHandlers() {
     this.mouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.stage.getPointerPosition();
+      const mousePos = this.boardManager.getMousePosition();
       this.boardManager.startPencil(mousePos);
     };
     this.mouseMove = (event) => {
       if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.stage.getPointerPosition();
+      const mousePos = this.boardManager.getMousePosition();
       this.boardManager.movePencil(mousePos);
     };
     this.mouseUp = () => {
@@ -156,6 +128,10 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   addLayer() {
-    this.hub.sendAction(this.actionFactory.create("Add", { type: "layer" }));
+    const newLayer = new Konva.Layer({
+      id: `Layer ${this.store.state.layers.length + 1}`,
+    });
+    this.store.commit("addLayer", newLayer);
+    this.store.commit("setCurrentLayer", newLayer);
   }
 }

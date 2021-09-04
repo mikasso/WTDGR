@@ -1,13 +1,24 @@
-import Vuex from "vuex";
-import Vue from "vue";
+// store.ts
+import Konva from "konva";
+import { createStore, Store } from "vuex";
 
-Vue.use(Vuex);
+// define your typings for the store state
+export interface State {
+  isOnline: boolean;
+  stage?: Konva.Stage;
+  currentLayer?: Konva.Layer;
+  layers: Konva.Layer[];
+}
 
-export const store = new Vuex.Store({
+// define injection key
+export interface InjectionKey<T> extends Symbol {}
+export const key: InjectionKey<Store<State>> = Symbol();
+
+export const store = createStore<State>({
   state: {
     isOnline: true,
-    stage: null,
-    currentLayer: null,
+    stage: undefined,
+    currentLayer: undefined,
     layers: [],
   },
   getters: {
@@ -41,9 +52,11 @@ export const store = new Vuex.Store({
       state.stage = stage;
     },
     addLayer(state, layer) {
-      state.stage.add(layer);
-      state.layers = [...state.layers, layer];
-      console.log(state.layers);
+      if (state.stage !== undefined) {
+        state.stage.add(layer);
+        state.layers = [...state.layers, layer];
+        console.log(state.layers);
+      }
     },
   },
 });
