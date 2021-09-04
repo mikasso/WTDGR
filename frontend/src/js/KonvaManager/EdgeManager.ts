@@ -1,24 +1,38 @@
 import Konva from "konva";
+import { Cordinates, HighlightConfig, Vertex } from "./VertexManager";
 
 export class Edge extends Konva.Line {
-  constructor(layer, v1, config, highlightConfig) {
-    let baseConfig = Object.assign({}, config);
+  v1: Vertex;
+  v2: Vertex | undefined;
+  layer: Konva.Layer;
+  baseConfig: Konva.LineConfig;
+  highlightConfig: any;
+  constructor(
+    layer: Konva.Layer,
+    v1: any,
+    config: Konva.LineConfig,
+    highlightConfig: any
+  ) {
+    const baseConfig = Object.assign({}, config);
     config.points = [v1.x(), v1.y(), v1.x(), v1.y()];
     super(config);
 
     this.v1 = v1;
-    this.v2 = null;
+    this.v2 = undefined;
     this.layer = layer;
     this.baseConfig = baseConfig;
     this.highlightConfig = highlightConfig;
   }
 
-  updatePosition(redraw, point = null) {
+  updatePosition(redraw: boolean, point: Cordinates | null = null) {
     let currentPoints;
-    if (this.v2)
+    if (this.v2 !== undefined)
       currentPoints = [this.v1.x(), this.v1.y(), this.v2.x(), this.v2.y()];
-    else currentPoints = [this.v1.x(), this.v1.y(), point.x, point.y];
-    this.points(currentPoints);
+    else if (point !== null) {
+      currentPoints = [this.v1.x(), this.v1.y(), point.x, point.y];
+      this.points(currentPoints);
+    }
+
     if (redraw) this.redraw();
   }
 
@@ -28,6 +42,12 @@ export class Edge extends Konva.Line {
 }
 
 export default class EdgeManager {
+  currentStartVertex: any;
+  currentEdge: any;
+  isDrawing: boolean;
+  vertexDistances: number[];
+  isDragging: boolean;
+  draggedEdge: any;
   constructor() {
     this.currentStartVertex = null;
     this.currentEdge = null;
@@ -42,15 +62,16 @@ export default class EdgeManager {
     strokeWidth: 2,
     lineCap: "round",
     lineJoin: "round",
+    points: [],
   };
 
-  highlightConfig = {
+  highlightConfig: HighlightConfig = {
     strokeWidth: 4,
   };
 
   startDrawing(
-    startVertex,
-    config = this.defaultConfig,
+    startVertex: Vertex,
+    config: any = this.defaultConfig,
     highlightConfig = this.highlightConfig
   ) {
     this.currentStartVertex = startVertex;
@@ -64,12 +85,12 @@ export default class EdgeManager {
     this.currentEdge.layer.add(this.currentEdge);
   }
 
-  redrawCurrentEdge(point) {
+  redrawCurrentEdge(point: any) {
     if (!this.currentEdge) return;
     this.currentEdge.updatePosition(true, point);
   }
 
-  tryToConnectVertices(vertex) {
+  tryToConnectVertices(vertex: Vertex) {
     if (!this.currentEdge) return;
     const v1 = this.currentEdge.v1;
     const v2 = vertex;
@@ -91,7 +112,7 @@ export default class EdgeManager {
     this.currentEdge = null;
   }
 
-  dragEdges(vertex, redraw = true) {
+  dragEdges(vertex: Vertex, redraw = true) {
     if (!vertex.edges.length) return;
     for (const edge of vertex.edges) {
       edge.updatePosition(false);
@@ -99,17 +120,21 @@ export default class EdgeManager {
     if (redraw) vertex.edges[0].layer.draw();
   }
 
-  startDraggingEdge(edge, pos) {
-    this.vertexDistances[0] = edge.v1.position().x - pos.x;
-    this.vertexDistances[1] = edge.v1.position().y - pos.y;
-    this.vertexDistances[2] = edge.v2.position().x - pos.x;
-    this.vertexDistances[3] = edge.v2.position().y - pos.y;
-    console.log(this.vertexDistances);
-    this.isDragging = true;
-    this.draggedEdge = edge;
+  startDraggingEdge(edge: Edge, pos: Cordinates) {
+    if (edge.v2 !== undefined) {
+      this.vertexDistances[0] = edge.v1.position().x - pos.x;
+      this.vertexDistances[1] = edge.v1.position().y - pos.y;
+      this.vertexDistances[2] = edge.v2.position().x - pos.x;
+      this.vertexDistances[3] = edge.v2.position().y - pos.y;
+      console.log(this.vertexDistances);
+      this.isDragging = true;
+      this.draggedEdge = edge;
+    } else {
+      throw Error("Edge should have exactly 2 vertives, but have only 1");
+    }
   }
 
-  dragVertexes(pos) {
+  dragVertexes(pos: Cordinates) {
     if (!this.isDragging) return;
     this.draggedEdge.v1.position({
       x: pos.x + this.vertexDistances[0],
@@ -130,7 +155,7 @@ export default class EdgeManager {
     this.draggedEdge = null;
   }
 
-  setHiglight(edge, isHighlithed) {
+  setHiglight(edge: Edge, isHighlithed: boolean) {
     let config;
     if (isHighlithed) config = edge.highlightConfig;
     else config = edge.baseConfig;
@@ -147,15 +172,20 @@ export default class EdgeManager {
     removedEdgeLayer.draw();
   }
 
-  remove(edges) {
+  remove(edges: Edge[]) {
     if (!edges.length) return;
     const edgesLayer = edges[0].layer;
     for (const edge of edges) {
       [edge.v1, edge.v2].forEach((vertex) => {
-        vertex.edges = vertex.edges.filter((x) => x !== edge);
+        if (vertex !== undefined)
+          vertex.edges = vertex.edges.filter((x) => x !== edge);
       });
       edge.remove();
     }
     edgesLayer.draw();
+  }
+
+  draw(konvaObject: Edge) {
+    konvaObject.draw();
   }
 }

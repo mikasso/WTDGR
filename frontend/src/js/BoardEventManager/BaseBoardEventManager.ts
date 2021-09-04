@@ -1,5 +1,32 @@
+import Konva from "konva";
+import { KonvaEventObject } from "konva/types/Node";
+import BoardManager from "../KonvaManager/BoardManager";
+import { Edge } from "../KonvaManager/EdgeManager";
+import { Vertex } from "../KonvaManager/VertexManager";
+
 export default class BaseBoardEventManager {
-  constructor(boardManager, store) {
+  click!: (...params: any[]) => void;
+  mouseMove!: (...params: any[]) => void;
+  mouseDown!: (...params: any[]) => void;
+  mouseUp!: (...params: any[]) => void;
+  vertexMouseUp!: (...params: any[]) => void;
+  vertexMouseDown!: (...params: any[]) => void;
+  vertexMouseEnter!: (...params: any[]) => void;
+  vertexMouseLeave!: (...params: any[]) => void;
+  vertexDrag!: (...params: any[]) => void;
+  vertexDragend!: (...params: any[]) => void;
+  vertexDragstart!: (...params: any[]) => void;
+  edgeClick!: (...params: any[]) => void;
+  edgeMouseEnter!: (...params: any[]) => void;
+  edgeMouseLeave!: (...params: any[]) => void;
+  edgeMouseUp!: (...params: any[]) => void;
+  edgeMouseDown!: (...params: any[]) => void;
+  edgeMouseMove!: (...params: any[]) => void;
+  pencilClick!: (...params: any[]) => void;
+  boardManager: BoardManager;
+  store: any;
+
+  constructor(boardManager: BoardManager, store: any) {
     this.boardManager = boardManager;
     this.store = store;
     this.clearHandlers();
@@ -27,14 +54,14 @@ export default class BaseBoardEventManager {
     this.pencilClick = () => {};
   }
 
-  bindStageEvents(stage) {
+  bindStageEvents(stage: Konva.Stage) {
     stage.on("click", (event) => this.click(event));
     stage.on("mousedown", (event) => this.mouseDown(event));
     stage.on("mouseup", (event) => this.mouseUp(event));
     stage.on("mousemove", (event) => this.mouseMove(event));
   }
 
-  bindVertexEvents(vertex) {
+  bindVertexEvents(vertex: Vertex) {
     vertex.on("mousedown", (event) => {
       this.vertexMouseDown(event);
     });
@@ -57,7 +84,7 @@ export default class BaseBoardEventManager {
       this.vertexDragend(event);
     });
   }
-  bindEdgeEvents(edge) {
+  bindEdgeEvents(edge: Edge) {
     edge.on("click", (event) => {
       this.edgeClick(event);
     });
@@ -78,13 +105,13 @@ export default class BaseBoardEventManager {
     });
   }
 
-  bindPencilEvents(pencil) {
-    pencil.on("click", (event) => {
+  bindPencilEvents(pencil: any) {
+    pencil.on("click", (event: any) => {
       this.pencilClick(event);
     });
   }
 
-  toolChanged(toolName) {
+  toolChanged(toolName: string) {
     this.boardManager.vertexManager.disableDrag(this.store.state.layers);
     this.clearHandlers();
     switch (toolName) {
@@ -122,15 +149,15 @@ export default class BaseBoardEventManager {
     throw new Error("Not implemented");
   }
 
-  isLeftClick(event) {
+  isLeftClick(event: { evt: { which: number } }) {
     return event.evt.which === 1;
   }
 
-  isRightClick(event) {
+  isRightClick(event: { evt: { which: number } }) {
     return event.evt.which === 3;
   }
 
-  getPointFromEvent(event) {
+  getPointFromEvent(event: any) {
     return {
       x: event.evt.layerX,
       y: event.evt.layerY,
