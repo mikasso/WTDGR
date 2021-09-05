@@ -1,20 +1,20 @@
 module.exports = {
+  root: true,
+  env: {
+    node: true,
+  },
   extends: [
-    // add more generic rulesets here, such as:
-    // 'eslint:recommended',
-    "plugin:vue/base",
-    // 'plugin:vue/recommended' // Use this if you are using Vue.js 2.x.
+    "plugin:vue/vue3-essential",
+    "eslint:recommended",
+    "@vue/typescript/recommended",
   ],
+  parserOptions: {
+    ecmaVersion: 2020,
+  },
   rules: {
-    // override/add rules settings here, such as:
-    // 'vue/no-unused-vars': 'error'
-    "no-restricted-syntax": ["error"],
-    "no-restricted-properties": [
-      2,
-      {
-        property: "__defineGetter__",
-        message: "Please use Object.defineProperty instead.",
-      },
-    ],
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
+    "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
   },
 };

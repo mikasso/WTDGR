@@ -1,18 +1,24 @@
+import { State } from "@/store";
 import Konva from "konva";
+import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
 import UserAction from "./Action";
 
 export default class ApiManager {
-  boardManager: BoardManager;
-  constructor(boardManager: BoardManager) {
-    this.boardManager = boardManager;
+  constructor(
+    private boardManager: BoardManager,
+    private store: Store<State>
+  ) {}
+
+  private get user() {
+    return this.store.state.user;
   }
 
-  receiveActionResponse(response: string) {
+  public receiveActionResponse(response: string) {
     console.log(response);
   }
 
-  receiveAction(action: UserAction, isSucceded: boolean) {
+  public receiveAction(action: UserAction, isSucceded: boolean) {
     switch (action.actionType) {
       case "Add":
         this.receiveAdd(action);
@@ -34,27 +40,31 @@ export default class ApiManager {
     }
   }
 
-  receiveAdd(action: UserAction) {
+  private receiveAdd(action: UserAction) {
     if (action.item.id)
       switch (action.item.type) {
-        case "v-circle":
-          var vertex = this.boardManager.createVertex(
-            { x: action.item.x as number, y: action.item.y as number },
+        case "v-circle": {
+          const vertex = this.boardManager.createVertex(
+            {
+              x: action.item.x as number,
+              y: action.item.y as number,
+            },
             action.item as Konva.CircleConfig
           );
           this.boardManager.draw(vertex);
           break;
+        }
         case "layer":
           this.boardManager.receiveAddLayer(action.item.id);
-          // if (action.userId === this.store.state.user)
-          this.boardManager.setCurrentLayer(action.item.id);
+          if (action.userId === this.user.userId)
+            this.boardManager.setCurrentLayer(action.item.id);
           break;
         default:
           throw Error(`Not implement add for ${action.item.type}`);
       }
   }
 
-  receiveDelete(action: UserAction) {
+  private receiveDelete(action: UserAction) {
     if (action.item.id)
       switch (action.item.type) {
         case "v-circle":
@@ -65,7 +75,7 @@ export default class ApiManager {
       }
   }
 
-  receiveEdit(action: UserAction) {
+  private receiveEdit(action: UserAction) {
     switch (action.item.type) {
       case "v-circle":
         this.boardManager.update(action.item);
@@ -75,7 +85,7 @@ export default class ApiManager {
     }
   }
 
-  receiveRequestToEdit(action: UserAction, isSucceded: boolean) {
+  private receiveRequestToEdit(action: UserAction, isSucceded: boolean) {
     if (action.item.id)
       switch (action.item.type) {
         case "v-circle":

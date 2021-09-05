@@ -1,5 +1,5 @@
 import Konva from "konva";
-import { KonvaEventListener, KonvaEventObject } from "konva/types/Node";
+import DraggableManager from "./DraggableManager";
 import { Edge } from "./EdgeManager";
 
 export interface Cordinates {
@@ -11,22 +11,12 @@ export interface HighlightConfig {
   strokeWidth: number;
 }
 export class Vertex extends Konva.Circle {
-  baseConfig: Konva.CircleConfig;
-  highlightConfig: HighlightConfig;
   edges: Edge[];
   layer: Konva.Layer;
-  constructor(
-    layer: Konva.Layer,
-    pos: Cordinates,
-    config: Konva.CircleConfig,
-    highlightConfig: HighlightConfig
-  ) {
-    const baseConfig = Object.assign({}, config);
+  constructor(layer: Konva.Layer, pos: Cordinates, config: Konva.CircleConfig) {
     config.x = pos.x;
     config.y = pos.y;
     super(config);
-    this.baseConfig = baseConfig;
-    this.highlightConfig = highlightConfig;
     this.edges = [];
     this.layer = layer;
   }
@@ -36,12 +26,11 @@ export class Vertex extends Konva.Circle {
   }
 }
 
-export default class VertexManager {
-  dragEnabled: boolean;
-  vertexes: Vertex[];
+export default class VertexManager extends DraggableManager {
   constructor() {
+    super();
     this.dragEnabled = true;
-    this.vertexes = [];
+    this.itemClassName = "Circle";
   }
 
   get defaultConfig() {
@@ -51,33 +40,26 @@ export default class VertexManager {
       radius: 12,
       fill: "#A8A8A8",
       stroke: "black",
-      strokeWidth: 2,
+      ...this.highlightConfigOff,
       draggeble: this.dragEnabled,
     };
   }
 
-  highlightConfig = {
+  private readonly highlightConfigOn = {
     strokeWidth: 3,
+  };
+
+  private readonly highlightConfigOff = {
+    strokeWidth: 2,
   };
 
   create(
     layer: Konva.Layer,
     pos: Cordinates,
-    config: any = this.defaultConfig,
-    highlightConfig = this.highlightConfig
+    config: Konva.CircleConfig = this.defaultConfig
   ) {
-    const newVertex = new Vertex(
-      layer,
-      pos,
-      Object.assign({}, config),
-      Object.assign({}, highlightConfig)
-    );
-    this.vertexes.push(newVertex);
+    const newVertex = new Vertex(layer, pos, config);
     return newVertex;
-  }
-
-  getVertexById(vertexId: string) {
-    return this.vertexes.find((x) => x.attrs.id === vertexId);
   }
 
   draw(vertex: Vertex) {
@@ -85,34 +67,9 @@ export default class VertexManager {
     vertex.layer.draw();
   }
 
-  enableDrag(layers: Konva.Layer[]) {
-    this.dragEnabled = true;
-    this.updateDragProp(layers);
-  }
-
-  setDraggableById(vertexId: string, value: boolean) {
-    const vertex = this.getVertexById(vertexId);
-    if (vertex !== undefined) vertex.setAttrs({ draggable: value });
-    throw new Error(`Couldn't find vertex to drag by id ${vertexId}`);
-  }
-
-  disableDrag(layers: Konva.Layer[]) {
-    this.dragEnabled = false;
-    this.updateDragProp(layers);
-  }
-
-  updateDragProp(layers: Konva.Layer[]) {
-    for (const layer of layers) {
-      const items = layer.getChildren();
-      items.each((x) => {
-        if (x.getClassName() === "Circle") x.setDraggable(this.dragEnabled);
-      });
-    }
-  }
-
   setHiglight(vertex: Vertex, isHighlithed: boolean) {
-    if (isHighlithed) vertex.setAttrs(vertex.highlightConfig);
-    else vertex.setAttrs(vertex.baseConfig);
+    if (isHighlithed) vertex.setAttrs(this.highlightConfigOn);
+    else vertex.setAttrs(this.highlightConfigOff);
 
     vertex.redraw();
   }

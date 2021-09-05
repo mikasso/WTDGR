@@ -6,13 +6,14 @@
 
 <script lang="ts">
 import MainPanel from "./components/MainPanel.vue";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
   name: "App",
   components: {
     MainPanel,
   },
-};
+});
 </script>
 
 <style lang="scss">
@@ -21,7 +22,5 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
