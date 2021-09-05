@@ -1,10 +1,46 @@
-export default class BaseBoardEventManager {
-  constructor(boardManager, store) {
+import { State } from "@/store";
+import Konva from "konva";
+import { Store } from "vuex";
+import BoardManager from "../KonvaManager/BoardManager";
+import { Edge } from "../KonvaManager/EdgeManager";
+import { Vertex } from "../KonvaManager/VertexManager";
+
+export default abstract class BaseBoardEventManager {
+  click!: (...params: any[]) => void;
+  mouseMove!: (...params: any[]) => void;
+  mouseDown!: (...params: any[]) => void;
+  mouseUp!: (...params: any[]) => void;
+  vertexMouseUp!: (...params: any[]) => void;
+  vertexMouseDown!: (...params: any[]) => void;
+  vertexMouseEnter!: (...params: any[]) => void;
+  vertexMouseLeave!: (...params: any[]) => void;
+  vertexDrag!: (...params: any[]) => void;
+  vertexDragend!: (...params: any[]) => void;
+  vertexDragstart!: (...params: any[]) => void;
+  edgeClick!: (...params: any[]) => void;
+  edgeMouseEnter!: (...params: any[]) => void;
+  edgeMouseLeave!: (...params: any[]) => void;
+  edgeMouseDown!: (...params: any[]) => void;
+  edgeMouseUp!: (...params: any[]) => void;
+  pencilClick!: (...params: any[]) => void;
+
+  boardManager: BoardManager;
+  store: Store<State>;
+
+  constructor(boardManager: BoardManager, store: Store<State>) {
     this.boardManager = boardManager;
+    this.boardManager.eventManager = this;
     this.store = store;
     this.clearHandlers();
     this.bindStageEvents(boardManager.stage);
   }
+
+  abstract setSelectToolHandlers(): void;
+  abstract setVertexToolHandlers(): void;
+  abstract setEdgeToolHandlers(): void;
+  abstract setEraseToolHandlers(): void;
+  abstract setPencilToolHandlers(): void;
+  abstract addLayer(): void;
 
   clearHandlers() {
     this.click = () => {};
@@ -21,20 +57,19 @@ export default class BaseBoardEventManager {
     this.edgeClick = () => {};
     this.edgeMouseEnter = () => {};
     this.edgeMouseLeave = () => {};
-    this.edgeMouseUp = () => {};
     this.edgeMouseDown = () => {};
-    this.edgeMouseMove = () => {};
+    this.edgeMouseUp = () => {};
     this.pencilClick = () => {};
   }
 
-  bindStageEvents(stage) {
+  bindStageEvents(stage: Konva.Stage) {
     stage.on("click", (event) => this.click(event));
     stage.on("mousedown", (event) => this.mouseDown(event));
     stage.on("mouseup", (event) => this.mouseUp(event));
     stage.on("mousemove", (event) => this.mouseMove(event));
   }
 
-  bindVertexEvents(vertex) {
+  bindVertexEvents(vertex: Vertex) {
     vertex.on("mousedown", (event) => {
       this.vertexMouseDown(event);
     });
@@ -57,7 +92,8 @@ export default class BaseBoardEventManager {
       this.vertexDragend(event);
     });
   }
-  bindEdgeEvents(edge) {
+
+  bindEdgeEvents(edge: Edge) {
     edge.on("click", (event) => {
       this.edgeClick(event);
     });
@@ -70,21 +106,19 @@ export default class BaseBoardEventManager {
     edge.on("mousedown", (event) => {
       this.edgeMouseDown(event);
     });
-    edge.on("mousemove", (event) => {
-      this.edgeMouseMove(event);
-    });
+
     edge.on("mouseup", (event) => {
       this.edgeMouseUp(event);
     });
   }
 
-  bindPencilEvents(pencil) {
-    pencil.on("click", (event) => {
+  bindPencilEvents(pencil: any) {
+    pencil.on("click", (event: any) => {
       this.pencilClick(event);
     });
   }
 
-  toolChanged(toolName) {
+  toolChanged(toolName: string) {
     this.boardManager.vertexManager.disableDrag(this.store.state.layers);
     this.clearHandlers();
     switch (toolName) {
@@ -106,31 +140,15 @@ export default class BaseBoardEventManager {
     }
   }
 
-  setSelectToolHandlers() {
-    throw new Error("Not implemented");
-  }
-  setVertexToolHandlers() {
-    throw new Error("Not implemented");
-  }
-  setEdgeToolHandlers() {
-    throw new Error("Not implemented");
-  }
-  setEraseToolHandlers() {
-    throw new Error("Not implemented");
-  }
-  setPencilToolHandlers() {
-    throw new Error("Not implemented");
-  }
-
-  isLeftClick(event) {
+  isLeftClick(event: { evt: { which: number } }) {
     return event.evt.which === 1;
   }
 
-  isRightClick(event) {
+  isRightClick(event: { evt: { which: number } }) {
     return event.evt.which === 3;
   }
 
-  getPointFromEvent(event) {
+  getPointFromEvent(event: any) {
     return {
       x: event.evt.layerX,
       y: event.evt.layerY,

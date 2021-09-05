@@ -4,57 +4,93 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import OnlineBoardEventManager from "../js/BoardEventManager/OnlineBoardEventManager";
 import OfflineBoardEventManager from "../js/BoardEventManager/OfflineBoardEventManager";
 import BoardManager from "../js/KonvaManager/BoardManager";
 import ApiManager from "../js/SignalR/ApiHandler";
 import BoardHub from "../js/SignalR/Hub";
 import { ActionFactory } from "../js/SignalR/Action";
-import { mapGetters } from "vuex";
 import Konva from "konva";
-export default {
+import { computed, defineComponent } from "vue";
+import BaseBoardEventManager from "@/js/BoardEventManager/BaseBoardEventManager";
+import { useStore } from "vuex";
+import { key, State } from "../store";
+
+interface User {
+  userId: string;
+  roomId: string;
+}
+
+interface BoardData {
+  eventManager?: BaseBoardEventManager;
+  hub?: BoardHub;
+}
+
+export default defineComponent({
   name: "Board",
   data() {
-    return {
-      eventManager: null,
-      hub: null,
-      lastToolSelected: null,
-      user: { userId: Math.random().toString(), roomId: "1" },
-    };
-  },
-  computed: {
-    ...mapGetters(["isOnline"]),
+    return {} as BoardData;
   },
   watch: {
     isOnline: {
       deep: true,
-      handler(isOnline) {
+      handler(isOnline: boolean) {
         this.handleConnectionChange(isOnline);
       },
     },
+    currentTool: {
+      deep: true,
+      handler(tool: string) {
+        this.eventManager?.toolChanged(tool);
+      },
+    },
+  },
+  setup() {
+    const store = useStore<State>(key);
+    const isOnline = computed(() => {
+      return store.state.isOnline;
+    });
+    const currentTool = computed(() => {
+      return store.state.currentTool;
+    });
+    console.log("Board setup");
+    return { store, isOnline, currentTool };
   },
   mounted() {
     this.handleConnectionChange(this.isOnline);
   },
   methods: {
-    handleConnectionChange(isOnline) {
+    handleConnectionChange(isOnline: boolean) {
       this.initalizeStageAndLayers();
-      const boardManager = new BoardManager(this.$store);
+      const boardManager = new BoardManager(this.store);
       if (isOnline) {
-        this.eventManager = this.getOnlineEventManager(boardManager);
-        this.switchToOnline(this);
+        const apiManager = new ApiManager(boardManager, this.store);
+        const hub = new BoardHub(apiManager, this.store);
+        this.eventManager = new OnlineBoardEventManager(
+          boardManager,
+          this.store,
+          hub,
+          new ActionFactory(this.store.state.user.userId, boardManager)
+        );
+        this.hub = hub;
+        this.hub?.joinRoomPromise().catch(async () => {
+          alert("Failed to connect with hub, switching to ofline");
+        });
       } else {
+        if (this.hub !== undefined) {
+          this.hub.disconnectPromise().catch(async () => {
+            alert("Failed to connect with hub, switching to ofline");
+          });
+        }
+        this.hub = undefined;
         this.eventManager = new OfflineBoardEventManager(
           boardManager,
-          this.$store
+          this.store
         );
-        this.switchToOffline(this);
       }
-      boardManager.eventManager = this.eventManager;
 
-      if (this.lastToolSelected !== null)
-        this.eventManager.toolbarSelect(this.lastToolSelected);
+      this.eventManager?.toolChanged(this.currentTool);
     },
     initalizeStageAndLayers() {
       const initLayer = new Konva.Layer({ id: "Layer 1" });
@@ -64,51 +100,18 @@ export default {
         height: window.innerHeight * 0.92,
       });
       initStage.add(initLayer);
-      this.$store.commit("setStage", initStage);
-      this.$store.commit("setLayers", [initLayer]);
-      this.$store.commit("setCurrentLayer", initLayer);
-    },
-    getOnlineEventManager(boardManager) {
-      const apiManager = new ApiManager(boardManager);
-      this.hub = new BoardHub(
-        apiManager,
-        this.user,
-        () => this.$store.commit("setOffline"),
-        () => this.$store.commit("setOnline")
-      );
-      return new OnlineBoardEventManager(
-        boardManager,
-        this.$store,
-        this.hub,
-        new ActionFactory(this.user.userId, boardManager)
-      );
-    },
-    async switchToOnline(that) {
-      that.hub.joinRoomPromise().catch(async () => {
-        alert("Failed to connect with hub, switching to ofline");
-      });
-    },
-    async switchToOffline(that) {
-      if (that.hub !== null) {
-        await that.hub.disconnectPromise();
-        that.hub = null;
-      }
+      this.store.commit("setStage", initStage);
+      this.store.commit("setLayers", [initLayer]);
+      this.store.commit("setCurrentLayer", initLayer);
     },
     addLayer() {
-      this.eventManager.addLayer();
+      this.eventManager?.addLayer();
     },
-    toolbarSelect(selected) {
-      this.lastToolSelected = selected;
-      this.eventManager.toolbarSelect(selected);
-    },
-    toolChanged(toolName) {
-      this.eventManager.toolChanged(toolName);
-    },
-    blockContextMenu(e) {
+    blockContextMenu(e: Event) {
       e.preventDefault(); //disable context menu when right click
     },
   },
-};
+});
 </script>
 
 <style scoped>
