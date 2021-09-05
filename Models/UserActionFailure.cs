@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 namespace Backend.Models
 {
     //TODO If it is only returned when action failed than maybe change it?
-    public class ActionResponse
+    public class UserActionFailure
     {
-        public bool Succeded { get; set; }
-        public string Information { get; set; } = "No additional information";
+        public string Reason { get; set; } = "No additional information";
     }
 }

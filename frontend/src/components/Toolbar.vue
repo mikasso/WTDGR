@@ -12,21 +12,22 @@
         {{ tool }}
       </div>
 
-      <div class="tool" style="margin-left:15px" @click="handleButton('Layer')">
+      <div class="tool" style="margin-left:15px" @click="addLayer()">
         Add layer
       </div>
 
       Layer:
       <select
         class="select"
-        v-if="toolbar.currentLayer"
-        v-model="toolbar.currentLayer"
-        @change="handleSelect('layer', toolbar.currentLayer)"
+        v-if="currentLayer"
+        v-model="currentLayer"
+        :sync="true"
       >
         <option
-          v-for="(layer, index) in toolbar.layers"
+          v-for="(layer, index) in layers"
           v-bind:key="index"
           :value="layer"
+          :sync="true"
         >
           {{ layer }}
         </option>
@@ -50,12 +51,26 @@ export default {
 
       edge_styles: ["line"],
       edge_style: "line",
-
-      currentLayer: null,
-      layers: [],
     },
   }),
   computed: {
+    layers: {
+      get() {
+        return this.$store.state.layers.map((layer) => layer.attrs.id);
+      },
+    },
+    currentLayer: {
+      get() {
+        if (this.$store.state.currentLayer == null) return "Loading..";
+        return this.$store.state.currentLayer.attrs.id;
+      },
+      set(layerId) {
+        var layer = this.$store.state.layers.find(
+          (layer) => layer.attrs.id === layerId
+        );
+        this.$store.commit("setCurrentLayer", layer);
+      },
+    },
     isOnline: {
       get() {
         return this.$store.state.isOnline;
@@ -73,18 +88,11 @@ export default {
   },
 
   methods: {
-    handleButton(buttonName) {
-      this.$emit("buttonPressed", buttonName);
+    addLayer() {
+      this.$emit("addLayer");
     },
     handleSelect(type, value) {
       this.$emit("select", { type: type, value: value });
-    },
-    layerStateChanged(layerState) {
-      this.toolbar.currentLayer = layerState.currentLayer.attrs.name;
-      this.toolbar.layers = [];
-      for (const layer of layerState.layers) {
-        if (layer.attrs) this.toolbar.layers.push(layer.attrs.name);
-      }
     },
   },
 };

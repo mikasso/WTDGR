@@ -1,77 +1,9 @@
 import BaseBoardEventManager from "./BaseBoardEventManager";
+import Konva from "konva";
 
 export default class OffLineBoardEventManager extends BaseBoardEventManager {
-  constructor(boardManager) {
-    super(boardManager);
-  }
-
-  bindVertexEvents(vertex) {
-    vertex.on("mousedown", (event) => {
-      this.vertexMouseDown(event);
-    });
-    vertex.on("mouseenter", (event) => {
-      this.vertexMouseEnter(event);
-    });
-    vertex.on("mouseleave", (event) => {
-      this.vertexMouseLeave(event);
-    });
-    vertex.on("mouseup", (event) => {
-      this.vertexMouseUp(event);
-    });
-    vertex.on("dragmove", (event) => {
-      this.vertexDrag(event);
-    });
-  }
-
-  bindEdgeEvents(edge) {
-    edge.on("click", (event) => {
-      this.edgeClick(event);
-    });
-    edge.on("mouseenter", (event) => {
-      this.edgeMouseEnter(event);
-    });
-    edge.on("mouseleave", (event) => {
-      this.edgeMouseLeave(event);
-    });
-    edge.on("mousedown", (event) => {
-      this.edgeMouseDown(event);
-    });
-    edge.on("mousemove", (event) => {
-      this.edgeMouseMove(event);
-    });
-    edge.on("mouseup", (event) => {
-      this.edgeMouseUp(event);
-    });
-  }
-
-  bindPencilEvents(pencil) {
-    pencil.on("click", (event) => {
-      this.pencilClick(event);
-    });
-  }
-
-  toolChanged(toolName) {
-    this.boardManager.vertexManager.disableDrag(
-      this.boardManager.layerManager.layers
-    );
-    this.clearHandlers();
-    switch (toolName) {
-      case "Select":
-        this.setSelectToolHandlers();
-        break;
-      case "Vertex":
-        this.setVertexToolHandlers();
-        break;
-      case "Edge":
-        this.setEdgeToolHandlers();
-        break;
-      case "Erase":
-        this.setEraseToolHandlers();
-        break;
-      case "Pencil":
-        this.setPencilToolHandlers();
-        break;
-    }
+  constructor(boardManager, store) {
+    super(boardManager, store);
   }
 
   setSelectToolHandlers() {
@@ -191,19 +123,11 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     };
   }
 
-  toolbarButton(buttonName) {
-    switch (buttonName) {
-      case "Layer":
-        this.boardManager.addLayer();
-        break;
-    }
-  }
-
-  toolbarSelect(selected) {
-    switch (selected.type) {
-      case "layer":
-        this.boardManager.selectLayer(selected.value);
-        break;
-    }
+  addLayer() {
+    const newLayer = new Konva.Layer({
+      id: `Layer ${this.store.state.layers.length + 1}`,
+    });
+    this.store.commit("addLayer", newLayer);
+    this.store.commit("setCurrentLayer", newLayer);
   }
 }

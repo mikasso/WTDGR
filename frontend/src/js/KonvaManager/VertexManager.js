@@ -67,6 +67,13 @@ export default class VertexManager {
     this.updateDragProp(layers);
   }
 
+  setDraggableById(vertexId, value) {
+    const vertex = this.getVertexById(vertexId);
+    if (vertex === null)
+      throw new Error(`Couldn't find vertex to drag by id ${vertexId}`);
+    vertex.setAttrs({ draggable: value });
+  }
+
   disableDrag(layers) {
     this.dragEnabled = false;
     this.updateDragProp(layers);

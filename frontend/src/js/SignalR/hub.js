@@ -21,8 +21,8 @@ export default class BoardHub {
       this.user = user;
       console.log(user);
     });
-    this.connection.on("ReceiveAction", (action) => {
-      this.apiManager.receiveAction(action);
+    this.connection.on("ReceiveAction", (action, isSucceded) => {
+      this.apiManager.receiveAction(action, isSucceded);
     });
     this.connection.on("ReceiveActionResponse", (actionResponse) => {
       this.apiManager.receiveActionResponse(actionResponse);
@@ -40,8 +40,6 @@ export default class BoardHub {
   }
 
   sendAction(action) {
-    console.log("sending action");
-    console.log(action);
     return this.connection
       .invoke("SendAction", action)
       .catch((err) => alert(err.toString()));
