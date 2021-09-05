@@ -1,9 +1,11 @@
 import BaseBoardEventManager from "./BaseBoardEventManager";
 import Konva from "konva";
 import BoardManager from "../KonvaManager/BoardManager";
+import { State } from "@/store";
+import { Store } from "vuex";
 
 export default class OffLineBoardEventManager extends BaseBoardEventManager {
-  constructor(boardManager: BoardManager, store: any) {
+  constructor(boardManager: BoardManager, store: Store<State>) {
     super(boardManager, store);
   }
 
@@ -11,34 +13,30 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     this.boardManager.enableDrag();
     this.mouseMove = () => {
       const mousePos = this.boardManager.getMousePosition();
-      if (mousePos !== null) this.boardManager.dragEdge(mousePos);
-    };
-    this.mouseUp = () => {
-      this.boardManager.stopDraggingEdge();
+      this.boardManager.dragEdge(mousePos);
     };
     this.vertexDrag = (event) => {
       this.boardManager.dragEdges(event.target);
     };
+
     this.vertexMouseEnter = (event) => {
       this.boardManager.setHighlight("vertex", event.target, true);
     };
     this.vertexMouseLeave = (event) => {
       this.boardManager.setHighlight("vertex", event.target, false);
     };
+
     this.edgeMouseEnter = (event) => {
       this.boardManager.setHighlight("edge", event.target, true);
     };
     this.edgeMouseLeave = (event) => {
       this.boardManager.setHighlight("edge", event.target, false);
     };
+
     this.edgeMouseDown = (event) => {
       const mousePos = this.boardManager.getMousePosition();
       if (mousePos !== null)
         this.boardManager.startDraggingEdge(event.target, mousePos);
-    };
-    this.edgeMouseMove = () => {
-      const mousePos = this.boardManager.getMousePosition();
-      if (mousePos !== null) this.boardManager.dragEdge(mousePos);
     };
     this.edgeMouseUp = () => {
       this.boardManager.stopDraggingEdge();
@@ -57,24 +55,21 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
   }
 
   setEdgeToolHandlers() {
-    this.mouseUp = () => {
-      this.boardManager.stopDrawingEdge();
-    };
-
-    this.mouseMove = (event) => {
-      const point = this.getPointFromEvent(event);
-      this.boardManager.moveCurrentEdge(point);
-    };
-
     this.vertexMouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const vertex = event.target;
-      this.boardManager.startDrawingEdge(vertex);
+      this.boardManager.startDrawingLine(vertex);
     };
-
+    this.mouseMove = (event) => {
+      const point = this.getPointFromEvent(event);
+      this.boardManager.moveLineToPoint(point);
+    };
     this.vertexMouseUp = (event) => {
       const vertex = event.target;
       this.boardManager.connectVertexes(vertex);
+    };
+    this.mouseUp = () => {
+      this.boardManager.stopDrawingLine();
     };
   }
 
@@ -95,19 +90,19 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     };
 
     this.vertexMouseEnter = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, true, true);
+      this.boardManager.setHighlight("vertex", event.target, true);
     };
 
     this.vertexMouseLeave = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, false, true);
+      this.boardManager.setHighlight("vertex", event.target, false);
     };
 
     this.edgeMouseEnter = (event) => {
-      this.boardManager.setHighlight("edge", event.target, true, true);
+      this.boardManager.setHighlight("edge", event.target, true);
     };
 
     this.edgeMouseLeave = (event) => {
-      this.boardManager.setHighlight("edge", event.target, false, true);
+      this.boardManager.setHighlight("edge", event.target, false);
     };
   }
 

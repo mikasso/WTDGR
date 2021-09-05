@@ -1,3 +1,5 @@
+import { State } from "@/store";
+import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 import { ActionFactory } from "../SignalR/Action";
@@ -8,7 +10,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   hub: BoardHub;
   constructor(
     boardManager: BoardManager,
-    store: any,
+    store: Store<State>,
     hub: BoardHub,
     actionFactory: ActionFactory
   ) {
@@ -29,18 +31,21 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.boardManager.dragEdges(event.target);
     };
     this.vertexMouseEnter = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, true);
+      const vertex = event.target;
+      this.boardManager.setHighlight("vertex", vertex, true);
       const action = this.actionFactory.create(
         "RequestToEdit",
         event.target.attrs
       );
-      this.hub.sendAction(action);
+      this.hub.sendAction(action).then(() => sendVertexEdit(vertex));
     };
     this.vertexMouseLeave = (event) => {
       const vertex = event.target;
       this.boardManager.setHighlight("vertex", vertex, false);
-      this.hub.sendAction(
-        this.actionFactory.create("ReleaseItem", vertex.attrs)
+      sendVertexEdit(vertex).then(() =>
+        this.hub.sendAction(
+          this.actionFactory.create("ReleaseItem", vertex.attrs)
+        )
       );
       this.boardManager.setDraggableVertexById(vertex.attrs.id, false);
     };
@@ -48,7 +53,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     let intervalId: number | null = null;
     const sendVertexEdit = (vertex: Vertex) => {
       const action = this.actionFactory.create("Edit", vertex.attrs);
-      this.hub.sendAction(action);
+      return this.hub.sendAction(action);
     };
     this.vertexDragend = (event) => {
       const vertex = event.target;
@@ -71,15 +76,11 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     this.edgeMouseLeave = (event) => {
       this.boardManager.setHighlight("edge", event.target, false);
     };
-    this.edgeMouseDown = (event) => {
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.startDraggingEdge(event.target, mousePos);
-    };
-    this.edgeMouseMove = () => {
+    this.edgeMouseUp = () => {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.dragEdge(mousePos);
     };
-    this.edgeMouseUp = () => {
+    this.edgeMouseDown = () => {
       this.boardManager.stopDraggingEdge();
     };
   }
@@ -94,25 +95,23 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.hub.sendAction(action);
     };
   }
+
   setEdgeToolHandlers() {
-    this.mouseUp = () => {
-      this.boardManager.stopDrawingEdge();
-    };
-
-    this.mouseMove = (event) => {
-      const point = this.getPointFromEvent(event);
-      this.boardManager.moveCurrentEdge(point);
-    };
-
     this.vertexMouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const vertex = event.target;
-      this.boardManager.startDrawingEdge(vertex);
+      this.boardManager.startDrawingLine(vertex);
     };
-
+    this.mouseMove = (event) => {
+      const point = this.getPointFromEvent(event);
+      this.boardManager.moveLineToPoint(point);
+    };
     this.vertexMouseUp = (event) => {
       const vertex = event.target;
       this.boardManager.connectVertexes(vertex);
+    };
+    this.mouseUp = () => {
+      this.boardManager.stopDrawingLine();
     };
   }
 
@@ -134,19 +133,19 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     };
 
     this.vertexMouseEnter = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, true, true);
+      this.boardManager.setHighlight("vertex", event.target, true);
     };
 
     this.vertexMouseLeave = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, false, true);
+      this.boardManager.setHighlight("vertex", event.target, false);
     };
 
     this.edgeMouseEnter = (event) => {
-      this.boardManager.setHighlight("edge", event.target, true, true);
+      this.boardManager.setHighlight("edge", event.target, true);
     };
 
     this.edgeMouseLeave = (event) => {
-      this.boardManager.setHighlight("edge", event.target, false, true);
+      this.boardManager.setHighlight("edge", event.target, false);
     };
   }
 

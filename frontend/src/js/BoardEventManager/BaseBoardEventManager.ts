@@ -1,10 +1,11 @@
+import { State } from "@/store";
 import Konva from "konva";
-import { KonvaEventObject } from "konva/types/Node";
+import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
 import { Edge } from "../KonvaManager/EdgeManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 
-export default class BaseBoardEventManager {
+export default abstract class BaseBoardEventManager {
   click!: (...params: any[]) => void;
   mouseMove!: (...params: any[]) => void;
   mouseDown!: (...params: any[]) => void;
@@ -19,19 +20,27 @@ export default class BaseBoardEventManager {
   edgeClick!: (...params: any[]) => void;
   edgeMouseEnter!: (...params: any[]) => void;
   edgeMouseLeave!: (...params: any[]) => void;
-  edgeMouseUp!: (...params: any[]) => void;
   edgeMouseDown!: (...params: any[]) => void;
-  edgeMouseMove!: (...params: any[]) => void;
+  edgeMouseUp!: (...params: any[]) => void;
   pencilClick!: (...params: any[]) => void;
-  boardManager: BoardManager;
-  store: any;
 
-  constructor(boardManager: BoardManager, store: any) {
+  boardManager: BoardManager;
+  store: Store<State>;
+
+  constructor(boardManager: BoardManager, store: Store<State>) {
     this.boardManager = boardManager;
+    this.boardManager.eventManager = this;
     this.store = store;
     this.clearHandlers();
     this.bindStageEvents(boardManager.stage);
   }
+
+  abstract setSelectToolHandlers(): void;
+  abstract setVertexToolHandlers(): void;
+  abstract setEdgeToolHandlers(): void;
+  abstract setEraseToolHandlers(): void;
+  abstract setPencilToolHandlers(): void;
+  abstract addLayer(): void;
 
   clearHandlers() {
     this.click = () => {};
@@ -48,9 +57,8 @@ export default class BaseBoardEventManager {
     this.edgeClick = () => {};
     this.edgeMouseEnter = () => {};
     this.edgeMouseLeave = () => {};
-    this.edgeMouseUp = () => {};
     this.edgeMouseDown = () => {};
-    this.edgeMouseMove = () => {};
+    this.edgeMouseUp = () => {};
     this.pencilClick = () => {};
   }
 
@@ -84,6 +92,7 @@ export default class BaseBoardEventManager {
       this.vertexDragend(event);
     });
   }
+
   bindEdgeEvents(edge: Edge) {
     edge.on("click", (event) => {
       this.edgeClick(event);
@@ -97,9 +106,7 @@ export default class BaseBoardEventManager {
     edge.on("mousedown", (event) => {
       this.edgeMouseDown(event);
     });
-    edge.on("mousemove", (event) => {
-      this.edgeMouseMove(event);
-    });
+
     edge.on("mouseup", (event) => {
       this.edgeMouseUp(event);
     });
@@ -131,22 +138,6 @@ export default class BaseBoardEventManager {
         this.setPencilToolHandlers();
         break;
     }
-  }
-
-  setSelectToolHandlers() {
-    throw new Error("Not implemented");
-  }
-  setVertexToolHandlers() {
-    throw new Error("Not implemented");
-  }
-  setEdgeToolHandlers() {
-    throw new Error("Not implemented");
-  }
-  setEraseToolHandlers() {
-    throw new Error("Not implemented");
-  }
-  setPencilToolHandlers() {
-    throw new Error("Not implemented");
   }
 
   isLeftClick(event: { evt: { which: number } }) {

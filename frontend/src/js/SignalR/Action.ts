@@ -13,14 +13,12 @@ export default class UserAction {
 }
 
 export class ActionFactory {
-  userId: any;
-  layerProvider: any;
-  constructor(userId: string, layerProvider: { currentLayer: Konva.Layer }) {
-    this.userId = userId;
-    this.layerProvider = layerProvider;
-  }
+  constructor(
+    private userId: string,
+    private layerProvider: { currentLayer: Konva.Layer }
+  ) {}
 
-  create(actionType: string, item: Konva.NodeConfig) {
+  public create(actionType: string, item: Konva.NodeConfig) {
     item.layer = this.layerProvider.currentLayer.attrs.id;
     return new UserAction(actionType, this.userId, item);
   }

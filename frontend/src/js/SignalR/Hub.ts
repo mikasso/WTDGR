@@ -1,34 +1,27 @@
-import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { State } from "@/store";
+import {
+  HubConnection,
+  HubConnectionBuilder,
+  LogLevel,
+} from "@microsoft/signalr";
+import { Store } from "vuex";
 import UserAction from "./Action";
 import ApiManager from "./ApiHandler";
 
 export default class BoardHub {
-  apiManager: any;
-  userId: any;
-  roomId: any;
-  disconnectedCallback: any;
-  reconnectedCallback: any;
-  connection: any;
-  user: any;
-  onCloseMethod: (attempt: any) => Promise<void>;
-  constructor(
-    apiManager: ApiManager,
-    credentials: { roomId: string; userId: string },
-    disconnectedCallback: () => void,
-    reconnectedCallback: () => void
-  ) {
-    this.apiManager = apiManager;
-    this.userId = credentials.userId;
-    this.roomId = credentials.roomId;
-    this.disconnectedCallback = disconnectedCallback;
-    this.reconnectedCallback = reconnectedCallback;
+  private get user() {
+    return this.store.state.user;
+  }
+
+  private connection: HubConnection;
+  onCloseMethod: (attempt: number) => Promise<void>;
+  constructor(private apiManager: ApiManager, private store: Store<State>) {
     this.connection = new HubConnectionBuilder()
       .withUrl("https://localhost:5001/graphHub")
       .configureLogging(LogLevel.Information)
       .build();
 
-    this.connection.on("ReceiveJoinResponse", (user: any) => {
-      this.user = user;
+    this.connection.on("ReceiveJoinResponse", (user) => {
       console.log(user);
     });
     this.connection.on(
@@ -43,19 +36,19 @@ export default class BoardHub {
 
     this.onCloseMethod = this.reJoinRoom;
     const closeHandler = async (that: BoardHub) => {
-      that.disconnectedCallback();
+      that.store.commit("setOffline");
       await that.onCloseMethod(0);
     };
     this.connection.onclose(async () => closeHandler(this));
   }
 
-  sendAction(action: UserAction) {
+  public sendAction(action: UserAction) {
     return this.connection
       .invoke("SendAction", action)
       .catch((err: Error) => alert(err.toString()));
   }
 
-  createRoom(username: string) {
+  public createRoom(username: string) {
     this.connection.start().then(() => {
       const request = { Name: username };
       this.connection
@@ -63,11 +56,30 @@ export default class BoardHub {
         .catch((err: Error) => alert(err.toString()));
     });
   }
-  async reJoinRoom(attempt: number) {
+
+  public joinRoomPromise() {
+    return this.connection.start().then(() => {
+      const request = {
+        Id: this.user.userId,
+        Role: "Owner",
+        RoomId: this.user.roomId,
+      };
+      this.connection.invoke("JoinRoom", request).catch((err: Error) => {
+        throw new Error("Error during joinning the room: " + err);
+      });
+    });
+  }
+
+  public disconnectPromise() {
+    this.onCloseMethod = () => Promise.resolve();
+    return this.connection.stop();
+  }
+
+  private async reJoinRoom(attempt: number) {
     console.warn("SignalR: attemp to reconnect");
     await this.joinRoomPromise()
       .then(() => {
-        this.reconnectedCallback();
+        this.store.commit("setOnline");
       })
       .catch((err: Error) => {
         console.error(err);
@@ -76,25 +88,5 @@ export default class BoardHub {
           Math.pow(2, attempt) * 1000
         );
       });
-  }
-
-  joinRoomPromise() {
-    return this.connection.start().then(() => {
-      const roomId = this.roomId.toString();
-      console.log("Joining room id=" + roomId);
-      const request = {
-        Id: this.userId,
-        Role: "Owner",
-        RoomId: roomId,
-      };
-      this.connection.invoke("JoinRoom", request).catch((err: Error) => {
-        throw new Error("Error during joinning the room: " + err);
-      });
-    });
-  }
-
-  disconnectPromise() {
-    this.onCloseMethod = () => Promise.resolve();
-    return this.connection.stop();
   }
 }

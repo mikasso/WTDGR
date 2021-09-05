@@ -1,14 +1,8 @@
 <template>
   <div class="main-panel">
-    <Toolbar
-      ref="ToolbarComponent"
-      @addLayer="addLayer()"
-      @toolSelected="toolSelected($event)"
-      @select="toolbarSelect($event)"
-    >
-    </Toolbar>
+    <Toolbar @add-layer="addLayer()" />
 
-    <Board class="Board" ref="BoardComponent"> </Board>
+    <Board ref="boardComponentRef" />
 
     <div class="users">
       userzy
@@ -16,38 +10,33 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, ref } from "vue";
 import Board from "./Board.vue";
 import Toolbar from "./Toolbar.vue";
 
-export default {
+export default defineComponent({
   name: "MainPanel",
-  mounted() {},
-
   components: {
-    Board,
     Toolbar,
+    Board,
   },
-
+  setup() {
+    const boardComponentRef = ref<typeof Board>();
+    return { boardComponentRef };
+  },
   methods: {
-    addLayer(name) {
-      this.$refs.BoardComponent.addLayer(name);
-    },
-    toolbarSelect(selected) {
-      this.$refs.BoardComponent.toolbarSelect(selected);
-    },
-    toolSelected(toolName) {
-      this.$refs.BoardComponent.toolChanged(toolName);
+    addLayer() {
+      this.boardComponentRef?.addLayer();
     },
   },
-};
+});
 </script>
 
 <style scoped lang="scss">
 .main-panel {
   width: 100%;
   min-height: 100%;
-
   display: inline-grid;
   grid-template-columns: auto 20%;
   grid-template-rows: 8% auto;

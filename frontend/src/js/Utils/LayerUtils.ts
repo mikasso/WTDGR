@@ -1,6 +1,4 @@
 import { Layer } from "konva/types/Layer";
-import { Edge } from "../KonvaManager/EdgeManager";
-import { Vertex } from "../KonvaManager/VertexManager";
 
 export function sortItems(layer: Layer) {
   layer

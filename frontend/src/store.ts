@@ -1,17 +1,16 @@
-// store.ts
 import Konva from "konva";
+import { InjectionKey } from "vue";
 import { createStore, Store } from "vuex";
 
-// define your typings for the store state
 export interface State {
   isOnline: boolean;
   stage?: Konva.Stage;
   currentLayer?: Konva.Layer;
+  currentTool: string;
   layers: Konva.Layer[];
+  user: { userId: string; roomId: string; role?: string };
 }
 
-// define injection key
-export interface InjectionKey<T> extends Symbol {}
 export const key: InjectionKey<Store<State>> = Symbol();
 
 export const store = createStore<State>({
@@ -19,7 +18,9 @@ export const store = createStore<State>({
     isOnline: true,
     stage: undefined,
     currentLayer: undefined,
+    currentTool: "Select",
     layers: [],
+    user: { userId: Math.random().toString(), roomId: "1" },
   },
   getters: {
     isOnline(state) {
@@ -31,6 +32,9 @@ export const store = createStore<State>({
     },
     getLayers(state) {
       return state.layers;
+    },
+    getCurrentTool(state) {
+      return state.currentTool;
     },
   },
   mutations: {
@@ -57,6 +61,9 @@ export const store = createStore<State>({
         state.layers = [...state.layers, layer];
         console.log(state.layers);
       }
+    },
+    setCurrentTool(state, tool) {
+      state.currentTool = tool;
     },
   },
 });
