@@ -12,6 +12,7 @@ import ApiManager from "../js/SignalR/ApiHandler";
 import BoardHub from "../js/SignalR/Hub";
 import { ActionFactory } from "../js/SignalR/Action";
 import { mapGetters } from "vuex";
+import Konva from "konva";
 export default {
   name: "Board",
   data() {
@@ -38,18 +39,34 @@ export default {
   },
   methods: {
     handleConnectionChange(isOnline) {
-      const boardManager = new BoardManager(this);
+      this.initalizeStageAndLayers();
+      const boardManager = new BoardManager(this.$store);
       if (isOnline) {
         this.eventManager = this.getOnlineEventManager(boardManager);
         this.switchToOnline(this);
       } else {
-        this.eventManager = new OfflineBoardEventManager(boardManager);
+        this.eventManager = new OfflineBoardEventManager(
+          boardManager,
+          this.$store
+        );
         this.switchToOffline(this);
       }
       boardManager.eventManager = this.eventManager;
 
       if (this.lastToolSelected !== null)
         this.eventManager.toolbarSelect(this.lastToolSelected);
+    },
+    initalizeStageAndLayers() {
+      const initLayer = new Konva.Layer({ id: "Layer 1" });
+      const initStage = new Konva.Stage({
+        container: "board",
+        width: window.innerWidth * 0.8,
+        height: window.innerHeight * 0.92,
+      });
+      initStage.add(initLayer);
+      this.$store.commit("setStage", initStage);
+      this.$store.commit("setLayers", [initLayer]);
+      this.$store.commit("setCurrentLayer", initLayer);
     },
     getOnlineEventManager(boardManager) {
       const apiManager = new ApiManager(boardManager);
@@ -61,14 +78,14 @@ export default {
       );
       return new OnlineBoardEventManager(
         boardManager,
+        this.$store,
         this.hub,
-        new ActionFactory(this.user.userId)
+        new ActionFactory(this.user.userId, boardManager)
       );
     },
     async switchToOnline(that) {
-      await that.hub.joinRoomPromise().catch(async () => {
+      that.hub.joinRoomPromise().catch(async () => {
         alert("Failed to connect with hub, switching to ofline");
-        await that.connectionChanged(false);
       });
     },
     async switchToOffline(that) {
@@ -77,8 +94,8 @@ export default {
         that.hub = null;
       }
     },
-    toolbarButton(buttonName) {
-      this.eventManager.toolbarButton(buttonName);
+    addLayer() {
+      this.eventManager.addLayer();
     },
     toolbarSelect(selected) {
       this.lastToolSelected = selected;
@@ -89,9 +106,6 @@ export default {
     },
     blockContextMenu(e) {
       e.preventDefault(); //disable context menu when right click
-    },
-    sendLayerStateToToolbar(layerState) {
-      this.$emit("layerStateChange", layerState);
     },
   },
 };

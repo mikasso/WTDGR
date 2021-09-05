@@ -1,46 +1,48 @@
 ﻿using Backend.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 namespace Backend.Core
 {
     public abstract class RoomItemsManager<T> where T : IIdentifiable
     {
-        public int Count { get => objects.Count; }
-        protected Dictionary<String, T> objects = new();
+        public int Count { get => _objects.Count; }
+        protected Dictionary<String, T> _objects = new();
         public bool Add(T obj)
         {
-            if (objects.ContainsKey(obj.Id))
+            if (_objects.ContainsKey(obj.Id))
                 return false;
-            objects.Add(obj.Id, obj);
+            _objects.Add(obj.Id, obj);
             return true;
         }
 
         public bool Delete(string name)
         {
-            if (!objects.ContainsKey(name))
+            if (!_objects.ContainsKey(name))
                 return false;
-            objects.Remove(name);
+            _objects.Remove(name);
             return true;
         }
 
         public bool Update(T obj)
         {
-            if (!objects.ContainsKey(obj.Id))
+            if (!_objects.ContainsKey(obj.Id))
                 return false;
-            objects[obj.Id] = obj;
+            _objects[obj.Id] = obj;
             return true;
         }
 
-        public IEnumerable<T> GetAll()
+        public IList<T> GetAll()
         {
-            return objects.Values;
+            return _objects.Values.ToList();
         }
 
         public T Get(string Id)
         {
-            if (!objects.ContainsKey(Id))
-                throw new Exception($"{Id} does not exist in collection");
-            return objects[Id];
+            if (!_objects.ContainsKey(Id))
+                return default(T);
+            return _objects[Id];
         }
     }
 }

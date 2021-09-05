@@ -1,25 +1,29 @@
 import EdgeManager, { Edge } from "./EdgeManager";
 import VertexManager, { Vertex } from "./VertexManager";
-import LayerManager from "./LayerManager";
+import { sortItems } from "../Utils/LayerUtils";
 import PencilManager from "./PencilManager.js";
 import Konva from "konva";
 
 export default class BoardManager {
-  constructor(parentComponent) {
-    this.parentComponent = parentComponent;
-    this.stage = new Konva.Stage(this.stageConfig);
+  constructor(store) {
+    this.store = store;
     this.eventManager = null;
-    this.layerManager = new LayerManager(this.stage, this.parentComponent);
     this.edgeManager = new EdgeManager();
     this.vertexManager = new VertexManager();
     this.pencilManager = new PencilManager();
   }
 
-  stageConfig = {
-    container: "board",
-    width: window.innerWidth * 0.8,
-    height: window.innerHeight * 0.92,
-  };
+  get currentLayer() {
+    return this.store.state.currentLayer;
+  }
+
+  get layers() {
+    return this.store.state.layers;
+  }
+
+  get stage() {
+    return this.store.state.stage;
+  }
 
   update(attrs) {
     const item = this.stage.findOne(`#${attrs.id}`); //konva uses id as selector so # is required
@@ -28,7 +32,11 @@ export default class BoardManager {
   }
 
   enableDrag() {
-    this.vertexManager.enableDrag(this.layerManager.layers);
+    this.vertexManager.enableDrag(this.layers);
+  }
+
+  setDraggableVertexById(vertexId, value) {
+    this.vertexManager.setDraggableById(vertexId, value);
   }
 
   dragEdges(vertex) {
@@ -36,7 +44,7 @@ export default class BoardManager {
   }
 
   setHighlight(targetType, target, isHighlithed, checkLayer = false) {
-    if (checkLayer && target.layer != this.layerManager.currentLayer) return;
+    if (checkLayer && target.layer != this.currentLayer) return;
     if (targetType == "vertex")
       this.vertexManager.setHiglight(target, isHighlithed);
     else if (targetType == "edge")
@@ -45,7 +53,7 @@ export default class BoardManager {
 
   createVertex(position, attrs) {
     const vertex = this.vertexManager.create(
-      this.layerManager.currentLayer,
+      this.currentLayer,
       position,
       attrs
     );
@@ -54,7 +62,7 @@ export default class BoardManager {
   }
 
   draw(konvaObject) {
-    this.layerManager.sortItems();
+    sortItems(this.currentLayer);
     if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
     else if (konvaObject instanceof Edge) this.edgeManager.draw(konvaObject);
     else if (konvaObject instanceof Konva.PencilLine)
@@ -64,16 +72,15 @@ export default class BoardManager {
   }
 
   connectVertexes(vertex) {
-    if (this.layerManager.currentLayer != vertex.layer)
-      this.edgeManager.removeCurrentEdge();
+    if (this.currentLayer != vertex.layer) this.edgeManager.removeCurrentEdge();
     this.edgeManager.tryToConnectVertices(vertex);
   }
 
   startDrawingEdge(vertex) {
-    if (this.layerManager.currentLayer != vertex.layer) return;
+    if (this.currentLayer != vertex.layer) return;
     this.edgeManager.startDrawing(vertex);
     this.eventManager.bindEdgeEvents(this.edgeManager.currentEdge);
-    this.layerManager.sortItems();
+    sortItems(this.currentLayer);
   }
 
   moveCurrentEdge(position) {
@@ -97,7 +104,7 @@ export default class BoardManager {
   }
 
   eraseVertex(vertex) {
-    if (this.layerManager.currentLayer != vertex.layer) return;
+    if (this.currentLayer != vertex.layer) return;
     this.edgeManager.remove(vertex.edges);
     this.vertexManager.remove(vertex);
   }
@@ -108,14 +115,14 @@ export default class BoardManager {
   }
 
   eraseEdge(edge) {
-    if (this.layerManager.currentLayer != edge.layer) return;
+    if (this.currentLayer != edge.layer) return;
     this.edgeManager.remove([edge]);
   }
 
   startPencil(position) {
     const pencilDrawing = this.pencilManager.create(
       position,
-      this.layerManager.currentLayer
+      this.currentLayer
     );
     this.eventManager.bindPencilEvents(pencilDrawing);
   }
@@ -132,11 +139,19 @@ export default class BoardManager {
     this.pencilManager.removeDrawing(drawing);
   }
 
-  addLayer() {
-    this.layerManager.addLayer();
+  selectLayer(layerID) {
+    this.selectLayer(layerID);
   }
 
-  selectLayer(layerID) {
-    this.layerManager.selectLayer(layerID);
+  receiveAddLayer(layerId) {
+    const newLayer = new Konva.Layer({
+      id: layerId,
+    });
+    this.store.commit("addLayer", newLayer);
+  }
+
+  setCurrentLayer(layerId) {
+    const layer = this.layers.find((layer) => layer.attrs.id === layerId);
+    this.store.commit("setCurrentLayer", layer);
   }
 }

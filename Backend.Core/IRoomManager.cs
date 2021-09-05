@@ -5,7 +5,7 @@ namespace Backend.Core
 {
     public interface IRoomManager
     {
-        Task<bool> ExecuteAction(UserAction userAction);
+        Task<ActionResult> ExecuteAction(UserAction userAction);
 
         User CreateOwner(User owner);
     }

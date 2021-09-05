@@ -8,11 +8,13 @@ export default class Action {
 }
 
 export class ActionFactory {
-  constructor(userId) {
+  constructor(userId, layerProvider) {
     this.userId = userId;
+    this.layerProvider = layerProvider;
   }
 
   create(actionType, item) {
+    item.layer = this.layerProvider.currentLayer.attrs.id;
     return new Action(actionType, this.userId, item);
   }
 }
