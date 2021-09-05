@@ -3,10 +3,10 @@
     <div class="tools">
       <div
         v-for="(tool, index) in toolbar.tools"
-        v-bind:key="index"
+        :key="index"
         class="tool"
-        :class="{ selected: tool == selectedTool }"
-        @click="selectedTool = tool"
+        :class="{ selected: tool == currentTool }"
+        @click="currentTool = tool"
       >
         <img :src="require('../assets/tools/' + tool + '.png')" />
         {{ tool }}
@@ -18,31 +18,92 @@
 
       Layer:
       <select
-        class="select"
         v-if="currentLayer"
         v-model="currentLayer"
+        class="select"
         :sync="true"
       >
         <option
           v-for="(layer, index) in layers"
-          v-bind:key="index"
+          :key="index"
           :value="layer"
           :sync="true"
         >
           {{ layer }}
         </option>
       </select>
-      Connection:
-      <toggle-button v-model="isOnline" :sync="true" />
+      <span> Connection: </span>
+      <Toggle v-model="isOnline" :sync="true" />
     </div>
   </div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { key, State } from "@/store";
+import Toggle from "@vueform/toggle";
+import { computed, defineComponent } from "vue";
+import { useStore } from "vuex";
+
+export default defineComponent({
   name: "Toolbar",
+  emits: ["addLayer"],
+  components: { Toggle },
+  setup(props, { emit }) {
+    console.log("Toolbar setup");
+    const store = useStore<State>(key);
+
+    const layers = computed(() => {
+      return store.state.layers.map((layer) => layer.attrs.id);
+    });
+
+    const currentLayer = computed({
+      get: function() {
+        if (store.state.currentLayer == null) return "None";
+        return store.state.currentLayer.attrs.id;
+      },
+      set: function(layerId: string) {
+        var layer = store.state.layers.find(
+          (layer) => layer.attrs.id === layerId
+        );
+        store.commit("setCurrentLayer", layer);
+      },
+    });
+
+    const isOnline = computed({
+      get: function() {
+        return store.state.isOnline;
+      },
+      set: function(value: boolean) {
+        if (value) store.commit("setOnline");
+        else store.commit("setOffline");
+      },
+    });
+
+    const currentTool = computed({
+      get: function() {
+        return store.state.currentTool;
+      },
+      set: function(tool: string) {
+        store.commit("setCurrentTool", tool);
+      },
+    });
+
+    const addLayer = () => {
+      emit("addLayer");
+    };
+
+    return {
+      layers,
+      currentLayer,
+      isOnline,
+      currentTool,
+      addLayer,
+    };
+  },
+  mounted() {
+    this.currentTool = "Select";
+  },
   data: () => ({
-    selectedTool: "Select",
     toolbar: {
       tools: ["Select", "Vertex", "Edge", "Pencil", "Erase"],
 
@@ -53,58 +114,18 @@ export default {
       edge_style: "line",
     },
   }),
-  computed: {
-    layers: {
-      get() {
-        return this.$store.state.layers.map((layer) => layer.attrs.id);
-      },
-    },
-    currentLayer: {
-      get() {
-        if (this.$store.state.currentLayer == null) return "Loading..";
-        return this.$store.state.currentLayer.attrs.id;
-      },
-      set(layerId) {
-        var layer = this.$store.state.layers.find(
-          (layer) => layer.attrs.id === layerId
-        );
-        this.$store.commit("setCurrentLayer", layer);
-      },
-    },
-    isOnline: {
-      get() {
-        return this.$store.state.isOnline;
-      },
-      set(value) {
-        if (value) this.$store.commit("setOnline");
-        else this.$store.commit("setOffline");
-      },
-    },
-  },
-  watch: {
-    selectedTool: function() {
-      this.$emit("toolSelected", this.selectedTool);
-    },
-  },
-
-  methods: {
-    addLayer() {
-      this.$emit("addLayer");
-    },
-    handleSelect(type, value) {
-      this.$emit("select", { type: type, value: value });
-    },
-  },
-};
+});
 </script>
-
+<style src="@vueform/toggle/themes/default.css"></style>
 <style scoped lang="scss">
+span {
+  margin-right: 1em;
+}
 .toolbar {
   grid-column-start: 1;
   grid-column-end: 1;
   grid-row-start: 1;
   grid-row-end: 1;
-
   height: 7vh;
   white-space: nowrap;
   color: black;
