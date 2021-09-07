@@ -23,3 +23,8 @@ export class ActionFactory {
     return new UserAction(actionType, this.userId, item);
   }
 }
+
+export interface EdgeDTO extends Konva.LineConfig {
+  v1: string;
+  v2: string;
+}

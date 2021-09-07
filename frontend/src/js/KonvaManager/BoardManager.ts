@@ -6,7 +6,8 @@ import Konva from "konva";
 import BaseBoardEventManager from "../BoardEventManager/BaseBoardEventManager";
 import { Store } from "vuex";
 import { State } from "@/store";
-import { NodeConfig } from "konva/types/Node";
+import { KonvaEventListener, NodeConfig } from "konva/types/Node";
+import { EdgeDTO } from "../SignalR/Action";
 
 export default class BoardManager {
   edgeManager: EdgeManager;
@@ -48,10 +49,11 @@ export default class BoardManager {
     return cords;
   }
 
-  update(attrs: Konva.NodeConfig) {
-    const item = this.findById(attrs.id); //konva uses id as selector so # is required
-    item.setAttrs(attrs);
-    this.stage.draw();
+  updateVertex(attrs: Konva.NodeConfig) {
+    const vertex = this.findById(attrs.id) as Vertex; //konva uses id as selector so # is required
+    vertex.setAttrs(attrs);
+    this.edgeManager.dragEdges(vertex);
+    vertex.redraw();
   }
 
   enableDrag() {
@@ -90,6 +92,18 @@ export default class BoardManager {
     return vertex;
   }
 
+  createEdge(edgeDTO: EdgeDTO) {
+    const v1 = this.findById(edgeDTO.v1);
+    const v2 = this.findById(edgeDTO.v2);
+    if (v1 instanceof Vertex && v2 instanceof Vertex) {
+      const edge = new Edge(v1, v2, edgeDTO);
+      v1.edges.push(edge);
+      v2.edges.push(edge);
+      this.eventManager.bindEdgeEvents(edge);
+      return edge;
+    }
+  }
+
   draw(konvaObject: Vertex | Edge | PencilLine) {
     sortItems(this.currentLayer);
     if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
@@ -101,13 +115,9 @@ export default class BoardManager {
   }
 
   connectVertexes(vertex: Vertex) {
-    console.log("connect");
     if (this.currentLayer !== vertex.layer)
       this.edgeManager.removeCurrentLine();
-    const edge = this.edgeManager.tryToConnectVertices(vertex);
-    if (!edge) return console.log(edge);
-    this.eventManager.bindEdgeEvents(edge);
-    this.edgeManager.draw(edge);
+    return this.edgeManager.tryToConnectVertices(vertex);
   }
 
   startDrawingLine(vertex: Vertex) {

@@ -15,6 +15,7 @@ namespace Backend.Core
         public User Owner { get; private set; }
         public readonly UsersManager Users = new();
         private readonly VerticesManager _verticesManager = new();
+        private readonly EdgeManager _edgeManager = new();
         private readonly LayersManager _layersManager = new LayersManager();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         public RoomManager(string id)
@@ -192,6 +193,11 @@ namespace Backend.Core
                     var layer = userAction.Item as Layer;
                     layer.Id = $"Layer {_layersManager.Count + 1}";
                     return () => _layersManager.Add(layer);
+                case KonvaType.Edge:
+                    userAction.Item.Id = Guid.NewGuid().ToString();
+                    var edge = userAction.Item as Edge;
+                    // if edge's vertices exist and they re not connected
+                    return () => _edgeManager.Add(edge);
                 default: throw new NotImplementedException();
             }
         }

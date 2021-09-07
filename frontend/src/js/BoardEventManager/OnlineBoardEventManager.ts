@@ -108,7 +108,16 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     };
     this.vertexMouseUp = (event) => {
       const vertex = event.target;
-      this.boardManager.connectVertexes(vertex);
+      const edge = this.boardManager.connectVertexes(vertex);
+      if (edge !== undefined) {
+        const action = this.actionFactory.create("Add", {
+          ...edge.attrs,
+          type: "edge",
+          v1: edge.v1.id(),
+          v2: edge.v2.id(),
+        });
+        this.hub.sendAction(action);
+      }
     };
     this.mouseUp = () => {
       this.boardManager.stopDrawingLine();
