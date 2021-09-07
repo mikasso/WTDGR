@@ -176,6 +176,7 @@ export default class EdgeManager extends DraggableManager {
   }
 
   public draw(edge: Edge) {
+    console.log(edge);
     edge.layer.add(edge);
     edge.redraw();
   }

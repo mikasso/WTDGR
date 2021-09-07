@@ -9,7 +9,7 @@ namespace Backend.Models.RoomItems
     public class Layer : IRoomItem
     {
         public KonvaType Type { get; set; }
-        public string EditorId { get; set; }
+        public string? EditorId { get; set; }
         public string Id { get; set; }
     }
 }
