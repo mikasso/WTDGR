@@ -95,9 +95,7 @@ export default class BoardManager {
     if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
     else if (konvaObject instanceof Edge) this.edgeManager.draw(konvaObject);
     else if (konvaObject instanceof PencilLine)
-      console.error(
-        "Piotr popraw to bo nie ma jak teraz to zrobic, fajnie jakby tam tez byla metoda draw()"
-      );
+      this.pencilManager.draw(konvaObject);
   }
 
   connectVertexes(vertex: Vertex) {

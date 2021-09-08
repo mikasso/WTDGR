@@ -38,9 +38,13 @@ export default class PencilManager {
     const newLine = new PencilLine(config, layer);
     this.isDrawing = true;
     this.currentDrawing = newLine;
-    this.currentDrawing.layer.add(this.currentDrawing);
-    this.currentDrawing.redraw();
+    this.draw(this.currentDrawing);
     return newLine;
+  }
+
+  draw(drawing: PencilLine) {
+    drawing.layer.add(drawing);
+    drawing.redraw();
   }
 
   appendPoint(position: Cordinates) {
