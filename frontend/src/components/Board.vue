@@ -54,7 +54,6 @@ export default defineComponent({
     const currentTool = computed(() => {
       return store.state.currentTool;
     });
-    console.log("Board setup");
     return { store, isOnline, currentTool };
   },
   mounted() {
@@ -96,13 +95,21 @@ export default defineComponent({
       const initLayer = new Konva.Layer({ id: "Layer 1" });
       const initStage = new Konva.Stage({
         container: "board",
-        width: window.innerWidth * 0.8,
-        height: window.innerHeight * 0.92,
+        width: this.getWidth(),
+        height: this.getHeigth(),
       });
       initStage.add(initLayer);
       this.store.commit("setStage", initStage);
       this.store.commit("setLayers", [initLayer]);
       this.store.commit("setCurrentLayer", initLayer);
+    },
+    getHeigth() {
+      if (document.getElementById("root") == null) return 0;
+      else return document.getElementById("root")?.clientHeight;
+    },
+    getWidth() {
+      if (document.getElementById("root") == null) return 0;
+      else return document.getElementById("root")?.clientWidth;
     },
     addLayer() {
       this.eventManager?.addLayer();
@@ -115,7 +122,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.stage {
+#root {
   width: 100%;
   height: 100%;
 }
