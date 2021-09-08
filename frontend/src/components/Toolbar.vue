@@ -1,53 +1,64 @@
 <template>
-  <div class="toolbar">
-    <div class="tools">
-      <div
+  <el-row justify="space-between" align="middle" style="height: 100%">
+    <div style="display: flex; align-items: center;">
+      <el-tooltip
         v-for="(tool, index) in toolbar.tools"
         :key="index"
-        class="tool"
-        :class="{ selected: tool == currentTool }"
-        @click="currentTool = tool"
+        effect="dark"
+        :content="tool.name"
+        placement="bottom"
       >
-        <img :src="require('../assets/tools/' + tool + '.png')" />
-        {{ tool }}
-      </div>
+        <el-button
+          :class="{ selectedTool: tool.name == currentTool }"
+          class="tool"
+          @click="currentTool = tool.name"
+        >
+          <img class="toolImg" :src="require('../assets/tools/' + tool.file)" />
+        </el-button>
+      </el-tooltip>
 
-      <div class="tool" style="margin-left:15px" @click="addLayer()">
-        Add layer
-      </div>
+      <el-button class="layerButton" @click="addLayer()">
+        <strong>Add layer</strong>
+      </el-button>
 
-      Layer:
-      <select
-        v-if="currentLayer"
-        v-model="currentLayer"
-        class="select"
-        :sync="true"
-      >
-        <option
+      <el-select v-model="currentLayer">
+        <el-option
           v-for="(layer, index) in layers"
           :key="index"
+          :label="layer"
           :value="layer"
-          :sync="true"
         >
-          {{ layer }}
-        </option>
-      </select>
-      <span> Connection: </span>
-      <Toggle v-model="isOnline" :sync="true" />
+        </el-option>
+      </el-select>
     </div>
-  </div>
+    <div style="display: flex; align-items: center;">
+      <el-tag v-if="!isOnline" class="connBadge" type="danger"
+        >Disconnected</el-tag
+      >
+      <el-tag v-if="isOnline" class="connBadge" type="success"
+        >Connected</el-tag
+      >
+      <el-button-group class="connButtons">
+        <el-button @click="isOnline = true">
+          Connect
+        </el-button>
+        <el-button @click="isOnline = false">
+          Disconnect
+        </el-button>
+      </el-button-group>
+    </div>
+  </el-row>
 </template>
 
 <script lang="ts">
 import { key, State } from "@/store";
-import Toggle from "@vueform/toggle";
 import { computed, defineComponent } from "vue";
 import { useStore } from "vuex";
+import "element-plus/dist/index.css";
 
 export default defineComponent({
   name: "Toolbar",
   emits: ["addLayer"],
-  components: { Toggle },
   setup(props, { emit }) {
     console.log("Toolbar setup");
     const store = useStore<State>(key);
@@ -105,7 +116,13 @@ export default defineComponent({
   },
   data: () => ({
     toolbar: {
-      tools: ["Select", "Vertex", "Edge", "Pencil", "Erase"],
+      tools: [
+        { name: "Select", file: "select.svg" },
+        { name: "Vertex", file: "vertex.svg" },
+        { name: "Edge", file: "edge.svg" },
+        { name: "Pencil", file: "pencil.svg" },
+        { name: "Erase", file: "erase.svg" },
+      ],
 
       vertex_styles: ["circle"],
       vertex_style: "circle",
@@ -116,85 +133,32 @@ export default defineComponent({
   }),
 });
 </script>
-<style src="@vueform/toggle/themes/default.css"></style>
 <style scoped lang="scss">
-span {
-  margin-right: 1em;
+.tool {
+  margin-left: 3px;
+  margin-right: 20px;
+  padding: 1px 5px;
+  .toolImg {
+    width: 30px;
+    height: 30px;
+  }
 }
-.toolbar {
-  grid-column-start: 1;
-  grid-column-end: 1;
-  grid-row-start: 1;
-  grid-row-end: 1;
-  height: 7vh;
-  white-space: nowrap;
-  color: black;
-
-  padding: 5px;
-  background-color: rgb(250, 250, 250);
-  border-bottom: rgb(180, 180, 180) 1px solid;
-
-  .tools {
-    width: 100%;
-    height: 100%;
-
-    padding: 5px;
-
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-
-    .tool {
-      margin-right: 5px;
-      min-width: 50px;
-      min-height: 30px;
-      padding: 0px 10px;
-
-      background-color: white;
-      cursor: pointer;
-      &:hover {
-        background: rgb(240, 240, 240);
-      }
-
-      border: rgb(180, 180, 180) 1px solid;
-      border-radius: 4px;
-
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      img {
-        max-height: 22px;
-        max-width: 22px;
-
-        margin-right: 3px;
-      }
-    }
-
-    .selected {
-      background: rgb(230, 230, 230);
-      &:hover {
-        background: rgb(230, 230, 230);
-      }
-    }
-
-    .select {
-      border: rgb(170, 170, 170) 1px solid;
-      border-radius: 5px;
-
-      min-width: 50px;
-      min-height: 30px;
-
-      margin-right: 15px;
-      margin-left: 3px;
-
-      img {
-        max-height: 18px;
-        max-width: 18px;
-
-        margin-right: 3px;
-      }
-    }
+.selectedTool {
+  border: 2px black solid;
+  margin-right: 19px;
+  margin-left: 2px;
+}
+.layerButton {
+  margin-left: 40px;
+  margin-right: 10px;
+  padding: 12px 12px;
+}
+.connButtons {
+  margin-left: 10px;
+  .el-button {
+    padding: 0px 8px;
+    font-size: 12px;
+    width: 80px;
   }
 }
 </style>
