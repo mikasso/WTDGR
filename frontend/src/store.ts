@@ -27,6 +27,9 @@ export const store = createStore<State>({
       return state.isOnline;
     },
 
+    stage(state) {
+      return state.stage;
+    },
     getCurrentLayer(state) {
       return state.currentLayer;
     },

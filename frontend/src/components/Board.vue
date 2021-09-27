@@ -16,6 +16,7 @@ import { computed, defineComponent } from "vue";
 import BaseBoardEventManager from "@/js/BoardEventManager/BaseBoardEventManager";
 import { useStore } from "vuex";
 import { key, State } from "../store";
+import { useWindowSize } from "vue-window-size";
 
 interface User {
   userId: string;
@@ -45,16 +46,45 @@ export default defineComponent({
         this.eventManager?.toolChanged(tool);
       },
     },
+    windowWidth: {
+      handler(newWidth: number, oldWidth: number) {
+        const diff = oldWidth - newWidth;
+        const stage = this.store.state.stage;
+        const updatedWidth = stage!.width() - diff;
+        stage!.size({
+          width: updatedWidth,
+          height: stage!.height(),
+        });
+      },
+    },
+    windowHeight: {
+      handler(newHeight: number, oldHeight: number) {
+        const diff = oldHeight - newHeight;
+        const stage = this.store.state.stage;
+        const updatedHeight = stage!.height() - diff;
+        stage!.size({
+          width: stage!.width(),
+          height: updatedHeight,
+        });
+      },
+    },
   },
   setup() {
     const store = useStore<State>(key);
+    const { width, height } = useWindowSize();
     const isOnline = computed(() => {
       return store.state.isOnline;
     });
     const currentTool = computed(() => {
       return store.state.currentTool;
     });
-    return { store, isOnline, currentTool };
+    return {
+      store,
+      isOnline,
+      currentTool,
+      windowWidth: width,
+      windowHeight: height,
+    };
   },
   mounted() {
     this.handleConnectionChange(this.isOnline);
@@ -125,5 +155,8 @@ export default defineComponent({
 #root {
   width: 100%;
   height: 100%;
+}
+#board {
+  border: 1px blue solid;
 }
 </style>

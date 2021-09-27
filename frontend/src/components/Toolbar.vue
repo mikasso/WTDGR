@@ -136,7 +136,7 @@ export default defineComponent({
 <style scoped lang="scss">
 .tool {
   margin-left: 3px;
-  margin-right: 20px;
+  margin-right: 12px;
   padding: 1px 5px;
   .toolImg {
     width: 30px;
@@ -145,7 +145,7 @@ export default defineComponent({
 }
 .selectedTool {
   border: 2px black solid;
-  margin-right: 19px;
+  margin-right: 11px;
   margin-left: 2px;
 }
 .layerButton {
