@@ -19,6 +19,7 @@ body {
   margin: 0px;
   min-height: 100vh;
   font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  overflow-y: hidden;
 }
 #app {
   min-height: 100vh;
