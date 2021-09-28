@@ -41,6 +41,7 @@ export default abstract class BaseBoardEventManager {
   abstract setEraseToolHandlers(): void;
   abstract setPencilToolHandlers(): void;
   abstract addLayer(): void;
+  abstract reorderLayers(layersOrder: string[]): void;
 
   clearHandlers() {
     this.click = () => {};

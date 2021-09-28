@@ -99,13 +99,12 @@ export default class BoardManager {
   }
 
   connectVertexes(vertex: Vertex) {
-    console.log("connect");
     if (this.currentLayer !== vertex.layer)
       this.edgeManager.removeCurrentLine();
     const edge = this.edgeManager.tryToConnectVertices(vertex);
-    if (!edge) return console.log(edge);
-    this.eventManager.bindEdgeEvents(edge);
-    this.edgeManager.draw(edge);
+    if (edge == null) return;
+    this.eventManager.bindEdgeEvents(edge!);
+    this.edgeManager.draw(edge!);
   }
 
   startDrawingLine(vertex: Vertex) {

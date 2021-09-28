@@ -168,4 +168,8 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   addLayer() {
     this.hub.sendAction(this.actionFactory.create("Add", { type: "layer" }));
   }
+
+  reorderLayers(layersOrder: string[]) {
+    //todo
+  }
 }
