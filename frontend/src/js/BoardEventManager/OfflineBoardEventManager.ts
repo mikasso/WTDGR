@@ -129,4 +129,16 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     this.store.commit("addLayer", newLayer);
     this.store.commit("setCurrentLayer", newLayer);
   }
+
+  reorderLayers(layersOrder: string[]) {
+    const stageLayers = this.store.state.stage!.getLayers();
+    for (const i in layersOrder.reverse()) {
+      for (const layer of stageLayers) {
+        if (layer.id() == layersOrder[i]) {
+          layer.zIndex(+i);
+          break;
+        }
+      }
+    }
+  }
 }
