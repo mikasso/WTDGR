@@ -164,11 +164,11 @@ export default defineComponent({
   data: () => ({
     toolbar: {
       tools: [
-        { name: "Select", file: "select.svg" },
-        { name: "Vertex", file: "vertex.svg" },
-        { name: "Edge", file: "edge.svg" },
-        { name: "Pencil", file: "pencil.svg" },
-        { name: "Erase", file: "erase.svg" },
+        { name: "Select", file: "Select.png" },
+        { name: "Vertex", file: "Vertex.png" },
+        { name: "Edge", file: "Edge.png" },
+        { name: "Pencil", file: "Pencil.png" },
+        { name: "Erase", file: "Erase.png" },
       ],
 
       vertex_styles: ["circle"],
