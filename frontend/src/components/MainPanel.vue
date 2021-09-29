@@ -196,7 +196,4 @@ export default defineComponent({
   width: 100%;
   height: 100%;
 }
-#board {
-  border: 1px blue solid;
-}
 </style>
