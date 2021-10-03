@@ -140,9 +140,7 @@ export default class BoardManager {
     else if (konvaObject instanceof TemporaryLine)
       this.edgeManager.drawLine(konvaObject);
     else if (konvaObject instanceof PencilLine)
-      console.error(
-        "Piotr popraw to bo nie ma jak teraz to zrobic, fajnie jakby tam tez byla metoda draw()"
-      );
+      this.pencilManager.draw(konvaObject);
   }
 
   connectVertexes(vertex: Vertex) {
