@@ -13,6 +13,8 @@ namespace Backend.Models
         Edge,
         [EnumMember(Value = "layer")]
         Layer,
+        [EnumMember(Value = "line")]
+        Line,
         [EnumMember(Value = "unknown?")]
         PencilLine,
     }

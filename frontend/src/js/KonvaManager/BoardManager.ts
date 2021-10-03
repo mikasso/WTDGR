@@ -1,4 +1,9 @@
-import EdgeManager, { Edge } from "./EdgeManager";
+import EdgeManager, {
+  Edge,
+  EdgeDTO,
+  LineDTO,
+  TemporaryLine,
+} from "./EdgeManager";
 import VertexManager, { Cordinates, Vertex } from "./VertexManager";
 import { sortItems } from "../Utils/LayerUtils";
 import PencilManager, { PencilLine } from "./PencilManager";
@@ -6,8 +11,6 @@ import Konva from "konva";
 import BaseBoardEventManager from "../BoardEventManager/BaseBoardEventManager";
 import { Store } from "vuex";
 import { State } from "@/store";
-import { KonvaEventListener, NodeConfig } from "konva/types/Node";
-import { EdgeDTO } from "../SignalR/Action";
 
 export default class BoardManager {
   edgeManager: EdgeManager;
@@ -104,10 +107,38 @@ export default class BoardManager {
     }
   }
 
-  draw(konvaObject: Vertex | Edge | PencilLine) {
+  deleteEdge(id: string) {
+    const edge = this.findById(id) as Edge;
+    this.edgeManager.removeEdges([edge]);
+  }
+
+  createLine(lineDTO: LineDTO) {
+    const v1 = this.findById(lineDTO.v1);
+    if (v1 instanceof Vertex) {
+      const line = new TemporaryLine(lineDTO, v1);
+      return line;
+    }
+  }
+
+  editLine(lineDTO: LineDTO) {
+    const line = this.findById(lineDTO.id) as TemporaryLine;
+    console.log("requested line" + JSON.stringify(lineDTO));
+    console.log("founded line" + line);
+    line.setAttrs(lineDTO);
+    line.redraw();
+  }
+
+  deleteLine(lineId: string) {
+    const line = this.findById(lineId) as TemporaryLine;
+    this.edgeManager.removeLine(line);
+  }
+
+  draw(konvaObject: Vertex | Edge | PencilLine | TemporaryLine) {
     sortItems(this.currentLayer);
     if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
     else if (konvaObject instanceof Edge) this.edgeManager.draw(konvaObject);
+    else if (konvaObject instanceof TemporaryLine)
+      this.edgeManager.drawLine(konvaObject);
     else if (konvaObject instanceof PencilLine)
       console.error(
         "Piotr popraw to bo nie ma jak teraz to zrobic, fajnie jakby tam tez byla metoda draw()"
@@ -121,13 +152,14 @@ export default class BoardManager {
   }
 
   startDrawingLine(vertex: Vertex) {
-    if (this.currentLayer !== vertex.layer) return;
+    if (this.currentLayer !== vertex.layer) return null;
     const line = this.edgeManager.startDrawingLine(vertex);
     sortItems(this.currentLayer);
+    return line;
   }
 
-  moveLineToPoint(position: Cordinates) {
-    this.edgeManager.moveLineToPoint(position);
+  moveLineToPoint(position: Cordinates): boolean {
+    return this.edgeManager.moveLineToPoint(position);
   }
 
   stopDrawingLine() {
@@ -147,9 +179,10 @@ export default class BoardManager {
   }
 
   eraseVertexById(vertexId: string) {
-    const vertex = this.findById(vertexId);
-    if (vertex) this.vertexManager.remove(vertex as Vertex);
-    else
+    const vertex = this.findById(vertexId) as Vertex;
+    if (vertex) {
+      this.eraseVertex(vertex);
+    } else
       throw Error(
         "Attempt to remove vertex with ID " + vertexId + " which doesnt exists"
       );

@@ -8,7 +8,6 @@ export default class UserAction {
     this.actionType = actionType;
     this.userId = userId;
     this.item = item;
-    this.item.id = actionType === "Add" ? undefined : item.id;
   }
 }
 
@@ -22,9 +21,4 @@ export class ActionFactory {
     item.layer = this.layerProvider.currentLayer.attrs.id;
     return new UserAction(actionType, this.userId, item);
   }
-}
-
-export interface EdgeDTO extends Konva.LineConfig {
-  v1: string;
-  v2: string;
 }
