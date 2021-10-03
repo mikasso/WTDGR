@@ -155,4 +155,8 @@ export default abstract class BaseBoardEventManager {
       y: event.evt.layerY,
     };
   }
+
+  highlightLayer(layerId: string, on: boolean) {
+    this.boardManager.highlightLayer(layerId, on);
+  }
 }

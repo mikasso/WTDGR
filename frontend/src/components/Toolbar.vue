@@ -4,6 +4,7 @@
       <el-tooltip
         v-for="(tool, index) in toolbar.tools"
         :key="index"
+        :hide-after="0"
         effect="dark"
         :content="tool.name"
         placement="bottom"
@@ -34,6 +35,8 @@
               <template #item="{element}">
                 <div
                   class="layer-item"
+                  @mouseover="highlightLayer(element, true)"
+                  @mouseleave="highlightLayer(element, false)"
                   :class="{
                     selected: currentLayer == element,
                     first: layers[0] == element,
@@ -89,7 +92,7 @@ interface layerData {
 
 export default defineComponent({
   name: "Toolbar",
-  emits: ["addLayer", "layersReordered"],
+  emits: ["toolbarAction"],
   components: {
     draggable,
   },
@@ -107,7 +110,10 @@ export default defineComponent({
           .map((layer) => layer.id);
       },
       set: function(layers: string[]) {
-        emit("layersReordered", layers);
+        emit("toolbarAction", {
+          type: "reorderLayers",
+          value: layers,
+        });
       },
     });
 
@@ -144,10 +150,13 @@ export default defineComponent({
     });
 
     const addLayer = () => {
-      emit("addLayer");
+      emit("toolbarAction", {
+        type: "addLayer",
+        value: null,
+      });
     };
 
-    let drag = false;
+    let hover = false;
 
     return {
       layers,
@@ -155,7 +164,8 @@ export default defineComponent({
       isOnline,
       currentTool,
       addLayer,
-      drag,
+      hover,
+      emit,
     };
   },
   mounted() {
@@ -177,7 +187,16 @@ export default defineComponent({
       edge_styles: ["line"],
       edge_style: "line",
     },
+    drag: false,
   }),
+  methods: {
+    highlightLayer(layerId: string, on: boolean) {
+      this.emit("toolbarAction", {
+        type: on ? "highlightLayerOn" : "highlightLayerOff",
+        value: layerId,
+      });
+    },
+  },
 });
 </script>
 <style scoped lang="scss">
