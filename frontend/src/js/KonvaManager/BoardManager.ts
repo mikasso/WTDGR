@@ -183,10 +183,23 @@ export default class BoardManager {
     this.store.commit("addLayer", newLayer);
   }
 
+  getLayerById(layerId: string) {
+    return this.layers.find((layer: Konva.Layer) => layer.attrs.id === layerId);
+  }
+
   setCurrentLayer(layerId: string) {
-    const layer = this.layers.find(
-      (layer: Konva.Layer) => layer.attrs.id === layerId
-    );
+    const layer = this.getLayerById(layerId);
     this.store.commit("setCurrentLayer", layer);
+  }
+
+  highlightLayer(layerId: string, on: boolean) {
+    const layer = this.getLayerById(layerId);
+    if (layer == null) return;
+    layer
+      .getChildren((node) => node.getClassName() === "Circle")
+      .each((vertex) => this.vertexManager.setHiglight(vertex as Vertex, on));
+    layer
+      .getChildren((node) => node.getClassName() === "Line")
+      .each((edge) => this.edgeManager.setHiglight(edge as Edge, on));
   }
 }

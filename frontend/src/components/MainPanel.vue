@@ -1,10 +1,7 @@
 <template>
   <el-container class="wrapper">
     <el-header class="header" height="55px">
-      <Toolbar
-        @layers-reordered="reorderLayers($event)"
-        @add-layer="addLayer()"
-      />
+      <Toolbar @toolbarAction="handleToolbarAction($event)" />
     </el-header>
 
     <el-container>
@@ -46,6 +43,11 @@ interface User {
 interface BoardData {
   eventManager?: BaseBoardEventManager;
   hub?: BoardHub;
+}
+
+interface toolbarAction {
+  type: string;
+  value: any;
 }
 
 export default defineComponent({
@@ -164,11 +166,24 @@ export default defineComponent({
       if (document.getElementById("root") == null) return 0;
       else return document.getElementById("root")?.clientWidth;
     },
+
+    handleToolbarAction(action: toolbarAction) {
+      if (action.type == "addLayer") this.addLayer();
+      if (action.type == "reorderLayers")
+        this.reorderLayers(action.value as string[]);
+      if (action.type == "highlightLayerOn")
+        this.highlightLayer(action.value as string, true);
+      if (action.type == "highlightLayerOff")
+        this.highlightLayer(action.value as string, false);
+    },
     addLayer() {
       this.eventManager?.addLayer();
     },
     reorderLayers(layers: string[]) {
       this.eventManager?.reorderLayers(layers);
+    },
+    highlightLayer(layerId: string, on: boolean) {
+      this.eventManager?.highlightLayer(layerId, on);
     },
     blockContextMenu(e: Event) {
       e.preventDefault(); //disable context menu when right click
