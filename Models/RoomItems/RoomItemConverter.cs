@@ -40,6 +40,8 @@ namespace Backend.Models
                     break;
                 case "edge":
                     return new Edge();
+                case "line":
+                    return new Line();
                 default:
                     throw new InvalidCastException($"Cant cast when type value is {value}");
             }
