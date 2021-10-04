@@ -2,6 +2,16 @@ import Konva from "konva";
 import DraggableManager from "./DraggableManager";
 import { Cordinates, HighlightConfig, Vertex } from "./VertexManager";
 
+export interface EdgeDTO extends Konva.LineConfig {
+  v1: string;
+  v2: string;
+}
+
+export interface LineDTO extends Konva.LineConfig {
+  v1: string;
+  endPoint: Cordinates;
+}
+
 export class Edge extends Konva.Line {
   v1: Vertex;
   v2: Vertex;
@@ -27,17 +37,58 @@ export class Edge extends Konva.Line {
     this.moveToBottom();
     this.layer.draw();
   }
+
+  asDTO(): EdgeDTO {
+    return {
+      ...this.attrs,
+      type: "edge",
+      v1: this.v1.id(),
+      v2: this.v2.id(),
+    };
+  }
+}
+
+export class TemporaryLine extends Konva.Line {
+  v1: Vertex;
+  baseConfig: Konva.LineConfig;
+  constructor(config: Konva.LineConfig, v1: Vertex) {
+    config.points = [v1.x(), v1.y(), v1.x(), v1.y()];
+    const baseConfig = Object.assign({}, config);
+    super(config);
+    if (this.id() === "") this.id(Math.random().toString() + v1.id());
+    this.v1 = v1;
+    this.baseConfig = baseConfig;
+  }
+
+  get layer() {
+    return this.v1.layer;
+  }
+
+  updatePosition(mousePos: Cordinates) {
+    this.points([this.v1.x(), this.v1.y(), mousePos.x, mousePos.y]);
+  }
+
+  redraw() {
+    this.moveToBottom();
+    this.layer.draw();
+  }
+
+  asDTO(): LineDTO {
+    return {
+      ...this.attrs,
+      type: "line",
+      v1: this.v1.id(),
+      endPoint: { x: this.points()[2], y: this.points()[3] },
+    };
+  }
 }
 
 export default class EdgeManager extends DraggableManager {
   constructor() {
     super();
-    this.itemClassName = "Line";
     this.dragEnabled = false;
   }
-
-  private startVertex: Vertex | undefined;
-  private currentLine: Konva.Line | undefined;
+  private currentLine: TemporaryLine | undefined;
   private draggedEdge: Edge | undefined;
 
   private vertexDistances: number[] = [0, 0, 0, 0];
@@ -61,30 +112,28 @@ export default class EdgeManager extends DraggableManager {
     v1: Vertex,
     config: Konva.LineConfig = this.defaultConfig
   ) {
-    this.startVertex = v1;
-    config.points = [v1.x(), v1.y(), v1.x(), v1.y()];
-    this.currentLine = new Konva.Line(config);
+    this.currentLine = new TemporaryLine(config, v1);
     v1.layer.add(this.currentLine);
     return this.currentLine;
   }
 
-  public moveLineToPoint(point: Cordinates) {
-    if (!this.currentLine || !this.startVertex) return;
+  public moveLineToPoint(point: Cordinates): boolean {
+    if (!this.currentLine) return false;
 
     this.currentLine.points([
-      this.startVertex.x(),
-      this.startVertex.y(),
+      this.currentLine.v1.x(),
+      this.currentLine.v1.y(),
       point.x,
       point.y,
     ]);
-
-    this.startVertex.layer.draw();
+    this.currentLine.layer.draw();
+    return true;
   }
 
   public tryToConnectVertices(vertex: Vertex) {
-    if (!this.currentLine || !this.startVertex) return;
+    if (!this.currentLine) return;
 
-    const v1 = this.startVertex;
+    const v1 = this.currentLine.v1;
     const v2 = vertex;
     if (v1.layer !== v2.layer || v1 === v2) {
       this.removeCurrentLine();
@@ -108,9 +157,13 @@ export default class EdgeManager extends DraggableManager {
 
   public removeCurrentLine() {
     if (!this.currentLine) return;
-    const layerToRedraw = this.currentLine.getLayer();
-    this.currentLine.destroy();
+    this.removeLine(this.currentLine);
     this.currentLine = undefined;
+  }
+
+  removeLine(line: TemporaryLine) {
+    const layerToRedraw = line.getLayer();
+    line.destroy();
     layerToRedraw?.draw();
   }
 
@@ -176,7 +229,17 @@ export default class EdgeManager extends DraggableManager {
   }
 
   public draw(edge: Edge) {
+    console.log("drawedge()");
+    console.log(edge);
     edge.layer.add(edge);
     edge.redraw();
+  }
+
+  public drawLine(line: TemporaryLine) {
+    console.log("drawline()");
+    console.log(line);
+    line.layer.add(line);
+    line.redraw();
+    console.log(line.layer);
   }
 }
