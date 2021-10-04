@@ -41,6 +41,7 @@ export default abstract class BaseBoardEventManager {
   abstract setEraseToolHandlers(): void;
   abstract setPencilToolHandlers(): void;
   abstract addLayer(): void;
+  abstract removeLayer(layerId: string): void;
   abstract reorderLayers(layersOrder: string[]): void;
 
   clearHandlers() {

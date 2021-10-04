@@ -13,6 +13,7 @@ export default class BoardManager {
   vertexManager: VertexManager;
   pencilManager: PencilManager;
   eventManager!: BaseBoardEventManager;
+
   store: Store<State>;
   constructor(store: Store<State>) {
     this.store = store;
