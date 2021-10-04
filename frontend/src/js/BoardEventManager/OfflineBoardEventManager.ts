@@ -66,7 +66,11 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     };
     this.vertexMouseUp = (event) => {
       const vertex = event.target;
-      this.boardManager.connectVertexes(vertex);
+      const edge = this.boardManager.connectVertexes(vertex);
+      if (edge !== undefined) {
+        this.bindEdgeEvents(edge);
+        this.boardManager.draw(edge);
+      }
     };
     this.mouseUp = () => {
       this.boardManager.stopDrawingLine();

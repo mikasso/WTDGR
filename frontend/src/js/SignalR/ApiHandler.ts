@@ -2,6 +2,7 @@ import { State } from "@/store";
 import Konva from "konva";
 import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
+import { EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
 import UserAction from "./Action";
 
 export default class ApiManager {
@@ -54,6 +55,18 @@ export default class ApiManager {
           this.boardManager.draw(vertex);
           break;
         }
+        case "edge": {
+          console.log(action.item);
+          const edge = this.boardManager.createEdge(action.item as EdgeDTO);
+          if (edge !== undefined) this.boardManager.draw(edge);
+          break;
+        }
+        case "line": {
+          console.log(action.item);
+          const line = this.boardManager.createLine(action.item as LineDTO);
+          if (line !== undefined) this.boardManager.draw(line);
+          break;
+        }
         case "layer":
           this.boardManager.receiveAddLayer(action.item.id);
           if (action.userId === this.user.userId)
@@ -70,6 +83,12 @@ export default class ApiManager {
         case "v-circle":
           this.boardManager.eraseVertexById(action.item.id);
           break;
+        case "line":
+          this.boardManager.deleteLine(action.item.id);
+          break;
+        case "edge":
+          this.boardManager.deleteEdge(action.item.id);
+          break;
         default:
           throw Error(`Not implement delete for ${action.item.type}`);
       }
@@ -78,7 +97,10 @@ export default class ApiManager {
   private receiveEdit(action: UserAction) {
     switch (action.item.type) {
       case "v-circle":
-        this.boardManager.update(action.item);
+        this.boardManager.updateVertex(action.item);
+        break;
+      case "line":
+        this.boardManager.editLine(action.item as LineDTO);
         break;
       default:
         throw Error(`Not implement edit for ${action.item.type}`);

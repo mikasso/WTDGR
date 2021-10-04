@@ -1,4 +1,9 @@
-import EdgeManager, { Edge } from "./EdgeManager";
+import EdgeManager, {
+  Edge,
+  EdgeDTO,
+  LineDTO,
+  TemporaryLine,
+} from "./EdgeManager";
 import VertexManager, { Cordinates, Vertex } from "./VertexManager";
 import { sortItems } from "../Utils/LayerUtils";
 import PencilManager, { PencilLine } from "./PencilManager";
@@ -6,7 +11,6 @@ import Konva from "konva";
 import BaseBoardEventManager from "../BoardEventManager/BaseBoardEventManager";
 import { Store } from "vuex";
 import { State } from "@/store";
-import { NodeConfig } from "konva/types/Node";
 
 export default class BoardManager {
   edgeManager: EdgeManager;
@@ -49,10 +53,11 @@ export default class BoardManager {
     return cords;
   }
 
-  update(attrs: Konva.NodeConfig) {
-    const item = this.findById(attrs.id); //konva uses id as selector so # is required
-    item.setAttrs(attrs);
-    this.stage.draw();
+  updateVertex(attrs: Konva.NodeConfig) {
+    const vertex = this.findById(attrs.id) as Vertex; //konva uses id as selector so # is required
+    vertex.setAttrs(attrs);
+    this.edgeManager.dragEdges(vertex);
+    vertex.redraw();
   }
 
   enableDrag() {
@@ -91,10 +96,50 @@ export default class BoardManager {
     return vertex;
   }
 
-  draw(konvaObject: Vertex | Edge | PencilLine) {
+  createEdge(edgeDTO: EdgeDTO) {
+    const v1 = this.findById(edgeDTO.v1);
+    const v2 = this.findById(edgeDTO.v2);
+    if (v1 instanceof Vertex && v2 instanceof Vertex) {
+      const edge = new Edge(v1, v2, edgeDTO);
+      v1.edges.push(edge);
+      v2.edges.push(edge);
+      this.eventManager.bindEdgeEvents(edge);
+      return edge;
+    }
+  }
+
+  deleteEdge(id: string) {
+    const edge = this.findById(id) as Edge;
+    this.edgeManager.removeEdges([edge]);
+  }
+
+  createLine(lineDTO: LineDTO) {
+    const v1 = this.findById(lineDTO.v1);
+    if (v1 instanceof Vertex) {
+      const line = new TemporaryLine(lineDTO, v1);
+      return line;
+    }
+  }
+
+  editLine(lineDTO: LineDTO) {
+    const line = this.findById(lineDTO.id) as TemporaryLine;
+    console.log("requested line" + JSON.stringify(lineDTO));
+    console.log("founded line" + line);
+    line.setAttrs(lineDTO);
+    line.redraw();
+  }
+
+  deleteLine(lineId: string) {
+    const line = this.findById(lineId) as TemporaryLine;
+    this.edgeManager.removeLine(line);
+  }
+
+  draw(konvaObject: Vertex | Edge | PencilLine | TemporaryLine) {
     sortItems(this.currentLayer);
     if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
     else if (konvaObject instanceof Edge) this.edgeManager.draw(konvaObject);
+    else if (konvaObject instanceof TemporaryLine)
+      this.edgeManager.drawLine(konvaObject);
     else if (konvaObject instanceof PencilLine)
       this.pencilManager.draw(konvaObject);
   }
@@ -102,20 +147,18 @@ export default class BoardManager {
   connectVertexes(vertex: Vertex) {
     if (this.currentLayer !== vertex.layer)
       this.edgeManager.removeCurrentLine();
-    const edge = this.edgeManager.tryToConnectVertices(vertex);
-    if (edge == null) return;
-    this.eventManager.bindEdgeEvents(edge!);
-    this.edgeManager.draw(edge!);
+    return this.edgeManager.tryToConnectVertices(vertex);
   }
 
   startDrawingLine(vertex: Vertex) {
-    if (this.currentLayer !== vertex.layer) return;
+    if (this.currentLayer !== vertex.layer) return null;
     const line = this.edgeManager.startDrawingLine(vertex);
     sortItems(this.currentLayer);
+    return line;
   }
 
-  moveLineToPoint(position: Cordinates) {
-    this.edgeManager.moveLineToPoint(position);
+  moveLineToPoint(position: Cordinates): boolean {
+    return this.edgeManager.moveLineToPoint(position);
   }
 
   stopDrawingLine() {
@@ -135,9 +178,10 @@ export default class BoardManager {
   }
 
   eraseVertexById(vertexId: string) {
-    const vertex = this.findById(vertexId);
-    if (vertex) this.vertexManager.remove(vertex as Vertex);
-    else
+    const vertex = this.findById(vertexId) as Vertex;
+    if (vertex) {
+      this.eraseVertex(vertex);
+    } else
       throw Error(
         "Attempt to remove vertex with ID " + vertexId + " which doesnt exists"
       );

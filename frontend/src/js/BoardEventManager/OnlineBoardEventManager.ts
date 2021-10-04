@@ -1,10 +1,14 @@
 import { State } from "@/store";
 import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
+import { TemporaryLine } from "../KonvaManager/EdgeManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 import { ActionFactory } from "../SignalR/Action";
 import BoardHub from "../SignalR/Hub";
 import BaseBoardEventManager from "./BaseBoardEventManager";
+
+const SentRequestInterval = 20;
+
 export default class OnlineBoardEventManager extends BaseBoardEventManager {
   actionFactory: ActionFactory;
   hub: BoardHub;
@@ -67,7 +71,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
         "vertex mouse down " + vertex.attrs.draggable + vertex.attrs.id
       );
       if (vertex.attrs.draggable)
-        intervalId = setInterval(sendVertexEdit, 33, vertex);
+        intervalId = setInterval(sendVertexEdit, SentRequestInterval, vertex);
     };
 
     this.edgeMouseEnter = (event) => {
@@ -97,21 +101,56 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   setEdgeToolHandlers() {
+    let intervalId: number | null = null;
+    let currentLine: TemporaryLine | null = null;
+    const sendLineEdit = (line: TemporaryLine) => {
+      if (line !== null) {
+        const mousePos = this.boardManager.getMousePosition();
+        line.updatePosition(mousePos);
+        const action = this.actionFactory.create("Edit", line.asDTO());
+        return this.hub.sendAction(action);
+      }
+    };
+    const stopSendLineEdit = async () => {
+      if (intervalId !== null && currentLine !== null) {
+        clearInterval(intervalId);
+        const action = this.actionFactory.create("Delete", currentLine.asDTO());
+        await this.hub.sendAction(action);
+        intervalId = null;
+        currentLine = null;
+      }
+    };
+
     this.vertexMouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const vertex = event.target;
-      this.boardManager.startDrawingLine(vertex);
+      const line = this.boardManager.startDrawingLine(vertex);
+      if (line !== null) {
+        currentLine = line;
+        console.log(currentLine.asDTO());
+        const action = this.actionFactory.create("Add", currentLine.asDTO());
+        this.hub.sendAction(action);
+        intervalId = setInterval(
+          sendLineEdit,
+          SentRequestInterval,
+          currentLine
+        );
+      }
     };
     this.mouseMove = (event) => {
-      const point = this.getPointFromEvent(event);
-      this.boardManager.moveLineToPoint(point);
+      // const point = this.getPointFromEvent(event);
+      // this.boardManager.moveLineToPoint(point);
     };
-    this.vertexMouseUp = (event) => {
+    this.vertexMouseUp = async (event) => {
       const vertex = event.target;
-      this.boardManager.connectVertexes(vertex);
+      const edge = this.boardManager.connectVertexes(vertex);
+      if (edge !== undefined) {
+        const action = this.actionFactory.create("Add", edge.asDTO());
+        this.hub.sendAction(action);
+      }
     };
-    this.mouseUp = () => {
-      this.boardManager.stopDrawingLine();
+    this.mouseUp = async () => {
+      await stopSendLineEdit();
     };
   }
 
@@ -124,7 +163,8 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
 
     this.edgeClick = (event) => {
       const edge = event.target;
-      this.boardManager.eraseEdge(edge);
+      const action = this.actionFactory.create("Delete", edge.attrs);
+      this.hub.sendAction(action);
     };
 
     this.pencilClick = (event) => {

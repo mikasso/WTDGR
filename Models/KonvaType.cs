@@ -9,10 +9,12 @@ namespace Backend.Models
     {
         [EnumMember(Value = "v-circle")]
         Vertex,
-        [EnumMember(Value = "v-line")]
+        [EnumMember(Value = "edge")]
         Edge,
         [EnumMember(Value = "layer")]
         Layer,
+        [EnumMember(Value = "line")]
+        Line,
         [EnumMember(Value = "unknown?")]
         PencilLine,
     }

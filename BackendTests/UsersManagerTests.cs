@@ -9,6 +9,22 @@ namespace BackendTests
     public class UsersManagerTests
     {
 
+        private static User NewUser
+        {
+            get
+            {
+                {
+                    return new User
+                    {
+                        Role = "User",
+                        Id = "User_1",
+                        RoomId = "130139"
+                    };
+                }
+            }
+        }
+
+
         [Fact]
         public void UserExists_AfterAddShouldReturnTrue()
         {
@@ -52,12 +68,11 @@ namespace BackendTests
             var Users = new UsersManager();
             var Added = NewUser;
             Users.Add(Added);
-            Added.Role = "Owner";
             //Act
-            Users.Update(Added);
+            Users.SetAdmin(NewUser.Id);
             var newRole = Users.Get(Added.Id).Role;
             //Assert
-            Assert.True(newRole == Added.Role);
+            Assert.True(newRole == "Admin");
         }
 
 
@@ -119,22 +134,6 @@ namespace BackendTests
             foreach(var item in allUsers)
             {
                 Assert.Equal(item.Founded.Id, item.ShouldFound.Id);
-            }
-        }
-
-
-        private static User NewUser
-        {
-            get
-            {
-                {
-                    return new User
-                    {
-                        Role = "User",
-                        Id = "User_1",
-                        RoomId = "130139"
-                    };
-                }
             }
         }
     }
