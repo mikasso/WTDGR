@@ -38,6 +38,10 @@ namespace Backend.Models
                 case "layer":
                     return new Layer();
                     break;
+                case "edge":
+                    return new Edge();
+                case "line":
+                    return new Line();
                 default:
                     throw new InvalidCastException($"Cant cast when type value is {value}");
             }

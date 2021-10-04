@@ -13,15 +13,23 @@ namespace Backend.Core
     {
         public string RoomId { get; init; }
         public User Owner { get; private set; }
+
         public readonly UsersManager Users = new();
-        private readonly VerticesManager _verticesManager = new();
+
+        private readonly EdgeManager _edgeManager;
+        private readonly VerticesManager _verticesManager;
         private readonly LayersManager _layersManager = new LayersManager();
+        private readonly LineManager _lineManager = new LineManager();
+
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         public RoomManager(string id)
         {
             Log.Information($"Starting new room. Id: {id}");
             RoomId = id;
             _layersManager.Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer });
+            _verticesManager = new();
+            _edgeManager = new(_verticesManager);
+            _verticesManager.Initialize(_edgeManager);
         }
         public User CreateOwner(User owner)
         {
@@ -35,9 +43,12 @@ namespace Backend.Core
 
         public async Task<RoomImage> GetRoomImage()
         {
-            var roomImage = new RoomImage();
-            roomImage.Vertices = _verticesManager.GetAll().Cast<Vertex>().ToList();
-            return roomImage;
+            return new RoomImage()
+            {
+                Vertices = _verticesManager.GetAll().Cast<Vertex>().ToList(),
+                Edges = _edgeManager.GetAll().Cast<Edge>().ToList(),
+                Layers = _layersManager.GetAll().Cast<Layer>().ToList(),
+            };
         }
 
         public async Task<ActionResult> ExecuteAction(UserAction userAction)
@@ -66,25 +77,10 @@ namespace Backend.Core
             }
             catch (Exception e)
             {
-                Log.Error("Cannot dispatch user action message!", e);
+                Log.Error("Cannot dispatch user action message! \n" + e.StackTrace);
                 return actionResult;
             }
 
-        }
-
-        private Receviers DispatchReceivers(bool isSucceded, ActionType actionType)
-        {
-            switch (actionType)
-            {
-                case ActionType.RequestToEdit:
-                case ActionType.ReleaseItem:
-                    return Receviers.caller;
-                default:
-                    if (isSucceded)
-                        return Receviers.all;
-                    else
-                        return Receviers.caller;
-            }
         }
 
         private Func<bool> DispatchAction(UserAction userAction)
@@ -95,18 +91,25 @@ namespace Backend.Core
                 throw new ItemLockedException();
             }
 
+            var item = userAction.Item;
+            var itemManager = DispatchItemManager(item.Type);
+
             switch (userAction.ActionType)
             {
                 case ActionType.Add:
-                    return DispatchAddAction(userAction);
+                    if(item.Id == null)
+                        item.Id = Guid.NewGuid().ToString();
+                    return () => itemManager.Add(item);
                 case ActionType.RequestToEdit:
-                    return DispatchRequestToEditAction(userAction);
+                    item.EditorId = userAction.UserId;
+                    return () => itemManager.Update(item);
                 case ActionType.ReleaseItem:
-                    return DispatchReleaseItemAction(userAction);
+                    item.EditorId = null;
+                    return () => itemManager.Update(item);
                 case ActionType.Edit:
-                    return DispatchEditAction(userAction);
+                    return () => itemManager.Update(item);
                 case ActionType.Delete:
-                    return DispatchDeleteAction(userAction);
+                    return () => itemManager.Delete(item.Id);
                 default:
                     throw new ArgumentException("Cannot dispatch user action message!");
             }
@@ -114,6 +117,8 @@ namespace Backend.Core
 
         private bool IsItemFree(UserAction userAction)
         {
+            if (userAction.Item.Type != KonvaType.Vertex) return true;
+
             var itemId = userAction.Item.Id;
             if (userAction.ActionType == ActionType.Add)
                 return true;
@@ -124,76 +129,28 @@ namespace Backend.Core
                 return true;
             return vertex.EditorId == userAction.UserId;
         }
-
-        private Func<bool> DispatchReleaseItemAction(UserAction userAction)
+        private Receviers DispatchReceivers(bool isSucceded, ActionType actionType)
         {
-            switch (userAction.Item.Type)
+            return actionType switch
             {
-                case KonvaType.Vertex:
-                    var item = userAction.Item as Vertex;
-                    item.EditorId = null;
-                    return () => _verticesManager.Update(item);
-                default: throw new NotImplementedException();
-            }
+                ActionType.RequestToEdit or ActionType.ReleaseItem => Receviers.caller,
+                _ => isSucceded ? Receviers.all : Receviers.caller,
+            };
         }
 
-        private Func<bool> DispatchRequestToEditAction(UserAction userAction)
+        private IRoomItemsManager DispatchItemManager(KonvaType konvaType)
         {
-            switch (userAction.Item.Type)
+            return konvaType switch
             {
-                case KonvaType.Vertex:
-                    var item = userAction.Item as Vertex;
-                    item.EditorId = userAction.UserId;
-                    return () => _verticesManager.Update(item);
-                default: throw new NotImplementedException();
-            }
-        }
-
-        private Func<bool> DispatchDeleteAction(UserAction userAction)
-        {
-            switch (userAction.Item.Type)
-            {
-                case KonvaType.Vertex:
-                    var vertex = userAction.Item as Vertex;
-                    return () => {
-                        if (_layersManager.Get(vertex.Layer) == null) return false;
-                        if (_verticesManager.Get(vertex.Id)?.Layer != vertex.Layer) return false;
-                        return _verticesManager.Delete(vertex.Id);
-                    };
-                default: throw new NotImplementedException();
-            }
+                KonvaType.Vertex => _verticesManager,
+                KonvaType.Layer => _layersManager,
+                KonvaType.Edge => _edgeManager,
+                KonvaType.Line => _lineManager,
+                _ => throw new NotImplementedException(),
+            };
         }
 
 
-        private Func<bool> DispatchEditAction(UserAction userAction)
-        {
-            switch (userAction.Item.Type)
-            {
-                case KonvaType.Vertex:
-                    var vertex = userAction.Item as Vertex;
-                    return () => {
-                        if (_layersManager.Get(vertex.Layer) == null) return false;
-                        if (_verticesManager.Get(vertex.Id)?.Layer != vertex.Layer) return false;
-                        return _verticesManager.Update(userAction.Item as Vertex);
-                    };
-                default: throw new NotImplementedException();
-            }
-        }
 
-        private Func<bool> DispatchAddAction(UserAction userAction)
-        {
-            switch (userAction.Item.Type)
-            {
-                case KonvaType.Vertex:
-                    userAction.Item.Id = Guid.NewGuid().ToString();
-                    var vertex = userAction.Item as Vertex;
-                    return () => _verticesManager.Add(vertex);
-                case KonvaType.Layer:
-                    var layer = userAction.Item as Layer;
-                    layer.Id = $"Layer {_layersManager.Count + 1}";
-                    return () => _layersManager.Add(layer);
-                default: throw new NotImplementedException();
-            }
-        }
     }
 }
