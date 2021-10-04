@@ -8,7 +8,6 @@ export default class UserAction {
     this.actionType = actionType;
     this.userId = userId;
     this.item = item;
-    this.item.id = actionType === "Add" ? undefined : item.id;
   }
 }
 

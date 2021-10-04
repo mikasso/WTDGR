@@ -108,7 +108,7 @@ namespace Backend.Service
             await receiver.ReceiveAction(actionResult.UserAction, actionResult.IsSucceded);
             if (!actionResult.IsSucceded)
             {
-                Log.Error($"Cannot execut action for user {userAction.UserId}\n" + userAction.ToString());
+                Log.Error($"Cannot execute action for user {userAction.UserId}\n" + userAction.ToString());
             }
         }
 
