@@ -175,12 +175,17 @@ export default defineComponent({
         this.highlightLayer(action.value as string, true);
       if (action.type == "highlightLayerOff")
         this.highlightLayer(action.value as string, false);
+      if (action.type == "removeLayer")
+        this.removeLayer(action.value as string);
     },
     addLayer() {
       this.eventManager?.addLayer();
     },
     reorderLayers(layers: string[]) {
       this.eventManager?.reorderLayers(layers);
+    },
+    removeLayer(layerId: string) {
+      this.eventManager?.removeLayer(layerId);
     },
     highlightLayer(layerId: string, on: boolean) {
       this.eventManager?.highlightLayer(layerId, on);

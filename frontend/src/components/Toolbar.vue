@@ -18,14 +18,10 @@
         </el-button>
       </el-tooltip>
 
-      <el-button class="layerButton" @click="addLayer()">
-        <strong>Add layer</strong>
-      </el-button>
-
       <el-dropdown split-button :hide-on-click="false" v-if="layers != null">
         {{ currentLayer }}
         <template #dropdown>
-          <el-dropdown-menu>
+          <el-dropdown-menu class="drop-menu">
             <draggable
               v-model="layers"
               tag="transition-group"
@@ -52,9 +48,17 @@
                     @click="currentLayer = element"
                     >{{ element }}</span
                   >
+                  <img
+                    class="delete"
+                    @click="removeLayer(element)"
+                    :src="require('../assets/buttons/delete.svg')"
+                  />
                 </div>
               </template>
             </draggable>
+            <el-button class="layerButton" @click="addLayer()">
+              <strong>Add layer</strong>
+            </el-button>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -196,6 +200,12 @@ export default defineComponent({
         value: layerId,
       });
     },
+    removeLayer(layerId: string) {
+      this.emit("toolbarAction", {
+        type: "removeLayer",
+        value: layerId,
+      });
+    },
   },
 });
 </script>
@@ -214,11 +224,6 @@ export default defineComponent({
   margin-right: 11px;
   margin-left: 2px;
 }
-.layerButton {
-  margin-left: 40px;
-  margin-right: 10px;
-  padding: 12px 12px;
-}
 .connButtons {
   margin-left: 10px;
   .el-button {
@@ -230,10 +235,15 @@ export default defineComponent({
 .el-dropdown-menu {
   background-color: #f6f6f6;
 }
+.layerButton {
+  padding: 12px 12px;
+  margin: 0px 10px;
+  margin-top: 15px;
+}
 .layer-item {
   margin: 0px 10px;
-  padding: 12px 10px;
-  width: 80px;
+  padding: 12px 8px;
+  width: 100px;
   border: 1px lightgray solid;
   background-color: #fff;
   display: flex;
@@ -247,6 +257,13 @@ export default defineComponent({
   height: 16px;
   margin-right: 3px;
 }
+.delete {
+  float: left;
+  width: 16px;
+  height: 16px;
+  margin-left: 3px;
+  cursor: pointer;
+}
 .selected {
   border: 1px blue solid;
 }
@@ -257,5 +274,10 @@ export default defineComponent({
 .last {
   border-bottom-left-radius: 3px;
   border-bottom-right-radius: 3px;
+}
+.drop-menu {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
 }
 </style>

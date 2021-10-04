@@ -172,4 +172,8 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   reorderLayers(layersOrder: string[]) {
     //todo
   }
+
+  removeLayer(layersId: string) {
+    //todo
+  }
 }
