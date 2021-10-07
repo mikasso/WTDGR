@@ -27,6 +27,9 @@ export const store = createStore<State>({
       return state.isOnline;
     },
 
+    stage(state) {
+      return state.stage;
+    },
     getCurrentLayer(state) {
       return state.currentLayer;
     },
@@ -46,20 +49,18 @@ export const store = createStore<State>({
     },
 
     setCurrentLayer(state, layer) {
-      console.log(layer);
       state.currentLayer = layer;
-    },
-    setLayers(state, layers) {
-      state.layers = layers;
     },
     setStage(state, stage) {
       state.stage = stage;
+    },
+    setLayers(state, layers) {
+      state.layers = layers;
     },
     addLayer(state, layer) {
       if (state.stage !== undefined) {
         state.stage.add(layer);
         state.layers = [...state.layers, layer];
-        console.log(state.layers);
       }
     },
     setCurrentTool(state, tool) {

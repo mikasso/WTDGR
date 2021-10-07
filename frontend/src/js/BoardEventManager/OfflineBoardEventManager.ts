@@ -126,11 +126,56 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     };
   }
 
+  findLayerById(layerId: string) {
+    const stageLayers = this.store.state.layers;
+    return stageLayers.find((layer: Konva.Layer) => layer.attrs.id === layerId);
+  }
+
   addLayer() {
+    const stageLayers = this.store.state.layers;
+    let layerId = "Layer ";
+    let count = 1;
+    while (layerId == "Layer ") {
+      if (this.findLayerById("Layer " + count) == null) layerId += count;
+      count += 1;
+    }
     const newLayer = new Konva.Layer({
-      id: `Layer ${this.store.state.layers.length + 1}`,
+      id: layerId,
     });
     this.store.commit("addLayer", newLayer);
     this.store.commit("setCurrentLayer", newLayer);
+  }
+
+  reorderLayers(layersOrder: string[]) {
+    const stageLayers = this.store.state.stage!.getLayers();
+    for (const i in layersOrder.reverse()) {
+      for (const layer of stageLayers) {
+        if (layer.id() == layersOrder[i]) {
+          layer.zIndex(+i);
+          break;
+        }
+      }
+    }
+  }
+
+  removeLayer(layerId: string) {
+    let newCurrentLayer = null;
+    const layers = this.store.state.layers;
+    const removedLayer = this.findLayerById(layerId);
+    if (removedLayer == null) return;
+    if (removedLayer == this.store.state.currentLayer) {
+      newCurrentLayer = layers.find(
+        (layer: Konva.Layer) => layer.attrs.id != layerId
+      );
+      if (newCurrentLayer == null) {
+        return;
+      } else this.store.commit("setCurrentLayer", newCurrentLayer);
+    }
+    removedLayer.destroy();
+    const index = layers.indexOf(removedLayer);
+    if (index > -1) {
+      layers.splice(index, 1);
+    }
+    this.store.commit("setLayers", layers);
   }
 }

@@ -1,59 +1,124 @@
 <template>
-  <div class="toolbar">
-    <div class="tools">
-      <div
+  <el-row justify="space-between" align="middle" style="height: 100%">
+    <div style="display: flex; align-items: center;">
+      <el-tooltip
         v-for="(tool, index) in toolbar.tools"
         :key="index"
-        class="tool"
-        :class="{ selected: tool == currentTool }"
-        @click="currentTool = tool"
+        :hide-after="0"
+        effect="dark"
+        :content="tool.name"
+        placement="bottom"
       >
-        <img :src="require('../assets/tools/' + tool + '.png')" />
-        {{ tool }}
-      </div>
-
-      <div class="tool" style="margin-left:15px" @click="addLayer()">
-        Add layer
-      </div>
-
-      Layer:
-      <select
-        v-if="currentLayer"
-        v-model="currentLayer"
-        class="select"
-        :sync="true"
-      >
-        <option
-          v-for="(layer, index) in layers"
-          :key="index"
-          :value="layer"
-          :sync="true"
+        <el-button
+          :class="{ selectedTool: tool.name == currentTool }"
+          class="tool"
+          @click="currentTool = tool.name"
         >
-          {{ layer }}
-        </option>
-      </select>
-      <span> Connection: </span>
-      <Toggle v-model="isOnline" :sync="true" />
+          <img class="toolImg" :src="require('../assets/tools/' + tool.file)" />
+        </el-button>
+      </el-tooltip>
+
+      <el-dropdown split-button :hide-on-click="false" v-if="layers != null">
+        {{ currentLayer }}
+        <template #dropdown>
+          <el-dropdown-menu class="drop-menu">
+            <draggable
+              v-model="layers"
+              tag="transition-group"
+              handle=".handle"
+              :item-key="(element) => element"
+            >
+              <template #item="{element}">
+                <div
+                  class="layer-item noselect"
+                  @mouseover="highlightLayer(element, true)"
+                  @mouseleave="highlightLayer(element, false)"
+                  :class="{
+                    selected: currentLayer == element,
+                    first: layers[0] == element,
+                    last: layers[layers.length - 1] == element,
+                  }"
+                >
+                  <img
+                    class="handle"
+                    :src="require('../assets/tools/d-caret.svg')"
+                  />
+                  <span
+                    style="cursor: pointer"
+                    @click="currentLayer = element"
+                    >{{ element }}</span
+                  >
+                  <img
+                    class="delete"
+                    @click="removeLayer(element)"
+                    :src="require('../assets/buttons/delete.svg')"
+                  />
+                </div>
+              </template>
+            </draggable>
+            <el-button class="layerButton" @click="addLayer()">
+              <strong>Add layer</strong>
+            </el-button>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </div>
-  </div>
+    <div style="display: flex; align-items: center;">
+      <el-tag v-if="!isOnline" class="connBadge" type="danger"
+        >Disconnected</el-tag
+      >
+      <el-tag v-if="isOnline" class="connBadge" type="success"
+        >Connected</el-tag
+      >
+      <el-button-group class="connButtons">
+        <el-button @click="isOnline = true">
+          Connect
+        </el-button>
+        <el-button @click="isOnline = false">
+          Disconnect
+        </el-button>
+      </el-button-group>
+    </div>
+  </el-row>
 </template>
 
 <script lang="ts">
 import { key, State } from "@/store";
-import Toggle from "@vueform/toggle";
 import { computed, defineComponent } from "vue";
 import { useStore } from "vuex";
+import draggable from "vuedraggable";
+import "element-plus/dist/index.css";
+
+interface layerData {
+  id: string;
+  zIndex: number;
+}
 
 export default defineComponent({
   name: "Toolbar",
-  emits: ["addLayer"],
-  components: { Toggle },
+  emits: ["toolbarAction"],
+  components: {
+    draggable,
+  },
   setup(props, { emit }) {
     console.log("Toolbar setup");
     const store = useStore<State>(key);
 
-    const layers = computed(() => {
-      return store.state.layers.map((layer) => layer.attrs.id);
+    const layers = computed({
+      get: function() {
+        const tempLayers: layerData[] = [];
+        for (const layer of store.state.layers)
+          tempLayers.push({ id: layer.id(), zIndex: layer.zIndex() });
+        return tempLayers
+          .sort((layer1, layer2) => layer2.zIndex - layer1.zIndex)
+          .map((layer) => layer.id);
+      },
+      set: function(layers: string[]) {
+        emit("toolbarAction", {
+          type: "reorderLayers",
+          value: layers,
+        });
+      },
     });
 
     const currentLayer = computed({
@@ -89,8 +154,13 @@ export default defineComponent({
     });
 
     const addLayer = () => {
-      emit("addLayer");
+      emit("toolbarAction", {
+        type: "addLayer",
+        value: null,
+      });
     };
+
+    let hover = false;
 
     return {
       layers,
@@ -98,6 +168,8 @@ export default defineComponent({
       isOnline,
       currentTool,
       addLayer,
+      hover,
+      emit,
     };
   },
   mounted() {
@@ -105,7 +177,13 @@ export default defineComponent({
   },
   data: () => ({
     toolbar: {
-      tools: ["Select", "Vertex", "Edge", "Pencil", "Erase"],
+      tools: [
+        { name: "Select", file: "Select.png" },
+        { name: "Vertex", file: "Vertex.png" },
+        { name: "Edge", file: "Edge.png" },
+        { name: "Pencil", file: "Pencil.png" },
+        { name: "Erase", file: "Erase.png" },
+      ],
 
       vertex_styles: ["circle"],
       vertex_style: "circle",
@@ -113,88 +191,101 @@ export default defineComponent({
       edge_styles: ["line"],
       edge_style: "line",
     },
+    drag: false,
   }),
+  methods: {
+    highlightLayer(layerId: string, on: boolean) {
+      this.emit("toolbarAction", {
+        type: on ? "highlightLayerOn" : "highlightLayerOff",
+        value: layerId,
+      });
+    },
+    removeLayer(layerId: string) {
+      this.emit("toolbarAction", {
+        type: "removeLayer",
+        value: layerId,
+      });
+    },
+  },
 });
 </script>
-<style src="@vueform/toggle/themes/default.css"></style>
 <style scoped lang="scss">
-span {
-  margin-right: 1em;
-}
-.toolbar {
-  grid-column-start: 1;
-  grid-column-end: 1;
-  grid-row-start: 1;
-  grid-row-end: 1;
-  height: 7vh;
-  white-space: nowrap;
-  color: black;
-
-  padding: 5px;
-  background-color: rgb(250, 250, 250);
-  border-bottom: rgb(180, 180, 180) 1px solid;
-
-  .tools {
-    width: 100%;
-    height: 100%;
-
-    padding: 5px;
-
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-
-    .tool {
-      margin-right: 5px;
-      min-width: 50px;
-      min-height: 30px;
-      padding: 0px 10px;
-
-      background-color: white;
-      cursor: pointer;
-      &:hover {
-        background: rgb(240, 240, 240);
-      }
-
-      border: rgb(180, 180, 180) 1px solid;
-      border-radius: 4px;
-
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      img {
-        max-height: 22px;
-        max-width: 22px;
-
-        margin-right: 3px;
-      }
-    }
-
-    .selected {
-      background: rgb(230, 230, 230);
-      &:hover {
-        background: rgb(230, 230, 230);
-      }
-    }
-
-    .select {
-      border: rgb(170, 170, 170) 1px solid;
-      border-radius: 5px;
-
-      min-width: 50px;
-      min-height: 30px;
-
-      margin-right: 15px;
-      margin-left: 3px;
-
-      img {
-        max-height: 18px;
-        max-width: 18px;
-
-        margin-right: 3px;
-      }
-    }
+.tool {
+  margin-left: 3px;
+  margin-right: 12px;
+  padding: 1px 5px;
+  .toolImg {
+    width: 30px;
+    height: 30px;
   }
+}
+.selectedTool {
+  border: 2px black solid;
+  margin-right: 11px;
+  margin-left: 2px;
+}
+.connButtons {
+  margin-left: 10px;
+  .el-button {
+    padding: 0px 8px;
+    font-size: 12px;
+    width: 80px;
+  }
+}
+.el-dropdown-menu {
+  background-color: #f6f6f6;
+}
+.layerButton {
+  padding: 12px 12px;
+  margin: 0px 10px;
+  margin-top: 15px;
+}
+.layer-item {
+  margin: 0px 10px;
+  padding: 12px 8px;
+  width: 100px;
+  border: 1px lightgray solid;
+  background-color: #fff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-size: 14px;
+}
+.handle {
+  float: left;
+  width: 16px;
+  height: 16px;
+  margin-right: 3px;
+}
+.delete {
+  float: left;
+  width: 16px;
+  height: 16px;
+  margin-left: 3px;
+  cursor: pointer;
+}
+.selected {
+  border: 1px blue solid;
+}
+.first {
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+.last {
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+.drop-menu {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+.noselect {
+  -webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none; 
+       -moz-user-select: none;
+        -ms-user-select: none; 
+            user-select: none; 
 }
 </style>

@@ -1,7 +1,5 @@
 <template>
-  <div id="app">
-    <MainPanel />
-  </div>
+  <MainPanel />
 </template>
 
 <script lang="ts">
@@ -17,10 +15,13 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+body {
+  margin: 0px;
+  min-height: 100vh;
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  overflow-y: hidden;
+}
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
+  min-height: 100vh;
 }
 </style>
