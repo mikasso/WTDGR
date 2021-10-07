@@ -72,24 +72,24 @@ export default defineComponent({
       },
     },
     windowWidth: {
-      handler(newWidth: number, oldWidth: number) {
-        const diff = oldWidth - newWidth;
+      handler(newWindowWidth: number, oldWindowWidth: number) {
+        const diff = oldWindowWidth - newWindowWidth;
         const stage = this.store.state.stage;
-        const updatedWidth = stage!.width() - diff;
+        const stageWidth = stage!.width() - diff;
         stage!.size({
-          width: updatedWidth,
+          width: stageWidth,
           height: stage!.height(),
         });
       },
     },
     windowHeight: {
-      handler(newHeight: number, oldHeight: number) {
-        const diff = oldHeight - newHeight;
+      handler(newWindowHeight: number, oldWindowHeight: number) {
+        const diff = oldWindowHeight - newWindowHeight;
         const stage = this.store.state.stage;
-        const updatedHeight = stage!.height() - diff;
+        const stageHeight = stage!.height() - diff;
         stage!.size({
           width: stage!.width(),
-          height: updatedHeight,
+          height: stageHeight,
         });
       },
     },

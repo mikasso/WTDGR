@@ -30,7 +30,7 @@
             >
               <template #item="{element}">
                 <div
-                  class="layer-item"
+                  class="layer-item noselect"
                   @mouseover="highlightLayer(element, true)"
                   @mouseleave="highlightLayer(element, false)"
                   :class="{
@@ -279,5 +279,13 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   flex-direction: column;
+}
+.noselect {
+  -webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none; 
+       -moz-user-select: none;
+        -ms-user-select: none; 
+            user-select: none; 
 }
 </style>

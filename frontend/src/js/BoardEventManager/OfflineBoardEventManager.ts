@@ -126,17 +126,17 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     };
   }
 
+  findLayerById(layerId: string) {
+    const stageLayers = this.store.state.layers;
+    return stageLayers.find((layer: Konva.Layer) => layer.attrs.id === layerId);
+  }
+
   addLayer() {
     const stageLayers = this.store.state.layers;
     let layerId = "Layer ";
     let count = 1;
     while (layerId == "Layer ") {
-      if (
-        stageLayers.find(
-          (layer: Konva.Layer) => layer.attrs.id === "Layer " + count
-        ) == null
-      )
-        layerId += count;
+      if (this.findLayerById("Layer " + count) == null) layerId += count;
       count += 1;
     }
     const newLayer = new Konva.Layer({
@@ -161,9 +161,7 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
   removeLayer(layerId: string) {
     let newCurrentLayer = null;
     const layers = this.store.state.layers;
-    const removedLayer = layers.find(
-      (layer: Konva.Layer) => layer.attrs.id === layerId
-    );
+    const removedLayer = this.findLayerById(layerId);
     if (removedLayer == null) return;
     if (removedLayer == this.store.state.currentLayer) {
       newCurrentLayer = layers.find(
