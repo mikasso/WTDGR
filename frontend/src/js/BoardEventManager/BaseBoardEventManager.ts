@@ -41,6 +41,8 @@ export default abstract class BaseBoardEventManager {
   abstract setEraseToolHandlers(): void;
   abstract setPencilToolHandlers(): void;
   abstract addLayer(): void;
+  abstract removeLayer(layerId: string): void;
+  abstract reorderLayers(layersOrder: string[]): void;
 
   clearHandlers() {
     this.click = () => {};
@@ -153,5 +155,9 @@ export default abstract class BaseBoardEventManager {
       x: event.evt.layerX,
       y: event.evt.layerY,
     };
+  }
+
+  highlightLayer(layerId: string, on: boolean) {
+    this.boardManager.highlightLayer(layerId, on);
   }
 }
