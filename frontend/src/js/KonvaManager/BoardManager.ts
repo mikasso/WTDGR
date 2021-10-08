@@ -86,12 +86,13 @@ export default class BoardManager {
       this.edgeManager.setHiglight(target as Edge, isHighlithed);
   }
 
-  createVertex(position: Cordinates, attrs?: Konva.CircleConfig) {
-    const vertex = this.vertexManager.create(
-      this.currentLayer,
-      position,
-      attrs
-    );
+  createVertex(
+    position: Cordinates,
+    attrs?: Konva.CircleConfig,
+    layerId: string = this.currentLayer.id()
+  ) {
+    const layer: Konva.Layer = this.getLayerById(layerId)!;
+    const vertex = this.vertexManager.create(layer, position, attrs);
     this.eventManager.bindVertexEvents(vertex);
     return vertex;
   }
@@ -232,6 +233,10 @@ export default class BoardManager {
     return this.layers.find((layer: Konva.Layer) => layer.attrs.id === layerId);
   }
 
+  getLayerIndexById(layerId: string) {
+    return this.layers.indexOf(this.getLayerById(layerId)!);
+  }
+
   setCurrentLayer(layerId: string) {
     const layer = this.getLayerById(layerId);
     this.store.commit("setCurrentLayer", layer);
@@ -246,5 +251,39 @@ export default class BoardManager {
     layer
       .getChildren((node) => node.getClassName() === "Line")
       .each((edge) => this.edgeManager.setHiglight(edge as Edge, on));
+  }
+
+  deleteLayer(layerId: string) {
+    let newCurrentLayer = null;
+    const layers = this.store.state.layers;
+    const removedLayer = this.getLayerById(layerId);
+    if (removedLayer == null) return;
+    if (removedLayer == this.store.state.currentLayer) {
+      newCurrentLayer = layers.find(
+        (layer: Konva.Layer) => layer.attrs.id != layerId
+      );
+      if (newCurrentLayer == null) {
+        return;
+      } else this.store.commit("setCurrentLayer", newCurrentLayer);
+    }
+    removedLayer.destroy();
+    const index = layers.indexOf(removedLayer);
+    if (index > -1) {
+      layers.splice(index, 1);
+    }
+    this.store.commit("setLayers", layers);
+  }
+
+  reorderLayers(layerId1: string, layerId2: string) {
+    const index1 = this.getLayerIndexById(layerId1);
+    const index2 = this.getLayerIndexById(layerId2);
+    const stageLayers = this.store.state.stage!.getLayers();
+    const layer1 = stageLayers[index1];
+    const layer2 = stageLayers[index2];
+    const zIndex1 = layer1.zIndex();
+    const zIndex2 = layer2.zIndex();
+    layer1.zIndex(zIndex2);
+    layer2.zIndex(zIndex1);
+    this.store.commit("swapLayers", [index1, index2]);
   }
 }

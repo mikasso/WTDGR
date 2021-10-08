@@ -19,7 +19,7 @@ module.exports = {
   devServer: {
     proxy: {
       "^/graphHub": {
-        target: "https://localhost:5001",
+        target: "http://localhost:5000",
         changeOrigin: true,
       },
     },

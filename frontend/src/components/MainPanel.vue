@@ -170,7 +170,10 @@ export default defineComponent({
     handleToolbarAction(action: toolbarAction) {
       if (action.type == "addLayer") this.addLayer();
       if (action.type == "reorderLayers")
-        this.reorderLayers(action.value as string[]);
+        this.reorderLayers(
+          action.value.index1 as number,
+          action.value.index2 as number
+        );
       if (action.type == "highlightLayerOn")
         this.highlightLayer(action.value as string, true);
       if (action.type == "highlightLayerOff")
@@ -181,8 +184,8 @@ export default defineComponent({
     addLayer() {
       this.eventManager?.addLayer();
     },
-    reorderLayers(layers: string[]) {
-      this.eventManager?.reorderLayers(layers);
+    reorderLayers(index1: number, index2: number) {
+      this.eventManager?.reorderLayers(index1, index2);
     },
     removeLayer(layerId: string) {
       this.eventManager?.removeLayer(layerId);

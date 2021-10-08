@@ -42,7 +42,7 @@ export default abstract class BaseBoardEventManager {
   abstract setPencilToolHandlers(): void;
   abstract addLayer(): void;
   abstract removeLayer(layerId: string): void;
-  abstract reorderLayers(layersOrder: string[]): void;
+  abstract reorderLayers(index1: number, index2: number): void;
 
   clearHandlers() {
     this.click = () => {};

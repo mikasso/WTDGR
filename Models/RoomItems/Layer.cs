@@ -11,5 +11,6 @@ namespace Backend.Models.RoomItems
         public KonvaType Type { get; set; }
         public string? EditorId { get; set; }
         public string Id { get; set; }
+        public string? ReplaceWithId { get; set; }
     }
 }

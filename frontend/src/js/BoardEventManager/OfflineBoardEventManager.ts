@@ -146,36 +146,14 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     this.store.commit("setCurrentLayer", newLayer);
   }
 
-  reorderLayers(layersOrder: string[]) {
+  reorderLayers(index1: number, index2: number) {
     const stageLayers = this.store.state.stage!.getLayers();
-    for (const i in layersOrder.reverse()) {
-      for (const layer of stageLayers) {
-        if (layer.id() == layersOrder[i]) {
-          layer.zIndex(+i);
-          break;
-        }
-      }
-    }
+    const layer1 = stageLayers[index1];
+    const layer2 = stageLayers[index2];
+    this.boardManager.reorderLayers(layer1.id(), layer2.id());
   }
 
   removeLayer(layerId: string) {
-    let newCurrentLayer = null;
-    const layers = this.store.state.layers;
-    const removedLayer = this.findLayerById(layerId);
-    if (removedLayer == null) return;
-    if (removedLayer == this.store.state.currentLayer) {
-      newCurrentLayer = layers.find(
-        (layer: Konva.Layer) => layer.attrs.id != layerId
-      );
-      if (newCurrentLayer == null) {
-        return;
-      } else this.store.commit("setCurrentLayer", newCurrentLayer);
-    }
-    removedLayer.destroy();
-    const index = layers.indexOf(removedLayer);
-    if (index > -1) {
-      layers.splice(index, 1);
-    }
-    this.store.commit("setLayers", layers);
+    this.boardManager.deleteLayer(layerId);
   }
 }

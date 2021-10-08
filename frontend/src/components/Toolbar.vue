@@ -23,7 +23,8 @@
         <template #dropdown>
           <el-dropdown-menu class="drop-menu">
             <draggable
-              v-model="layers"
+              :list="layers"
+              @change="layersSwaped($event)"
               tag="transition-group"
               handle=".handle"
               :item-key="(element) => element"
@@ -40,6 +41,7 @@
                   }"
                 >
                   <img
+                    v-if="layers.length > 1"
                     class="handle"
                     :src="require('../assets/tools/d-caret.svg')"
                   />
@@ -49,6 +51,7 @@
                     >{{ element }}</span
                   >
                   <img
+                    v-if="layers.length > 1"
                     class="delete"
                     @click="removeLayer(element)"
                     :src="require('../assets/buttons/delete.svg')"
@@ -206,6 +209,15 @@ export default defineComponent({
         value: layerId,
       });
     },
+    layersSwaped(event: any) {
+      this.emit("toolbarAction", {
+        type: "reorderLayers",
+        value: {
+          index1: event!.moved.oldIndex,
+          index2: event!.moved.newIndex,
+        },
+      });
+    },
   },
 });
 </script>
@@ -282,10 +294,10 @@ export default defineComponent({
 }
 .noselect {
   -webkit-touch-callout: none;
-    -webkit-user-select: none;
-     -khtml-user-select: none; 
-       -moz-user-select: none;
-        -ms-user-select: none; 
-            user-select: none; 
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 </style>
