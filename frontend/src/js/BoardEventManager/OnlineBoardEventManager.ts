@@ -209,11 +209,24 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     this.hub.sendAction(this.actionFactory.create("Add", { type: "layer" }));
   }
 
-  reorderLayers(layersOrder: string[]) {
-    //todo
+  reorderLayers(index1: number, index2: number) {
+    const stageLayers = this.store.state.stage!.getLayers();
+    const layer1 = stageLayers[index1];
+    const layer2 = stageLayers[index2];
+    this.hub.sendAction(
+      this.actionFactory.create("Edit", {
+        type: "layer",
+        id: layer1.id(),
+        ReplaceWithId: layer2.id(),
+      })
+    );
   }
 
-  removeLayer(layersId: string) {
-    //todo
+  removeLayer(layerId: string) {
+    const action = this.actionFactory.create("Delete", {
+      type: "layer",
+      id: layerId,
+    });
+    this.hub.sendAction(action);
   }
 }

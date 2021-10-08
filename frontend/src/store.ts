@@ -63,6 +63,11 @@ export const store = createStore<State>({
         state.layers = [...state.layers, layer];
       }
     },
+    swapLayers(state, indexes: number[]) {
+      const temp = state.layers[indexes[1]];
+      state.layers[indexes[1]] = state.layers[indexes[0]];
+      state.layers[indexes[0]] = temp;
+    },
     setCurrentTool(state, tool) {
       state.currentTool = tool;
     },
