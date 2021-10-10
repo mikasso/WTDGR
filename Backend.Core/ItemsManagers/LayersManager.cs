@@ -7,15 +7,14 @@ namespace Backend.Core
 {
     internal class LayersManager : IRoomItemsManager
     {
-        //private readonly Dictionary<string, Layer> _layers = new Dictionary<string, Layer>();
         private List<Layer> _layers = new List<Layer>();
         public int Count => _layers.Count;
-        private int layerNameCount = 1;
+        private int _layerNameCount = 1;
 
         public bool Add(IRoomItem item) {
             var layer = (Layer)item;
-            layer.Id = $"Layer {layerNameCount}";
-            layerNameCount++;
+            layer.Id = $"Layer {_layerNameCount}";
+            _layerNameCount++;
             _layers.Add(layer);
             return true;
         }
@@ -26,8 +25,8 @@ namespace Backend.Core
             if (!result)
             {
                 string layersStr = "";
-                for (int i = 0; i < _layers.Count; i++) layersStr += "\"" + _layers[i].Id + "\", ";
-                Log.Information($"Failed to delete layer: \"{Id}\" from layers: {layersStr}");
+                for (int i = 0; i < _layers.Count; i++) layersStr += $"\"{_layers[i].Id}\", ";
+                Log.Warning($"Failed to delete layer: \"{Id}\" from layers: {layersStr}");
                 return false;
             }
             return result;
