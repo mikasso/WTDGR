@@ -20,6 +20,7 @@ export default class ApiManager {
   }
 
   public receiveAction(action: UserAction, isSucceded: boolean) {
+    console.log("Recieved action", action);
     switch (action.actionType) {
       case "Add":
         this.receiveAdd(action);
@@ -50,7 +51,8 @@ export default class ApiManager {
               x: action.item.x as number,
               y: action.item.y as number,
             },
-            action.item as Konva.CircleConfig
+            action.item as Konva.CircleConfig,
+            action.item.layer as string
           );
           this.boardManager.draw(vertex);
           break;
@@ -89,6 +91,9 @@ export default class ApiManager {
         case "edge":
           this.boardManager.deleteEdge(action.item.id);
           break;
+        case "layer":
+          this.boardManager.deleteLayer(action.item.id);
+          break;
         default:
           throw Error(`Not implement delete for ${action.item.type}`);
       }
@@ -101,6 +106,12 @@ export default class ApiManager {
         break;
       case "line":
         this.boardManager.editLine(action.item as LineDTO);
+        break;
+      case "layer":
+        this.boardManager.reorderLayers(
+          action.item.id! as string,
+          action.item.replaceWithId! as string
+        );
         break;
       default:
         throw Error(`Not implement edit for ${action.item.type}`);
