@@ -17,7 +17,7 @@ export default class BoardHub {
   onCloseMethod: (attempt: number) => Promise<void>;
   constructor(private apiManager: ApiManager, private store: Store<State>) {
     this.connection = new HubConnectionBuilder()
-      .withUrl("https://localhost:5001/graphHub")
+      .withUrl("http://localhost:5000/graphHub")
       .configureLogging(LogLevel.Information)
       .build();
 

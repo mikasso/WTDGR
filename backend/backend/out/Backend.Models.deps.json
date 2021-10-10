@@ -1,0 +1,57 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v5.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v5.0": {
+      "Backend.Models/1.0.0": {
+        "dependencies": {
+          "MongoDB.Bson": "2.11.6",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "runtime": {
+          "Backend.Models.dll": {}
+        }
+      },
+      "MongoDB.Bson/2.11.6": {
+        "runtime": {
+          "lib/netstandard2.0/MongoDB.Bson.dll": {
+            "assemblyVersion": "2.11.6.0",
+            "fileVersion": "2.11.6.0"
+          }
+        }
+      },
+      "Newtonsoft.Json/13.0.1": {
+        "runtime": {
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {
+            "assemblyVersion": "13.0.0.0",
+            "fileVersion": "13.0.1.25517"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Backend.Models/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MongoDB.Bson/2.11.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-JMxPQvz61IW+AFDWEkl4Dwswc4Eg6Zrii65T9R6VMHwdSdcb1eseHdwIyfjyf776vCmDVJbpSHW8075A6tTqqg==",
+      "path": "mongodb.bson/2.11.6",
+      "hashPath": "mongodb.bson.2.11.6.nupkg.sha512"
+    },
+    "Newtonsoft.Json/13.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ppPFpBcvxdsfUonNcvITKqLl3bqxWbDCZIzDWHzjpdAHRFfZe0Dw9HmA0+za13IdyrgJwpkDTDA9fHaxOrt20A==",
+      "path": "newtonsoft.json/13.0.1",
+      "hashPath": "newtonsoft.json.13.0.1.nupkg.sha512"
+    }
+  }
+}
