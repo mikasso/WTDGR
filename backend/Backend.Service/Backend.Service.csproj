@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Backend.Core\Backend.Core.csproj" />
-    <ProjectReference Include="..\Models\Backend.Models.csproj" />
+    <ProjectReference Include="..\Backend.Models\Backend.Models.csproj" />
   </ItemGroup>
 
 </Project>
