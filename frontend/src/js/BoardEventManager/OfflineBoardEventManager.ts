@@ -58,7 +58,8 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     this.vertexMouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const vertex = event.target;
-      this.boardManager.startDrawingLine(vertex);
+      const line = this.boardManager.startDrawingLine(vertex);
+      this.boardManager.addLine(line!);
     };
     this.mouseMove = (event) => {
       const point = this.getPointFromEvent(event);
