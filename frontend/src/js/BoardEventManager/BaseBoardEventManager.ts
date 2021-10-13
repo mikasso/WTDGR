@@ -23,6 +23,8 @@ export default abstract class BaseBoardEventManager {
   edgeMouseDown!: (...params: any[]) => void;
   edgeMouseUp!: (...params: any[]) => void;
   pencilClick!: (...params: any[]) => void;
+  multiselectMouseDown!: (...params: any[]) => void;
+  multiselectMouseUp!: (...params: any[]) => void;
 
   boardManager: BoardManager;
   store: Store<State>;
@@ -40,6 +42,7 @@ export default abstract class BaseBoardEventManager {
   abstract setEdgeToolHandlers(): void;
   abstract setEraseToolHandlers(): void;
   abstract setPencilToolHandlers(): void;
+  abstract setMultiselectToolHandlers(): void;
   abstract addLayer(): void;
   abstract removeLayer(layerId: string): void;
   abstract reorderLayers(index1: number, index2: number): void;
@@ -120,8 +123,19 @@ export default abstract class BaseBoardEventManager {
     });
   }
 
+  bindMultiselectEvents(select: any) {
+    select.on("mousedown", (event: any) => {
+      this.multiselectMouseDown(event);
+    });
+
+    select.on("mouseup", (event: any) => {
+      this.multiselectMouseUp(event);
+    });
+  }
+
   toolChanged(toolName: string) {
     this.boardManager.vertexManager.disableDrag(this.store.state.layers);
+    this.boardManager.setHighlightOfSelected(false);
     this.clearHandlers();
     switch (toolName) {
       case "Select":
@@ -138,6 +152,9 @@ export default abstract class BaseBoardEventManager {
         break;
       case "Pencil":
         this.setPencilToolHandlers();
+        break;
+      case "Multiselect":
+        this.setMultiselectToolHandlers();
         break;
     }
   }

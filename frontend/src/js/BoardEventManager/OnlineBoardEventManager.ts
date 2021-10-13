@@ -100,6 +100,8 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     };
   }
 
+  setMultiselectToolHandlers() {}
+
   setEdgeToolHandlers() {
     let intervalId: number | null = null;
     let currentLine: TemporaryLine | null = null;

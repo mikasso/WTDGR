@@ -186,6 +186,7 @@ export default defineComponent({
         { name: "Edge", file: "Edge.png" },
         { name: "Pencil", file: "Pencil.png" },
         { name: "Erase", file: "Erase.png" },
+        { name: "Multiselect", file: "Multiselect.png" },
       ],
 
       vertex_styles: ["circle"],

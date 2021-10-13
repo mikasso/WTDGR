@@ -54,6 +54,31 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     };
   }
 
+  setMultiselectToolHandlers() {
+    this.multiselectMouseDown = (event) => {
+      this.boardManager.multiselectManager.startDrag();
+    };
+    this.multiselectMouseUp = (event) => {
+      this.boardManager.multiselectManager.stopDrag();
+    };
+    this.mouseDown = (event) => {
+      if (this.boardManager.multiselectManager.isDragging) return;
+      console.log("elo");
+      if (!this.isLeftClick(event)) return;
+      const mousePos = this.boardManager.getMousePosition();
+      this.boardManager.startMultiselect(mousePos);
+    };
+    this.mouseMove = (event) => {
+      if (!this.isLeftClick(event)) return;
+      const mousePos = this.boardManager.getMousePosition();
+      this.boardManager.moveMultiselect(mousePos);
+    };
+    this.mouseUp = () => {
+      this.boardManager.multiselectManager.stopDrag();
+      this.boardManager.finishMultiselect();
+    };
+  }
+
   setEdgeToolHandlers() {
     this.vertexMouseDown = (event) => {
       if (!this.isLeftClick(event)) return;

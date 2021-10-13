@@ -7,6 +7,7 @@ import EdgeManager, {
 import VertexManager, { Cordinates, Vertex } from "./VertexManager";
 import { sortItems } from "../Utils/LayerUtils";
 import PencilManager, { PencilLine } from "./PencilManager";
+import MultiselectManager, { SelectLine } from "./MultiselectManager";
 import Konva from "konva";
 import BaseBoardEventManager from "../BoardEventManager/BaseBoardEventManager";
 import { Store } from "vuex";
@@ -17,6 +18,7 @@ export default class BoardManager {
   vertexManager: VertexManager;
   pencilManager: PencilManager;
   eventManager!: BaseBoardEventManager;
+  multiselectManager!: MultiselectManager;
 
   store: Store<State>;
   constructor(store: Store<State>) {
@@ -24,6 +26,7 @@ export default class BoardManager {
     this.edgeManager = new EdgeManager();
     this.vertexManager = new VertexManager();
     this.pencilManager = new PencilManager();
+    this.multiselectManager = new MultiselectManager();
   }
 
   get currentLayer(): Konva.Layer {
@@ -212,6 +215,32 @@ export default class BoardManager {
 
   finishPencilDrawing() {
     this.pencilManager.finishDrawing();
+  }
+
+  startMultiselect(position: Cordinates) {
+    this.setHighlightOfSelected(false);
+    const multiselect = this.multiselectManager.create(
+      position,
+      this.currentLayer
+    );
+    this.eventManager.bindMultiselectEvents(multiselect);
+  }
+
+  moveMultiselect(position: Cordinates) {
+    this.multiselectManager.appendPoint(position);
+  }
+
+  finishMultiselect() {
+    this.multiselectManager.finishDrawing();
+    this.setHighlightOfSelected(true);
+  }
+
+  setHighlightOfSelected(value: boolean) {
+    const selectedVertexes = this.multiselectManager.selectedVertexes;
+    if (selectedVertexes != null && selectedVertexes.length > 0) {
+      for (const vertex of selectedVertexes)
+        this.vertexManager.setHiglight(vertex, value);
+    }
   }
 
   eraseDrawing(drawing: any) {
