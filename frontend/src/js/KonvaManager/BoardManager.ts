@@ -154,8 +154,13 @@ export default class BoardManager {
   startDrawingLine(vertex: Vertex) {
     if (this.currentLayer !== vertex.layer) return null;
     const line = this.edgeManager.startDrawingLine(vertex);
-    sortItems(this.currentLayer);
     return line;
+  }
+
+  addLine(line: TemporaryLine) {
+    const layer = line.layer;
+    layer.add(line);
+    sortItems(this.currentLayer);
   }
 
   moveLineToPoint(position: Cordinates): boolean {
