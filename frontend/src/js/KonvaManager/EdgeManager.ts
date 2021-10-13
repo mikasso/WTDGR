@@ -113,7 +113,6 @@ export default class EdgeManager extends DraggableManager {
     config: Konva.LineConfig = this.defaultConfig
   ) {
     this.currentLine = new TemporaryLine(config, v1);
-    v1.layer.add(this.currentLine);
     return this.currentLine;
   }
 
