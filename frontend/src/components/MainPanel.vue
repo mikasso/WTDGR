@@ -21,13 +21,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, computed } from "vue";
 import OnlineBoardEventManager from "../js/BoardEventManager/OnlineBoardEventManager";
 import OfflineBoardEventManager from "../js/BoardEventManager/OfflineBoardEventManager";
-import BoardManager from "../js/KonvaManager/BoardManager";
 import ApiManager from "../js/SignalR/ApiHandler";
 import BoardHub from "../js/SignalR/Hub";
-import { ActionFactory } from "../js/SignalR/Action";
 import Konva from "konva";
 import BaseBoardEventManager from "@/js/BoardEventManager/BaseBoardEventManager";
 import { useStore } from "vuex";
@@ -117,16 +115,10 @@ export default defineComponent({
   methods: {
     handleConnectionChange(isOnline: boolean) {
       this.initalizeStageAndLayers();
-      const boardManager = new BoardManager(this.store);
       if (isOnline) {
-        const apiManager = new ApiManager(boardManager, this.store);
+        const apiManager = new ApiManager(this.store);
         const hub = new BoardHub(apiManager, this.store);
-        this.eventManager = new OnlineBoardEventManager(
-          boardManager,
-          this.store,
-          hub,
-          new ActionFactory(this.store.state.user.userId, boardManager)
-        );
+        this.eventManager = new OnlineBoardEventManager(hub);
         this.hub = hub;
         this.hub?.joinRoomPromise().catch(async () => {
           alert("Failed to connect with hub, switching to ofline");
@@ -138,10 +130,7 @@ export default defineComponent({
           });
         }
         this.hub = undefined;
-        this.eventManager = new OfflineBoardEventManager(
-          boardManager,
-          this.store
-        );
+        this.eventManager = new OfflineBoardEventManager(this.store);
       }
 
       this.eventManager?.toolChanged(this.currentTool);

@@ -1,55 +1,57 @@
 import BaseBoardEventManager from "./BaseBoardEventManager";
 import Konva from "konva";
-import BoardManager from "../KonvaManager/BoardManager";
 import { State } from "@/store";
 import { Store } from "vuex";
+import { Edge, edgeManager } from "../KonvaManager/EdgeManager";
+import VertexManager, { vertexManager } from "../KonvaManager/VertexManager";
+import { stageManager } from "../KonvaManager/StageManager";
+import { pencilManager } from "../KonvaManager/PencilManager";
+import { layerManager } from "../KonvaManager/LayerManager";
+import { lineManager } from "../KonvaManager/LineManager";
 
 export default class OffLineBoardEventManager extends BaseBoardEventManager {
-  constructor(boardManager: BoardManager, store: Store<State>) {
-    super(boardManager, store);
-  }
-
   setSelectToolHandlers() {
-    this.boardManager.enableDrag();
+    edgeManager.enableDrag();
+    vertexManager.enableDrag();
     this.mouseMove = () => {
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.dragEdge(mousePos);
+      const mousePos = stageManager.getMousePosition();
+      edgeManager.dragVertexes(mousePos);
     };
     this.vertexDrag = (event) => {
-      this.boardManager.dragEdges(event.target);
+      edgeManager.dragEdges(event.target);
     };
 
     this.vertexMouseEnter = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, true);
+      vertexManager.setHighlight(event.target, true);
     };
     this.vertexMouseLeave = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, false);
+      vertexManager.setHighlight(event.target, false);
     };
 
     this.edgeMouseEnter = (event) => {
-      this.boardManager.setHighlight("edge", event.target, true);
+      edgeManager.setHighlight(event.target, true);
     };
     this.edgeMouseLeave = (event) => {
-      this.boardManager.setHighlight("edge", event.target, false);
+      edgeManager.setHighlight(event.target, false);
     };
 
     this.edgeMouseDown = (event) => {
-      const mousePos = this.boardManager.getMousePosition();
+      const mousePos = stageManager.getMousePosition();
       if (mousePos !== null)
-        this.boardManager.startDraggingEdge(event.target, mousePos);
+        edgeManager.startDraggingEdge(event.target, mousePos);
     };
     this.edgeMouseUp = () => {
-      this.boardManager.stopDraggingEdge();
+      edgeManager.stopDraggingEdge();
     };
   }
 
   setVertexToolHandlers() {
     this.click = (event) => {
       if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.getMousePosition();
+      const mousePos = stageManager.getMousePosition();
       if (mousePos !== null) {
-        const vertex = this.boardManager.createVertex(mousePos);
-        this.boardManager.draw(vertex);
+        const vertex = vertexManager.create(mousePos);
+        stageManager.draw(vertex);
       }
     };
   }
@@ -58,71 +60,71 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     this.vertexMouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
       const vertex = event.target;
-      this.boardManager.startDrawingLine(vertex);
+      lineManager.startDrawingLine(vertex);
     };
     this.mouseMove = (event) => {
       const point = this.getPointFromEvent(event);
-      this.boardManager.moveLineToPoint(point);
+      lineManager.moveLineToPoint(point);
     };
     this.vertexMouseUp = (event) => {
       const vertex = event.target;
-      const edge = this.boardManager.connectVertexes(vertex);
+      const edge = lineManager.tryToConnectVertices(vertex);
       if (edge !== undefined) {
         this.bindEdgeEvents(edge);
-        this.boardManager.draw(edge);
+        edgeManager.draw(edge);
       }
     };
     this.mouseUp = () => {
-      this.boardManager.stopDrawingLine();
+      lineManager.removeCurrentLine();
     };
   }
 
   setEraseToolHandlers() {
     this.vertexMouseDown = (event) => {
       const vertex = event.target;
-      this.boardManager.eraseVertex(vertex);
+      vertexManager.delete(vertex);
     };
 
     this.edgeClick = (event) => {
       const edge = event.target;
-      this.boardManager.eraseEdge(edge);
+      edgeManager.deleteEdges([edge]);
     };
 
     this.pencilClick = (event) => {
       const drawing = event.target;
-      this.boardManager.eraseDrawing(drawing);
+      pencilManager.delete(drawing);
     };
 
     this.vertexMouseEnter = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, true);
+      vertexManager.setHighlight(event.target, true);
     };
 
     this.vertexMouseLeave = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, false);
+      vertexManager.setHighlight(event.target, false);
     };
 
     this.edgeMouseEnter = (event) => {
-      this.boardManager.setHighlight("edge", event.target, true);
+      edgeManager.setHighlight(event.target, true);
     };
 
     this.edgeMouseLeave = (event) => {
-      this.boardManager.setHighlight("edge", event.target, false);
+      edgeManager.setHighlight(event.target, false);
     };
   }
 
   setPencilToolHandlers() {
     this.mouseDown = (event) => {
       if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.startPencil(mousePos);
+      const mousePos = stageManager.getMousePosition();
+      pencilManager.start(mousePos);
     };
     this.mouseMove = (event) => {
       if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.movePencil(mousePos);
+      const mousePos = stageManager.getMousePosition();
+      pencilManager.appendPoint(mousePos);
     };
     this.mouseUp = () => {
-      this.boardManager.finishPencilDrawing();
+      pencilManager.finishDrawing();
     };
   }
 
@@ -150,10 +152,10 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
     const stageLayers = this.store.state.stage!.getLayers();
     const layer1 = stageLayers[index1];
     const layer2 = stageLayers[index2];
-    this.boardManager.reorderLayers(layer1.id(), layer2.id());
+    layerManager.reorderLayers(layer1.id(), layer2.id());
   }
 
   removeLayer(layerId: string) {
-    this.boardManager.deleteLayer(layerId);
+    layerManager.deleteById(layerId);
   }
 }

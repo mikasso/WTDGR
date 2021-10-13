@@ -1,10 +1,11 @@
 import Konva from "konva";
+import { layerManager } from "./LayerManager";
 
 export default class DraggableManager {
   protected dragEnabled = false;
   protected itemClassName = "";
 
-  public enableDrag(layers: Konva.Layer[]) {
+  public enableDrag(layers: Konva.Layer[] = layerManager.layers) {
     this.dragEnabled = true;
     this.updateDragProp(layers);
   }

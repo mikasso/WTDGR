@@ -1,9 +1,9 @@
 import { State } from "@/store";
 import Konva from "konva";
 import { Store } from "vuex";
-import BoardManager from "../KonvaManager/BoardManager";
 import { Edge } from "../KonvaManager/EdgeManager";
-import { Vertex } from "../KonvaManager/VertexManager";
+import { layerManager } from "../KonvaManager/LayerManager";
+import { Vertex, vertexManager } from "../KonvaManager/VertexManager";
 
 export default abstract class BaseBoardEventManager {
   click!: (...params: any[]) => void;
@@ -24,15 +24,11 @@ export default abstract class BaseBoardEventManager {
   edgeMouseUp!: (...params: any[]) => void;
   pencilClick!: (...params: any[]) => void;
 
-  boardManager: BoardManager;
   store: Store<State>;
 
-  constructor(boardManager: BoardManager, store: Store<State>) {
-    this.boardManager = boardManager;
-    this.boardManager.eventManager = this;
+  constructor(store: Store<State>) {
     this.store = store;
     this.clearHandlers();
-    this.bindStageEvents(boardManager.stage);
   }
 
   abstract setSelectToolHandlers(): void;
@@ -121,7 +117,7 @@ export default abstract class BaseBoardEventManager {
   }
 
   toolChanged(toolName: string) {
-    this.boardManager.vertexManager.disableDrag(this.store.state.layers);
+    vertexManager.disableDrag(this.store.state.layers);
     this.clearHandlers();
     switch (toolName) {
       case "Select":
@@ -158,6 +154,6 @@ export default abstract class BaseBoardEventManager {
   }
 
   highlightLayer(layerId: string, on: boolean) {
-    this.boardManager.highlightLayer(layerId, on);
+    layerManager.highlightLayer(layerId, on);
   }
 }

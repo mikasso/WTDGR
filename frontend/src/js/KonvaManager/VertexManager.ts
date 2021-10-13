@@ -1,7 +1,8 @@
 import Konva from "konva";
 import DraggableManager from "./DraggableManager";
-import { Edge } from "./EdgeManager";
-
+import { Edge, edgeManager } from "./EdgeManager";
+import { layerManager } from "./LayerManager";
+import { stageManager } from "./StageManager";
 export interface Cordinates {
   x: number;
   y: number;
@@ -54,12 +55,13 @@ export default class VertexManager extends DraggableManager {
   };
 
   create(
-    layer: Konva.Layer,
-    pos: Cordinates,
-    config: Konva.CircleConfig = this.defaultConfig
+    position: Cordinates,
+    attrs: Konva.CircleConfig = this.defaultConfig,
+    layerId: string = layerManager.currentLayer.id()
   ) {
-    const newVertex = new Vertex(layer, pos, config);
-    return newVertex;
+    const layer: Konva.Layer = layerManager.getLayerById(layerId)!;
+    const vertex = new Vertex(layer, position, attrs);
+    return vertex;
   }
 
   draw(vertex: Vertex) {
@@ -67,16 +69,35 @@ export default class VertexManager extends DraggableManager {
     vertex.layer.draw();
   }
 
-  setHiglight(vertex: Vertex, isHighlithed: boolean) {
-    if (isHighlithed) vertex.setAttrs(this.highlightConfigOn);
-    else vertex.setAttrs(this.highlightConfigOff);
-
+  editVertex(attrs: Konva.NodeConfig) {
+    if (!attrs.id) return;
+    const vertex = stageManager.findById(attrs.id) as Vertex; //konva uses id as selector so # is required
+    vertex.setAttrs(attrs);
+    edgeManager.dragEdges(vertex);
     vertex.redraw();
   }
 
-  remove(vertex: Vertex) {
+  setHighlight(vertex: Vertex, isHighlithed: boolean) {
+    if (isHighlithed) vertex.setAttrs(this.highlightConfigOn);
+    else vertex.setAttrs(this.highlightConfigOff);
+    vertex.redraw();
+  }
+
+  delete(vertex: Vertex) {
     const vertexLayer = vertex.layer;
     vertex.remove();
     vertexLayer.draw();
   }
+
+  deleteById(vertexId: string) {
+    const vertex = stageManager.findById(vertexId);
+    if (vertex) {
+      this.delete(vertex as Vertex);
+    } else
+      throw Error(
+        "Attempt to remove vertex with ID " + vertexId + " which doesnt exists"
+      );
+  }
 }
+
+export const vertexManager = new VertexManager();

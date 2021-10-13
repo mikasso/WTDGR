@@ -1,15 +1,12 @@
 import Konva from "konva";
 import DraggableManager from "./DraggableManager";
+import { layerManager } from "./LayerManager";
+import { stageManager } from "./StageManager";
 import { Cordinates, HighlightConfig, Vertex } from "./VertexManager";
 
 export interface EdgeDTO extends Konva.LineConfig {
   v1: string;
   v2: string;
-}
-
-export interface LineDTO extends Konva.LineConfig {
-  v1: string;
-  endPoint: Cordinates;
 }
 
 export class Edge extends Konva.Line {
@@ -48,47 +45,11 @@ export class Edge extends Konva.Line {
   }
 }
 
-export class TemporaryLine extends Konva.Line {
-  v1: Vertex;
-  baseConfig: Konva.LineConfig;
-  constructor(config: Konva.LineConfig, v1: Vertex) {
-    config.points = [v1.x(), v1.y(), v1.x(), v1.y()];
-    const baseConfig = Object.assign({}, config);
-    super(config);
-    if (this.id() === "") this.id(Math.random().toString() + v1.id());
-    this.v1 = v1;
-    this.baseConfig = baseConfig;
-  }
-
-  get layer() {
-    return this.v1.layer;
-  }
-
-  updatePosition(mousePos: Cordinates) {
-    this.points([this.v1.x(), this.v1.y(), mousePos.x, mousePos.y]);
-  }
-
-  redraw() {
-    this.moveToBottom();
-    this.layer.draw();
-  }
-
-  asDTO(): LineDTO {
-    return {
-      ...this.attrs,
-      type: "line",
-      v1: this.v1.id(),
-      endPoint: { x: this.points()[2], y: this.points()[3] },
-    };
-  }
-}
-
 export default class EdgeManager extends DraggableManager {
   constructor() {
     super();
     this.dragEnabled = false;
   }
-  private currentLine: TemporaryLine | undefined;
   private draggedEdge: Edge | undefined;
 
   private vertexDistances: number[] = [0, 0, 0, 0];
@@ -108,63 +69,16 @@ export default class EdgeManager extends DraggableManager {
     ...this.highlightConfigOff,
   } as Konva.LineConfig;
 
-  public startDrawingLine(
-    v1: Vertex,
-    config: Konva.LineConfig = this.defaultConfig
-  ) {
-    this.currentLine = new TemporaryLine(config, v1);
-    v1.layer.add(this.currentLine);
-    return this.currentLine;
-  }
-
-  public moveLineToPoint(point: Cordinates): boolean {
-    if (!this.currentLine) return false;
-
-    this.currentLine.points([
-      this.currentLine.v1.x(),
-      this.currentLine.v1.y(),
-      point.x,
-      point.y,
-    ]);
-    this.currentLine.layer.draw();
-    return true;
-  }
-
-  public tryToConnectVertices(vertex: Vertex) {
-    if (!this.currentLine) return;
-
-    const v1 = this.currentLine.v1;
-    const v2 = vertex;
-    if (v1.layer !== v2.layer || v1 === v2) {
-      this.removeCurrentLine();
-      return;
+  createEdge(edgeDTO: EdgeDTO) {
+    const v1 = stageManager.findById(edgeDTO.v1);
+    const v2 = stageManager.findById(edgeDTO.v2);
+    if (v1 instanceof Vertex && v2 instanceof Vertex) {
+      const edge = new Edge(v1, v2, edgeDTO);
+      v1.edges.push(edge);
+      v2.edges.push(edge);
+      // bind missing
+      return edge;
     }
-
-    //check if the line will be the first edge
-    for (const edge of v2.edges) {
-      if (edge.v1 == v1 || edge.v2 == v1) {
-        this.removeCurrentLine();
-        return;
-      }
-    }
-
-    const edge = new Edge(v1, v2, this.defaultConfig);
-    v1.edges.push(edge);
-    v2.edges.push(edge);
-    this.removeCurrentLine();
-    return edge;
-  }
-
-  public removeCurrentLine() {
-    if (!this.currentLine) return;
-    this.removeLine(this.currentLine);
-    this.currentLine = undefined;
-  }
-
-  removeLine(line: TemporaryLine) {
-    const layerToRedraw = line.getLayer();
-    line.destroy();
-    layerToRedraw?.draw();
   }
 
   public startDraggingEdge(edge: Edge, pos: Cordinates) {
@@ -178,7 +92,6 @@ export default class EdgeManager extends DraggableManager {
   public stopDraggingEdge() {
     console.log("stop drag");
     if (!this.draggedEdge) return;
-    //this.draggedEdge.updatePosition();
     this.vertexDistances = [0, 0, 0, 0];
     this.draggedEdge = undefined;
   }
@@ -206,7 +119,7 @@ export default class EdgeManager extends DraggableManager {
       .forEach((edge) => edge.updatePosition());
   }
 
-  public setHiglight(edge: Edge, isHighlithed: boolean) {
+  public setHighlight(edge: Edge, isHighlithed: boolean) {
     const config: HighlightConfig = isHighlithed
       ? this.highlightConfigOn
       : this.highlightConfigOff;
@@ -215,7 +128,12 @@ export default class EdgeManager extends DraggableManager {
     edge.redraw();
   }
 
-  public removeEdges(edges: Edge[]) {
+  public deleteById(id: string) {
+    const edge = stageManager.findById(id) as Edge;
+    this.deleteEdges([edge]);
+  }
+
+  public deleteEdges(edges: Edge[]) {
     if (!edges.length) return;
     const edgesLayer = edges[0].layer;
     for (const edge of edges) {
@@ -234,12 +152,6 @@ export default class EdgeManager extends DraggableManager {
     edge.layer.add(edge);
     edge.redraw();
   }
-
-  public drawLine(line: TemporaryLine) {
-    console.log("drawline()");
-    console.log(line);
-    line.layer.add(line);
-    line.redraw();
-    console.log(line.layer);
-  }
 }
+
+export const edgeManager = new EdgeManager();

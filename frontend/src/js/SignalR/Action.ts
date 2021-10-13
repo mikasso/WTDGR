@@ -1,4 +1,5 @@
 import Konva from "konva";
+import { layerManager } from "../KonvaManager/LayerManager";
 
 export default class UserAction {
   actionType: string;
@@ -12,13 +13,10 @@ export default class UserAction {
 }
 
 export class ActionFactory {
-  constructor(
-    private userId: string,
-    private layerProvider: { currentLayer: Konva.Layer }
-  ) {}
+  constructor(private userId: string) {}
 
   public create(actionType: string, item: Konva.NodeConfig) {
-    item.layer = this.layerProvider.currentLayer.attrs.id;
+    item.layer = layerManager.currentLayer.attrs.id;
     return new UserAction(actionType, this.userId, item);
   }
 }

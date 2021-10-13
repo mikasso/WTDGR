@@ -1,15 +1,15 @@
 import { State } from "@/store";
 import Konva from "konva";
 import { Store } from "vuex";
-import BoardManager from "../KonvaManager/BoardManager";
-import { EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
+import { EdgeDTO, edgeManager } from "../KonvaManager/EdgeManager";
+import { layerManager } from "../KonvaManager/LayerManager";
+import { LineDTO, lineManager } from "../KonvaManager/LineManager";
+import { stageManager } from "../KonvaManager/StageManager";
+import { Vertex, vertexManager } from "../KonvaManager/VertexManager";
 import UserAction from "./Action";
 
 export default class ApiManager {
-  constructor(
-    private boardManager: BoardManager,
-    private store: Store<State>
-  ) {}
+  constructor(private store: Store<State>) {}
 
   private get user() {
     return this.store.state.user;
@@ -46,7 +46,7 @@ export default class ApiManager {
     if (action.item.id)
       switch (action.item.type) {
         case "v-circle": {
-          const vertex = this.boardManager.createVertex(
+          const vertex = vertexManager.create(
             {
               x: action.item.x as number,
               y: action.item.y as number,
@@ -54,25 +54,25 @@ export default class ApiManager {
             action.item as Konva.CircleConfig,
             action.item.layer as string
           );
-          this.boardManager.draw(vertex);
+          stageManager.draw(vertex);
           break;
         }
         case "edge": {
           console.log(action.item);
-          const edge = this.boardManager.createEdge(action.item as EdgeDTO);
-          if (edge !== undefined) this.boardManager.draw(edge);
+          const edge = edgeManager.createEdge(action.item as EdgeDTO);
+          if (edge !== undefined) stageManager.draw(edge);
           break;
         }
         case "line": {
           console.log(action.item);
-          const line = this.boardManager.createLine(action.item as LineDTO);
-          if (line !== undefined) this.boardManager.draw(line);
+          const line = lineManager.createLine(action.item as LineDTO);
+          if (line !== undefined) stageManager.draw(line);
           break;
         }
         case "layer":
-          this.boardManager.receiveAddLayer(action.item.id);
+          layerManager.receiveAddLayer(action.item.id);
           if (action.userId === this.user.userId)
-            this.boardManager.setCurrentLayer(action.item.id);
+            layerManager.setCurrentLayer(action.item.id);
           break;
         default:
           throw Error(`Not implement add for ${action.item.type}`);
@@ -83,16 +83,16 @@ export default class ApiManager {
     if (action.item.id)
       switch (action.item.type) {
         case "v-circle":
-          this.boardManager.eraseVertexById(action.item.id);
+          vertexManager.deleteById(action.item.id);
           break;
         case "line":
-          this.boardManager.deleteLine(action.item.id);
+          lineManager.deleteById(action.item.id);
           break;
         case "edge":
-          this.boardManager.deleteEdge(action.item.id);
+          edgeManager.deleteById(action.item.id);
           break;
         case "layer":
-          this.boardManager.deleteLayer(action.item.id);
+          layerManager.deleteById(action.item.id);
           break;
         default:
           throw Error(`Not implement delete for ${action.item.type}`);
@@ -102,15 +102,15 @@ export default class ApiManager {
   private receiveEdit(action: UserAction) {
     switch (action.item.type) {
       case "v-circle":
-        this.boardManager.updateVertex(action.item);
+        vertexManager.editVertex(action.item);
         break;
       case "line":
-        this.boardManager.editLine(action.item as LineDTO);
+        lineManager.editLine(action.item as LineDTO);
         break;
       case "layer":
-        this.boardManager.reorderLayers(
-          action.item.id! as string,
-          action.item.replaceWithId! as string
+        layerManager.reorderLayers(
+          action.item.id as string,
+          action.item.replaceWithId as string
         );
         break;
       default:
@@ -121,11 +121,13 @@ export default class ApiManager {
   private receiveRequestToEdit(action: UserAction, isSucceded: boolean) {
     if (action.item.id)
       switch (action.item.type) {
-        case "v-circle":
-          if (isSucceded)
-            this.boardManager.setDraggableVertexById(action.item.id, true);
-          else console.error("cannot edit vertex" + action.item.id);
+        case "v-circle": {
+          if (!isSucceded)
+            return console.error("cannot edit vertex" + action.item.id);
+          const vertex = stageManager.findById(action.item.id) as Vertex;
+          if (vertex) vertexManager.setDraggable(vertex, true);
           break;
+        }
         default:
           throw Error(`Not implement edit for ${action.item.type}`);
       }

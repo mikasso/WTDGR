@@ -1,4 +1,6 @@
 import Konva from "konva";
+import { layerManager } from "./LayerManager";
+import { stageManager } from "./StageManager";
 import { Cordinates } from "./VertexManager";
 
 export class PencilLine extends Konva.Line {
@@ -29,9 +31,9 @@ export default class PencilManager {
     lineJoin: "round",
   };
 
-  create(
+  start(
     position: Cordinates,
-    layer: Konva.Layer,
+    layer: Konva.Layer = layerManager.currentLayer,
     config: any = this.defualtConfig
   ) {
     config.points = [position.x, position.y];
@@ -61,9 +63,11 @@ export default class PencilManager {
     this.currentDrawing = undefined;
   }
 
-  removeDrawing(drawing: any) {
+  delete(drawing: any) {
     const removedDrawingLayer = drawing.layer;
     drawing.destroy();
     removedDrawingLayer.draw();
   }
 }
+
+export const pencilManager = new PencilManager();
