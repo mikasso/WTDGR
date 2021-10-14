@@ -7,6 +7,30 @@ import { ActionFactory } from "../SignalR/Action";
 import BoardHub from "../SignalR/Hub";
 import BaseBoardEventManager from "./BaseBoardEventManager";
 
+function poll<T>(params: {
+  fn: () => T;
+  validate: (result: T) => boolean;
+  interval: number;
+  maxAttempts: number;
+}) {
+  let attempts = 0;
+  const { fn, validate, interval, maxAttempts } = params;
+  const executePoll = async () => {
+    const result = await fn();
+    attempts++;
+
+    if (validate(result)) {
+      return result;
+    } else if (maxAttempts && attempts === maxAttempts) {
+      throw new Error("Exceeded max attempts");
+    } else {
+      setTimeout(executePoll, interval);
+    }
+  };
+
+  return new Promise(executePoll);
+}
+
 const SentRequestInterval = 20;
 
 export default class OnlineBoardEventManager extends BaseBoardEventManager {
@@ -24,6 +48,14 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   setSelectToolHandlers() {
+    let intervalId: NodeJS.Timeout | null = null;
+    const sendVertexEdit = (vertex: Vertex) => {
+      const mousePos = this.boardManager.getMousePosition();
+      vertex.setAttrs({ x: mousePos.x, y: mousePos.y });
+      const action = this.actionFactory.create("Edit", vertex.attrs);
+      return this.hub.sendAction(action);
+    };
+
     this.mouseMove = () => {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.dragEdge(mousePos);
@@ -34,16 +66,35 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     this.vertexDrag = (event) => {
       this.boardManager.dragEdges(event.target);
     };
-    this.vertexMouseEnter = (event) => {
-      const vertex = event.target;
+    this.vertexMouseDown = (event) => {
+      const vertex = event.target as Vertex;
       this.boardManager.setHighlight("vertex", vertex, true);
       const action = this.actionFactory.create(
         "RequestToEdit",
         event.target.attrs
       );
       this.hub.sendAction(action).then(() => sendVertexEdit(vertex));
+
+      poll({
+        fn: () => {
+          if (vertex.followMousePointer) {
+            intervalId = setInterval(
+              sendVertexEdit,
+              SentRequestInterval,
+              vertex
+            );
+            return true;
+          }
+          return false;
+        },
+        interval: 100,
+        maxAttempts: 3,
+        validate: (x) => x,
+      }).catch((e) => {
+        console.error(e);
+      });
     };
-    this.vertexMouseLeave = (event) => {
+    this.vertexMouseUp = (event) => {
       const vertex = event.target;
       this.boardManager.setHighlight("vertex", vertex, false);
       sendVertexEdit(vertex).then(() =>
@@ -51,27 +102,10 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
           this.actionFactory.create("ReleaseItem", vertex.attrs)
         )
       );
-      this.boardManager.setDraggableVertexById(vertex.attrs.id, false);
-    };
-
-    let intervalId: number | null = null;
-    const sendVertexEdit = (vertex: Vertex) => {
-      const action = this.actionFactory.create("Edit", vertex.attrs);
-      return this.hub.sendAction(action);
-    };
-    this.vertexDragend = (event) => {
-      const vertex = event.target;
+      this.boardManager.setVertexFollowMousePointerById(vertex.attrs.id, false);
       if (intervalId !== null) clearInterval(intervalId);
       intervalId = null;
       sendVertexEdit(vertex);
-    };
-    this.vertexDragstart = (event) => {
-      const vertex = event.target;
-      console.log(
-        "vertex mouse down " + vertex.attrs.draggable + vertex.attrs.id
-      );
-      if (vertex.attrs.draggable)
-        intervalId = setInterval(sendVertexEdit, SentRequestInterval, vertex);
     };
 
     this.edgeMouseEnter = (event) => {
@@ -101,10 +135,10 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   setEdgeToolHandlers() {
-    let intervalId: number | null = null;
-    let currentLine: TemporaryLine | null = null;
-    const sendLineEdit = (line: TemporaryLine) => {
-      if (line !== null) {
+    let intervalId: NodeJS.Timer | undefined;
+    let currentLine: TemporaryLine | undefined;
+    const sendLineEdit = (line: TemporaryLine | undefined) => {
+      if (line !== undefined) {
         const mousePos = this.boardManager.getMousePosition();
         line.updatePosition(mousePos);
         const action = this.actionFactory.create("Edit", line.asDTO());
@@ -112,12 +146,12 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       }
     };
     const stopSendLineEdit = async () => {
-      if (intervalId !== null && currentLine !== null) {
+      if (intervalId !== undefined && currentLine !== undefined) {
         clearInterval(intervalId);
         const action = this.actionFactory.create("Delete", currentLine.asDTO());
         await this.hub.sendAction(action);
-        intervalId = null;
-        currentLine = null;
+        intervalId = undefined;
+        currentLine = undefined;
       }
     };
 
@@ -125,7 +159,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       if (!this.isLeftClick(event)) return;
       const vertex = event.target;
       const line = this.boardManager.startDrawingLine(vertex);
-      if (line !== null) {
+      if (line !== undefined) {
         currentLine = line;
         console.log(currentLine.asDTO());
         const action = this.actionFactory.create("Add", currentLine.asDTO());

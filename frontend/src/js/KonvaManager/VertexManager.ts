@@ -1,4 +1,5 @@
 import Konva from "konva";
+import { Node, NodeConfig } from "konva/types/Node";
 import DraggableManager from "./DraggableManager";
 import { Edge } from "./EdgeManager";
 
@@ -13,12 +14,14 @@ export interface HighlightConfig {
 export class Vertex extends Konva.Circle {
   edges: Edge[];
   layer: Konva.Layer;
+  followMousePointer: boolean;
   constructor(layer: Konva.Layer, pos: Cordinates, config: Konva.CircleConfig) {
     config.x = pos.x;
     config.y = pos.y;
     super(config);
     this.edges = [];
     this.layer = layer;
+    this.followMousePointer = false;
   }
 
   redraw() {
@@ -78,5 +81,9 @@ export default class VertexManager extends DraggableManager {
     const vertexLayer = vertex.layer;
     vertex.remove();
     vertexLayer.draw();
+  }
+
+  setFollowMousePointer(vertex: Vertex, value: boolean) {
+    vertex.followMousePointer = value;
   }
 }
