@@ -65,9 +65,9 @@ export default class BoardManager {
     //this.edgeManager.enableDrag(this.layers);
   }
 
-  setVertexFollowMousePointerById(vertexId: string, value: boolean) {
-    const vertex = this.findById(vertexId) as Vertex;
-    if (vertex) this.vertexManager.setFollowMousePointer(vertex, value);
+  setDraggableVertexById(vertexId: string, value: boolean) {
+    const vertex = this.findById(vertexId);
+    if (vertex) this.vertexManager.setDraggable(vertex, value);
   }
 
   dragEdges(vertex: Vertex) {
@@ -152,7 +152,7 @@ export default class BoardManager {
   }
 
   startDrawingLine(vertex: Vertex) {
-    if (this.currentLayer !== vertex.layer) return undefined;
+    if (this.currentLayer !== vertex.layer) return null;
     const line = this.edgeManager.startDrawingLine(vertex);
     return line;
   }

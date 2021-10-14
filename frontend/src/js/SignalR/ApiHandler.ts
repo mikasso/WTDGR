@@ -123,10 +123,7 @@ export default class ApiManager {
       switch (action.item.type) {
         case "v-circle":
           if (isSucceded)
-            this.boardManager.setVertexFollowMousePointerById(
-              action.item.id,
-              true
-            );
+            this.boardManager.setDraggableVertexById(action.item.id, true);
           else console.error("cannot edit vertex" + action.item.id);
           break;
         default:
