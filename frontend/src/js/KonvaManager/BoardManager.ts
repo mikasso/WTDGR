@@ -152,7 +152,7 @@ export default class BoardManager {
   }
 
   startDrawingLine(vertex: Vertex) {
-    if (this.currentLayer !== vertex.layer) return undefined;
+    if (this.currentLayer !== vertex.layer) return null;
     const line = this.edgeManager.startDrawingLine(vertex);
     return line;
   }

@@ -88,8 +88,8 @@ export default class EdgeManager extends DraggableManager {
     super();
     this.dragEnabled = false;
   }
-  private currentLine: TemporaryLine | undefined;
-  private draggedEdge: Edge | undefined;
+  private currentLine: TemporaryLine | null = null;
+  private draggedEdge: Edge | null = null;
 
   private vertexDistances: number[] = [0, 0, 0, 0];
 
@@ -157,7 +157,7 @@ export default class EdgeManager extends DraggableManager {
   public removeCurrentLine() {
     if (!this.currentLine) return;
     this.removeLine(this.currentLine);
-    this.currentLine = undefined;
+    this.currentLine = null;
   }
 
   removeLine(line: TemporaryLine) {
@@ -179,7 +179,7 @@ export default class EdgeManager extends DraggableManager {
     if (!this.draggedEdge) return;
     //this.draggedEdge.updatePosition();
     this.vertexDistances = [0, 0, 0, 0];
-    this.draggedEdge = undefined;
+    this.draggedEdge = null;
   }
 
   public dragVertexes(pos: Cordinates) {

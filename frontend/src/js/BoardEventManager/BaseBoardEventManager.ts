@@ -4,6 +4,7 @@ import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
 import { Edge } from "../KonvaManager/EdgeManager";
 import { Vertex } from "../KonvaManager/VertexManager";
+import { IHandler } from "./IHandler";
 
 export default abstract class BaseBoardEventManager {
   click!: (...params: any[]) => void;
@@ -26,6 +27,7 @@ export default abstract class BaseBoardEventManager {
 
   boardManager: BoardManager;
   store: Store<State>;
+  handlers: IHandler[];
 
   constructor(boardManager: BoardManager, store: Store<State>) {
     this.boardManager = boardManager;
@@ -33,6 +35,7 @@ export default abstract class BaseBoardEventManager {
     this.store = store;
     this.clearHandlers();
     this.bindStageEvents(boardManager.stage);
+    this.handlers = [];
   }
 
   abstract setSelectToolHandlers(): void;
@@ -123,6 +126,7 @@ export default abstract class BaseBoardEventManager {
   toolChanged(toolName: string) {
     this.boardManager.vertexManager.disableDrag(this.store.state.layers);
     this.clearHandlers();
+    this.handlers.forEach((handler) => handler.clearIntervals());
     switch (toolName) {
       case "Select":
         this.setSelectToolHandlers();
