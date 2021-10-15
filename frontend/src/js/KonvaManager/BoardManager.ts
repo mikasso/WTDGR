@@ -60,9 +60,14 @@ export default class BoardManager {
     vertex.redraw();
   }
 
+  disableDrag() {
+    this.vertexManager.disableDrag(this.layers);
+    this.edgeManager.disableDrag(this.layers);
+  }
+
   enableDrag() {
     this.vertexManager.enableDrag(this.layers);
-    //this.edgeManager.enableDrag(this.layers);
+    this.edgeManager.enableDrag(this.layers);
   }
 
   setVertexFollowMousePointerById(vertexId: string, value: boolean) {

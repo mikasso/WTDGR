@@ -7,7 +7,7 @@ import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
 import { SentRequestInterval } from "../OnlineBoardEventManager";
-import poll from "../poll";
+import { poll } from "../utils";
 
 export default class OnlineSelectToolHandler implements IHandler {
   intervalId: number | null = null;
@@ -28,7 +28,7 @@ export default class OnlineSelectToolHandler implements IHandler {
     eventManager.edgeMouseUp = () => this.edgeMouseUp();
   }
 
-  public clearIntervals(): void {
+  public setInactive(): void {
     if (this.currentVertex !== null) {
       const vertex = this.currentVertex;
       this.boardManager.setHighlight("vertex", vertex, false);
@@ -89,7 +89,7 @@ export default class OnlineSelectToolHandler implements IHandler {
   }
 
   private mouseUp(event: KonvaEventObject<any>) {
-    this.clearIntervals();
+    this.setInactive();
   }
 
   private edgeMouseEnter(event: KonvaEventObject<any>) {

@@ -124,9 +124,8 @@ export default abstract class BaseBoardEventManager {
   }
 
   toolChanged(toolName: string) {
-    this.boardManager.vertexManager.disableDrag(this.store.state.layers);
     this.clearHandlers();
-    this.handlers.forEach((handler) => handler.clearIntervals());
+    this.handlers.forEach((handler) => handler.setInactive());
     switch (toolName) {
       case "Select":
         this.setSelectToolHandlers();
@@ -144,21 +143,6 @@ export default abstract class BaseBoardEventManager {
         this.setPencilToolHandlers();
         break;
     }
-  }
-
-  isLeftClick(event: { evt: { which: number } }) {
-    return event.evt.which === 1;
-  }
-
-  isRightClick(event: { evt: { which: number } }) {
-    return event.evt.which === 3;
-  }
-
-  getPointFromEvent(event: any) {
-    return {
-      x: event.evt.layerX,
-      y: event.evt.layerY,
-    };
   }
 
   highlightLayer(layerId: string, on: boolean) {

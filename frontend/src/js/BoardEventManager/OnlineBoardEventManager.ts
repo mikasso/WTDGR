@@ -1,23 +1,28 @@
 import { State } from "@/store";
 import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
-import { TemporaryLine } from "../KonvaManager/EdgeManager";
-import { Vertex } from "../KonvaManager/VertexManager";
 import { ActionFactory } from "../SignalR/Action";
 import BoardHub from "../SignalR/Hub";
 import BaseBoardEventManager from "./BaseBoardEventManager";
 import { IHandler } from "./IHandler";
+import OfflineHighlightToolHandler from "./Offline/OfflineHighlightToolHandler";
+import OfflinePencilToolHandler from "./Offline/OfflinePencilToolHandler";
 import OnlineEdgeToolHandler from "./Online/OnlineEdgeToolHandler";
+import OnlineEraseToolHandler from "./Online/OnlineEraseToolHandler";
 import OnlineSelectToolHandler from "./Online/OnlineSelectToolHandler";
-import poll from "./poll";
+import OnlineVertextoolHandler from "./Online/OnlineVertexToolHandler";
 
 export const SentRequestInterval = 20;
 
 export default class OnlineBoardEventManager extends BaseBoardEventManager {
   actionFactory: ActionFactory;
   hub: BoardHub;
-  selectHandler: OnlineSelectToolHandler;
-  edgeHandler: OnlineEdgeToolHandler;
+  selectHandler: IHandler;
+  edgeHandler: IHandler;
+  vertexHandler: IHandler;
+  eraseHandler: IHandler;
+  pencilHandler: IHandler;
+  highlightHandler: IHandler;
   handlers: IHandler[];
   constructor(
     boardManager: BoardManager,
@@ -38,7 +43,27 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.actionFactory,
       this.hub
     );
-    this.handlers = [this.edgeHandler, this.selectHandler];
+    this.vertexHandler = new OnlineVertextoolHandler(
+      this.boardManager,
+      this.actionFactory,
+      this.hub
+    );
+    this.highlightHandler = new OfflineHighlightToolHandler(this.boardManager);
+    this.pencilHandler = new OfflinePencilToolHandler(this.boardManager);
+
+    this.eraseHandler = new OnlineEraseToolHandler(
+      this.boardManager,
+      this.actionFactory,
+      this.hub,
+      this.highlightHandler
+    );
+    this.handlers = [
+      this.edgeHandler,
+      this.selectHandler,
+      this.vertexHandler,
+      this.eraseHandler,
+      this.eraseHandler,
+    ];
   }
 
   setSelectToolHandlers() {
@@ -46,14 +71,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   setVertexToolHandlers() {
-    this.click = (event) => {
-      if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.getMousePosition();
-      const vertex = this.boardManager.createVertex(mousePos);
-
-      const action = this.actionFactory.create("Add", vertex.attrs);
-      this.hub.sendAction(action);
-    };
+    this.vertexHandler.setActive(this);
   }
 
   setEdgeToolHandlers() {
@@ -61,54 +79,11 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   setEraseToolHandlers() {
-    this.vertexMouseDown = (event) => {
-      const vertex = event.target;
-      const action = this.actionFactory.create("Delete", vertex.attrs);
-      this.hub.sendAction(action);
-    };
-
-    this.edgeClick = (event) => {
-      const edge = event.target;
-      const action = this.actionFactory.create("Delete", edge.attrs);
-      this.hub.sendAction(action);
-    };
-
-    this.pencilClick = (event) => {
-      const drawing = event.target;
-      this.boardManager.eraseDrawing(drawing);
-    };
-
-    this.vertexMouseEnter = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, true);
-    };
-
-    this.vertexMouseLeave = (event) => {
-      this.boardManager.setHighlight("vertex", event.target, false);
-    };
-
-    this.edgeMouseEnter = (event) => {
-      this.boardManager.setHighlight("edge", event.target, true);
-    };
-
-    this.edgeMouseLeave = (event) => {
-      this.boardManager.setHighlight("edge", event.target, false);
-    };
+    this.eraseHandler.setActive(this);
   }
 
   setPencilToolHandlers() {
-    this.mouseDown = (event) => {
-      if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.startPencil(mousePos);
-    };
-    this.mouseMove = (event) => {
-      if (!this.isLeftClick(event)) return;
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.movePencil(mousePos);
-    };
-    this.mouseUp = () => {
-      this.boardManager.finishPencilDrawing();
-    };
+    this.pencilHandler.setActive(this);
   }
 
   addLayer() {

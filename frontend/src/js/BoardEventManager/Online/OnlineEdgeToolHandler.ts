@@ -21,10 +21,10 @@ export default class OnlineEdgeToolHandler implements IHandler {
   public setActive(eventManager: BaseBoardEventManager): void {
     eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
     eventManager.vertexMouseUp = (event) => this.vertexMouseUp(event);
-    eventManager.mouseUp = (event) => this.vertexMouseUp(event);
+    eventManager.mouseUp = (event) => this.mouseUp();
   }
 
-  public async clearIntervals() {
+  public async setInactive() {
     if (this.intervalId !== null && this.currentLine !== null) {
       clearInterval(this.intervalId);
       const action = this.actionFactory.create(
@@ -76,6 +76,6 @@ export default class OnlineEdgeToolHandler implements IHandler {
   }
 
   async mouseUp() {
-    await this.clearIntervals();
+    await this.setInactive();
   }
 }
