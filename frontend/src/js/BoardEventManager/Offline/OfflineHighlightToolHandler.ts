@@ -1,4 +1,5 @@
 import BoardManager from "@/js/KonvaManager/BoardManager";
+import { ClassNames } from "@/js/KonvaManager/ClassNames";
 import { Vertex } from "@/js/KonvaManager/VertexManager";
 import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
@@ -15,18 +16,18 @@ export default class OfflineHighlightToolHandler implements IHandler {
   }
 
   private vertexMouseEnter(event: KonvaEventObject<any>) {
-    this.boardManager.setHighlight("vertex", event.target as Vertex, true);
+    this.boardManager.setHighlight(event.target as Vertex, true);
   }
 
   private vertexMouseLeave(event: KonvaEventObject<any>) {
-    this.boardManager.setHighlight("vertex", event.target as Vertex, false);
+    this.boardManager.setHighlight(event.target as Vertex, false);
   }
 
   private edgeMouseEnter(event: KonvaEventObject<any>) {
-    this.boardManager.setHighlight("edge", event.target as Vertex, true);
+    this.boardManager.setHighlight(event.target as Vertex, true);
   }
 
   private edgeMouseLeave(event: KonvaEventObject<any>) {
-    this.boardManager.setHighlight("edge", event.target as Vertex, false);
+    this.boardManager.setHighlight(event.target as Vertex, false);
   }
 }

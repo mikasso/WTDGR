@@ -3,7 +3,8 @@ import Konva from "konva";
 import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
 import { ClassNames } from "../KonvaManager/ClassNames";
-import { EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
+import { Edge, EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
+import { Vertex } from "../KonvaManager/VertexManager";
 import UserAction from "./Action";
 
 export enum ActionTypes {
@@ -40,7 +41,7 @@ export default class ApiManager {
         this.receiveRequestToEdit(action, isSucceded);
         break;
       case ActionTypes.ReleaseItem:
-        console.log("Realeas item" + action.item.id);
+        this.receiveReleaseItem(action);
         break;
       case ActionTypes.Delete:
         this.receiveDelete(action);
@@ -130,12 +131,46 @@ export default class ApiManager {
     if (action.item.id)
       switch (action.item.type) {
         case ClassNames.Vertex:
-          if (isSucceded)
-            this.boardManager.setVertexFollowMousePointerById(
-              action.item.id,
-              true
-            );
-          else console.error("cannot edit vertex" + action.item.id);
+          if (isSucceded) {
+            const vertex = this.boardManager.findById(action.item.id) as Vertex;
+            this.boardManager.setHighlight(vertex, true);
+            if (this.store.state.user.userId === action.userId) {
+              this.boardManager.setFollowMousePointerById(action.item.id, true);
+            }
+          } else console.error("cannot edit vertex" + action.item.id);
+          break;
+        case ClassNames.Edge:
+          if (isSucceded) {
+            const edge = this.boardManager.findById(action.item.id) as Edge;
+            this.boardManager.setHighlight(edge, true);
+            this.boardManager.setHighlight(edge.v1, true);
+            this.boardManager.setHighlight(edge.v2, true);
+            if (this.store.state.user.userId === action.userId) {
+              this.boardManager.setFollowMousePointerById(action.item.id, true);
+            }
+          } else console.error("cannot edit vertex" + action.item.id);
+          break;
+        default:
+          throw Error(`Not implement edit for ${action.item.type}`);
+      }
+  }
+
+  private receiveReleaseItem(action: UserAction) {
+    if (action.item.id)
+      switch (action.item.type) {
+        case ClassNames.Vertex:
+          {
+            const vertex = this.boardManager.findById(action.item.id) as Vertex;
+            this.boardManager.setHighlight(vertex, false);
+          }
+          break;
+        case ClassNames.Edge:
+          {
+            const edge = this.boardManager.findById(action.item.id) as Edge;
+            this.boardManager.setHighlight(edge, false);
+            this.boardManager.setHighlight(edge.v1, false);
+            this.boardManager.setHighlight(edge.v2, false);
+          }
           break;
         default:
           throw Error(`Not implement edit for ${action.item.type}`);

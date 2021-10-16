@@ -75,24 +75,31 @@ export default class BoardManager {
     this.vertexManager.enableDrag(this.layers);
   }
 
-  setVertexFollowMousePointerById(vertexId: string, value: boolean) {
-    const vertex = this.findById(vertexId) as Vertex;
-    if (vertex) this.vertexManager.setFollowMousePointer(vertex, value);
+  setFollowMousePointerById(itemId: string, value: boolean) {
+    const item = this.findById(itemId);
+    if (item !== undefined) {
+      const className = item.getClassName();
+      if (className === ClassNames.Vertex) {
+        const vertex = item as Vertex;
+        vertex.followMousePointer = value;
+      } else if (className === ClassNames.Edge) {
+        const edge = item as Edge;
+        edge.followMousePointer = value;
+      }
+    } else {
+      throw new Error("cannot set followMousePointer, item not found");
+    }
   }
 
   dragEdges(vertex: Vertex) {
     this.edgeManager.dragEdges(vertex);
   }
 
-  setHighlight(
-    targetType: string,
-    target: Vertex | Edge,
-    isHighlithed: boolean
-  ) {
+  setHighlight(target: Vertex | Edge, isHighlithed: boolean) {
     if (target.layer.id !== this.currentLayer.id) return;
-    if (targetType === "vertex")
+    if (target.getClassName() === ClassNames.Vertex)
       this.vertexManager.setHiglight(target as Vertex, isHighlithed);
-    else if (targetType === "edge")
+    else if (target.getClassName() === ClassNames.Edge)
       this.edgeManager.setHiglight(target as Edge, isHighlithed);
   }
 

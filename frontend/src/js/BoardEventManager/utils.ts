@@ -20,17 +20,15 @@ export function poll<T>(params: {
   validate: (result: T) => boolean;
   interval: number;
   maxAttempts: number;
-}) {
+}): Promise<T> {
   let attempts = 0;
   const { fn, validate, interval, maxAttempts } = params;
   const executePoll = async () => {
     const result = await fn();
     attempts++;
-
-    if (validate(result)) {
-      return result;
-    } else if (maxAttempts && attempts === maxAttempts) {
-      throw new Error("Exceeded max attempts");
+    const isValid = validate(result);
+    if (isValid || (maxAttempts && attempts === maxAttempts)) {
+      return isValid;
     } else {
       setTimeout(executePoll, interval);
     }

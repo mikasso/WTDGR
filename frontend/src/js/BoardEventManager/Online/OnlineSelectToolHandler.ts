@@ -8,12 +8,14 @@ import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
 import { SentRequestInterval } from "../OnlineBoardEventManager";
-import { poll } from "../utils";
+import { getPointFromEvent, poll } from "../utils";
 
 export default class OnlineSelectToolHandler implements IHandler {
   intervalId: number | null = null;
   currentVertex: Vertex | null = null;
-
+  currentEdge: Edge | null = null;
+  private readonly MaxAttempts = 3;
+  private readonly PollingTime = 100;
   constructor(
     private boardManager: BoardManager,
     private actionFactory: ActionFactory,
@@ -23,50 +25,75 @@ export default class OnlineSelectToolHandler implements IHandler {
   public setActive(eventManager: BaseBoardEventManager): void {
     eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
     eventManager.mouseUp = (event) => this.mouseUp(event);
-    eventManager.edgeMouseEnter = (event) => this.edgeMouseEnter(event);
-    eventManager.edgeMouseLeave = (event) => this.edgeMouseLeave(event);
-    eventManager.edgeMouseDown = () => this.edgeMouseDown();
-    eventManager.edgeMouseUp = () => this.edgeMouseUp();
+    eventManager.edgeMouseDown = (event) => this.edgeMouseDown(event);
   }
 
   public setInactive(): void {
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId);
+    }
+
     if (this.currentVertex !== null) {
       const vertex = this.currentVertex;
-      this.boardManager.setHighlight("vertex", vertex, false);
-      this.sendVertexEdit(vertex).then(() =>
-        this.hub.sendAction(
-          this.actionFactory.create(ActionTypes.ReleaseItem, vertex.asDTO())
-        )
+      this.hub.sendAction(
+        this.actionFactory.create(ActionTypes.ReleaseItem, vertex.asDTO())
       );
-      this.boardManager.setVertexFollowMousePointerById(vertex.attrs.id, false);
-      if (this.intervalId !== null) {
-        clearInterval(this.intervalId);
-        this.intervalId = null;
-        this.sendVertexEdit(vertex);
-        this.currentVertex = null;
-      }
-      this.currentVertex = null;
+      this.boardManager.setFollowMousePointerById(vertex.attrs.id, false);
     }
+
+    if (this.currentEdge !== null) {
+      const edge = this.currentEdge;
+      this.hub.sendAction(
+        this.actionFactory.create(ActionTypes.ReleaseItem, edge.asDTO())
+      );
+      this.boardManager.setFollowMousePointerById(edge.attrs.id, false);
+    }
+
+    this.intervalId = null;
+    this.currentVertex = null;
+    this.currentEdge = null;
   }
 
   private sendVertexEdit(vertex: Vertex) {
     const mousePos = this.boardManager.getMousePosition();
-    vertex.setAttrs({ x: mousePos.x, y: mousePos.y });
-    const action = this.actionFactory.create(ActionTypes.Edit, vertex.asDTO());
+
+    const action = this.actionFactory.create(ActionTypes.Edit, {
+      ...vertex.asDTO(),
+      x: mousePos.x,
+      y: mousePos.y,
+    });
     return this.hub.sendAction(action);
   }
 
-  private vertexMouseDown(event: KonvaEventObject<any>) {
+  private sendVertexEditsFromEdge(edge: Edge) {
+    const mousePos = this.boardManager.getMousePosition();
+    const {
+      v1Pos,
+      v2Pos,
+    } = this.boardManager.edgeManager.calculcateNewVerticesPosition(mousePos);
+
+    const action1 = this.actionFactory.create(ActionTypes.Edit, {
+      ...edge.v1.asDTO(),
+      ...v1Pos,
+    });
+    const action2 = this.actionFactory.create(ActionTypes.Edit, {
+      ...edge.v2.asDTO(),
+      ...v2Pos,
+    });
+    this.hub.sendAction(action1);
+    return this.hub.sendAction(action2);
+  }
+
+  private async vertexMouseDown(event: KonvaEventObject<any>) {
     const vertex = event.target as Vertex;
     this.currentVertex = vertex;
-    this.boardManager.setHighlight("vertex", this.currentVertex, true);
     const action = this.actionFactory.create(
       ActionTypes.RequestToEdit,
       vertex.asDTO()
     );
-    this.hub.sendAction(action).then(() => this.sendVertexEdit(vertex));
+    this.hub.sendAction(action);
 
-    poll({
+    const result = await poll({
       fn: () => {
         if (
           this.currentVertex !== null &&
@@ -81,29 +108,56 @@ export default class OnlineSelectToolHandler implements IHandler {
         }
         return false;
       },
-      interval: 100,
-      maxAttempts: 3,
+      interval: this.PollingTime,
+      maxAttempts: this.MaxAttempts,
       validate: (x) => x,
     }).catch((e) => {
       console.error(e);
     });
+
+    if (result === false) {
+      this.currentVertex = null;
+    }
   }
 
   private mouseUp(event: KonvaEventObject<any>) {
     this.setInactive();
   }
 
-  private edgeMouseEnter(event: KonvaEventObject<any>) {
-    this.boardManager.setHighlight("edge", event.target as Edge, true);
-  }
-  private edgeMouseLeave(event: KonvaEventObject<any>) {
-    this.boardManager.setHighlight("edge", event.target as Edge, false);
-  }
-  private edgeMouseUp() {
-    const mousePos = this.boardManager.getMousePosition();
-    this.boardManager.dragEdge(mousePos);
-  }
-  private edgeMouseDown() {
-    this.boardManager.stopDraggingEdge();
+  private async edgeMouseDown(event: KonvaEventObject<any>) {
+    const edge = event.target as Edge;
+    this.currentEdge = edge;
+    const action = this.actionFactory.create(
+      ActionTypes.RequestToEdit,
+      edge.asDTO()
+    );
+    this.hub.sendAction(action);
+
+    const result = await poll({
+      fn: () => {
+        if (this.currentEdge !== null && this.currentEdge.followMousePointer) {
+          this.boardManager.startDraggingEdge(
+            event.target as Edge,
+            getPointFromEvent(event)
+          );
+          this.intervalId = window.setInterval(
+            (x: Edge) => this.sendVertexEditsFromEdge(x),
+            SentRequestInterval,
+            this.currentEdge
+          );
+          return true;
+        }
+        return false;
+      },
+      interval: this.PollingTime,
+      maxAttempts: this.MaxAttempts,
+      validate: (x) => x,
+    }).catch((e) => {
+      console.error(e);
+    });
+
+    if (result === false) {
+      this.currentEdge = null;
+    }
   }
 }

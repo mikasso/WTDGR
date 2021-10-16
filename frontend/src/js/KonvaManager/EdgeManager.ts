@@ -16,12 +16,14 @@ export class Edge extends Konva.Line {
   v1: Vertex;
   v2: Vertex;
   baseConfig: Konva.LineConfig;
+  followMousePointer: boolean;
   constructor(v1: Vertex, v2: Vertex, config: Konva.LineConfig) {
     config.points = [v1.x(), v1.y(), v2.x(), v2.y()];
     const baseConfig = Object.assign({}, config);
     super(config);
     this.v1 = v1;
     this.v2 = v2;
+    this.followMousePointer = false;
     this.className = ClassNames.Edge;
     this.baseConfig = baseConfig;
   }
@@ -180,16 +182,27 @@ export default class EdgeManager {
     this.draggedEdge = null;
   }
 
+  public calculcateNewVerticesPosition(
+    pos: Cordinates
+  ): { v1Pos: Cordinates; v2Pos: Cordinates } {
+    if (!this.draggedEdge) throw Error("edge shouldnt be null");
+    return {
+      v1Pos: {
+        x: pos.x + this.vertexDistances[0],
+        y: pos.y + this.vertexDistances[1],
+      },
+      v2Pos: {
+        x: pos.x + this.vertexDistances[2],
+        y: pos.y + this.vertexDistances[3],
+      },
+    };
+  }
+
   public dragVertexes(pos: Cordinates) {
     if (!this.draggedEdge) return;
-    this.draggedEdge.v1.position({
-      x: pos.x + this.vertexDistances[0],
-      y: pos.y + this.vertexDistances[1],
-    });
-    this.draggedEdge.v2.position({
-      x: pos.x + this.vertexDistances[2],
-      y: pos.y + this.vertexDistances[3],
-    });
+    const { v1Pos, v2Pos } = this.calculcateNewVerticesPosition(pos);
+    this.draggedEdge.v1.position(v1Pos);
+    this.draggedEdge.v2.position(v2Pos);
     this.dragEdges(this.draggedEdge.v1);
     this.dragEdges(this.draggedEdge.v2);
     this.draggedEdge.redraw();

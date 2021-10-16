@@ -110,8 +110,4 @@ export default class VertexManager {
     vertex.remove();
     vertexLayer.draw();
   }
-
-  setFollowMousePointer(vertex: Vertex, value: boolean) {
-    vertex.followMousePointer = value;
-  }
 }
