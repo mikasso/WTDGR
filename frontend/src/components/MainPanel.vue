@@ -1,5 +1,6 @@
 <template>
   <el-container class="wrapper">
+    <WelcomeWindow @connectionResult="handleConnection($event)"></WelcomeWindow>
     <el-header class="header" height="55px">
       <Toolbar @toolbarAction="handleToolbarAction($event)" />
     </el-header>
@@ -34,6 +35,7 @@ import { useStore } from "vuex";
 import { key, State } from "../store";
 import { useWindowSize } from "vue-window-size";
 import Toolbar from "./Toolbar.vue";
+import WelcomeWindow from "./WelcomeWindow.vue";
 
 interface User {
   userId: string;
@@ -57,6 +59,7 @@ export default defineComponent({
   },
   components: {
     Toolbar,
+    WelcomeWindow,
   },
   watch: {
     isOnline: {
@@ -95,6 +98,7 @@ export default defineComponent({
     },
   },
   setup() {
+    let connectionStarted = false;
     const store = useStore<State>(key);
     const { width, height } = useWindowSize();
     const isOnline = computed(() => {
@@ -104,6 +108,7 @@ export default defineComponent({
       return store.state.currentTool;
     });
     return {
+      connectionStarted,
       store,
       isOnline,
       currentTool,
@@ -112,10 +117,35 @@ export default defineComponent({
     };
   },
   mounted() {
-    this.handleConnectionChange(this.isOnline);
+    this.initalizeStageAndLayers();
   },
   methods: {
+    async handleConnection(connectionResult: any) {
+      this.initalizeStageAndLayers();
+      if (connectionResult!.type == "join") {
+        this.hub = connectionResult!.hub;
+        const boardManager = connectionResult!.boardManager;
+        this.eventManager = new OnlineBoardEventManager(
+          boardManager,
+          this.store,
+          this.hub as BoardHub,
+          new ActionFactory(this.store.state.user.userId, boardManager)
+        );
+        this.store.commit("setOnline");
+      }
+      if (connectionResult!.type == "offline") {
+        const boardManager = new BoardManager(this.store);
+        this.eventManager = new OfflineBoardEventManager(
+          boardManager,
+          this.store
+        );
+      }
+      this.eventManager?.toolChanged(this.currentTool);
+      await this.$nextTick();
+      this.connectionStarted = true;
+    },
     handleConnectionChange(isOnline: boolean) {
+      if (!this.connectionStarted) return;
       this.initalizeStageAndLayers();
       const boardManager = new BoardManager(this.store);
       if (isOnline) {

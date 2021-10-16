@@ -15,7 +15,7 @@ export const key: InjectionKey<Store<State>> = Symbol();
 
 export const store = createStore<State>({
   state: {
-    isOnline: true,
+    isOnline: false,
     stage: undefined,
     currentLayer: undefined,
     currentTool: "Select",
