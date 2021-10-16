@@ -2,6 +2,7 @@ import { State } from "@/store";
 import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
 import { ActionFactory } from "../SignalR/Action";
+import { ActionTypes } from "../SignalR/ApiHandler";
 import BoardHub from "../SignalR/Hub";
 import BaseBoardEventManager from "./BaseBoardEventManager";
 import { IHandler } from "./IHandler";
@@ -66,28 +67,32 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     ];
   }
 
-  setSelectToolHandlers() {
-    this.selectHandler.setActive(this);
-  }
-
-  setVertexToolHandlers() {
-    this.vertexHandler.setActive(this);
-  }
-
-  setEdgeToolHandlers() {
-    this.edgeHandler.setActive(this);
-  }
-
-  setEraseToolHandlers() {
-    this.eraseHandler.setActive(this);
-  }
-
-  setPencilToolHandlers() {
-    this.pencilHandler.setActive(this);
+  public toolChanged(toolName: string) {
+    this.clearHandlers();
+    this.handlers.forEach((handler) => handler.setInactive());
+    switch (toolName) {
+      case "Select":
+        this.selectHandler.setActive(this);
+        break;
+      case "Vertex":
+        this.vertexHandler.setActive(this);
+        break;
+      case "Edge":
+        this.edgeHandler.setActive(this);
+        break;
+      case "Erase":
+        this.eraseHandler.setActive(this);
+        break;
+      case "Pencil":
+        this.pencilHandler.setActive(this);
+        break;
+    }
   }
 
   addLayer() {
-    this.hub.sendAction(this.actionFactory.create("Add", { type: "layer" }));
+    this.hub.sendAction(
+      this.actionFactory.create(ActionTypes.Add, { type: "Layer" })
+    );
   }
 
   reorderLayers(index1: number, index2: number) {
@@ -95,8 +100,8 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     const layer1 = stageLayers[index1];
     const layer2 = stageLayers[index2];
     this.hub.sendAction(
-      this.actionFactory.create("Edit", {
-        type: "layer",
+      this.actionFactory.create(ActionTypes.Edit, {
+        type: "Layer",
         id: layer1.id(),
         ReplaceWithId: layer2.id(),
       })
@@ -104,8 +109,8 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   removeLayer(layerId: string) {
-    const action = this.actionFactory.create("Delete", {
-      type: "layer",
+    const action = this.actionFactory.create(ActionTypes.Delete, {
+      type: "Layer",
       id: layerId,
     });
     this.hub.sendAction(action);

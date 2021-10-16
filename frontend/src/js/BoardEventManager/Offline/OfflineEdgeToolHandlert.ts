@@ -7,11 +7,10 @@ import { IHandler } from "../IHandler";
 import { getPointFromEvent, isLeftClick } from "../utils";
 
 export default class OfflineEdgeToolHandler implements IHandler {
-  constructor(
-    private boardManager: BoardManager,
-    private highlightHandler: IHandler
-  ) {}
-  setInactive(): void {}
+  constructor(private boardManager: BoardManager) {}
+  setInactive(): void {
+    this.mouseUp();
+  }
   setActive(eventManager: BaseBoardEventManager): void {
     eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
     eventManager.mouseMove = (event) => this.mouseMove(event);
@@ -21,9 +20,9 @@ export default class OfflineEdgeToolHandler implements IHandler {
 
   private vertexMouseDown(event: KonvaEventObject<any>) {
     if (!isLeftClick(event)) return;
-    const vertex = event.target;
+    const vertex = event.target as Vertex;
     const line = this.boardManager.startDrawingLine(vertex);
-    this.boardManager.addLine(line!);
+    if (line) this.boardManager.addLine(line);
   }
 
   private mouseMove(event: KonvaEventObject<any>) {
@@ -32,11 +31,10 @@ export default class OfflineEdgeToolHandler implements IHandler {
   }
 
   private vertexMouseUp(event: KonvaEventObject<any>) {
-    const vertex = event.target;
+    const vertex = event.target as Vertex;
     const edge = this.boardManager.connectVertexes(vertex);
     if (edge !== undefined) {
-      this.bindEdgeEvents(edge);
-      this.boardManager.draw(edge);
+      this.boardManager.addEdge(edge);
     }
   }
 

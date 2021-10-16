@@ -2,9 +2,17 @@ import { State } from "@/store";
 import Konva from "konva";
 import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
+import { ClassNames } from "../KonvaManager/ClassNames";
 import { EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
 import UserAction from "./Action";
 
+export enum ActionTypes {
+  Add = "Add",
+  Edit = "Edit",
+  RequestToEdit = "RequestToEdit",
+  ReleaseItem = "ReleaseItem",
+  Delete = "Delete",
+}
 export default class ApiManager {
   constructor(
     private boardManager: BoardManager,
@@ -22,19 +30,19 @@ export default class ApiManager {
   public receiveAction(action: UserAction, isSucceded: boolean) {
     console.log("Recieved action", action);
     switch (action.actionType) {
-      case "Add":
+      case ActionTypes.Add:
         this.receiveAdd(action);
         break;
-      case "Edit":
+      case ActionTypes.Edit:
         this.receiveEdit(action);
         break;
-      case "RequestToEdit":
+      case ActionTypes.RequestToEdit:
         this.receiveRequestToEdit(action, isSucceded);
         break;
-      case "ReleaseItem":
+      case ActionTypes.ReleaseItem:
         console.log("Realeas item" + action.item.id);
         break;
-      case "Delete":
+      case ActionTypes.Delete:
         this.receiveDelete(action);
         break;
       default:
@@ -45,7 +53,7 @@ export default class ApiManager {
   private receiveAdd(action: UserAction) {
     if (action.item.id)
       switch (action.item.type) {
-        case "v-circle": {
+        case ClassNames.Vertex: {
           const vertex = this.boardManager.createVertex(
             {
               x: action.item.x as number,
@@ -57,19 +65,19 @@ export default class ApiManager {
           this.boardManager.draw(vertex);
           break;
         }
-        case "edge": {
+        case ClassNames.Edge: {
           console.log(action.item);
           const edge = this.boardManager.createEdge(action.item as EdgeDTO);
           if (edge !== undefined) this.boardManager.draw(edge);
           break;
         }
-        case "line": {
+        case ClassNames.TemporaryLine: {
           console.log(action.item);
           const line = this.boardManager.createLine(action.item as LineDTO);
           if (line !== undefined) this.boardManager.draw(line);
           break;
         }
-        case "layer":
+        case ClassNames.Layer:
           this.boardManager.receiveAddLayer(action.item.id);
           if (action.userId === this.user.userId)
             this.boardManager.setCurrentLayer(action.item.id);
@@ -82,16 +90,16 @@ export default class ApiManager {
   private receiveDelete(action: UserAction) {
     if (action.item.id)
       switch (action.item.type) {
-        case "v-circle":
+        case ClassNames.Vertex:
           this.boardManager.eraseVertexById(action.item.id);
           break;
-        case "line":
+        case ClassNames.TemporaryLine:
           this.boardManager.deleteLine(action.item.id);
           break;
-        case "edge":
+        case ClassNames.Edge:
           this.boardManager.deleteEdge(action.item.id);
           break;
-        case "layer":
+        case ClassNames.Layer:
           this.boardManager.deleteLayer(action.item.id);
           break;
         default:
@@ -101,13 +109,13 @@ export default class ApiManager {
 
   private receiveEdit(action: UserAction) {
     switch (action.item.type) {
-      case "v-circle":
+      case ClassNames.Vertex:
         this.boardManager.updateVertex(action.item);
         break;
-      case "line":
+      case ClassNames.TemporaryLine:
         this.boardManager.editLine(action.item as LineDTO);
         break;
-      case "layer":
+      case ClassNames.Layer:
         this.boardManager.reorderLayers(
           action.item.id! as string,
           action.item.replaceWithId! as string
@@ -121,7 +129,7 @@ export default class ApiManager {
   private receiveRequestToEdit(action: UserAction, isSucceded: boolean) {
     if (action.item.id)
       switch (action.item.type) {
-        case "v-circle":
+        case ClassNames.Vertex:
           if (isSucceded)
             this.boardManager.setVertexFollowMousePointerById(
               action.item.id,

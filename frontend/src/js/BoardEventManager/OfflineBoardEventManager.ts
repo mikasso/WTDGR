@@ -3,45 +3,68 @@ import Konva from "konva";
 import BoardManager from "../KonvaManager/BoardManager";
 import { State } from "@/store";
 import { Store } from "vuex";
+import { IHandler } from "./IHandler";
+import OffLineSelectHandler from "./Offline/OfflineSelectToolHandler";
+import OfflineHighlightToolHandler from "./Offline/OfflineHighlightToolHandler";
+import OfflineEdgeToolHandler from "./Offline/OfflineEdgeToolHandlert";
+import OfflineVertexToolHandler from "./Offline/OfflineVertexToolHandler";
+import OfflinePencilToolHandler from "./Offline/OfflinePencilToolHandler";
+import OfflineEraseToolHandler from "./Offline/OfflineEraseToolHandler";
 
 export default class OffLineBoardEventManager extends BaseBoardEventManager {
+  selectHandler: IHandler;
+  edgeHandler: IHandler;
+  vertexHandler: IHandler;
+  eraseHandler: IHandler;
+  pencilHandler: IHandler;
+  highlightHandler: IHandler;
+  handlers: IHandler[];
   constructor(boardManager: BoardManager, store: Store<State>) {
     super(boardManager, store);
-    this;
-    this.handlers = [];
+    this.highlightHandler = new OfflineHighlightToolHandler(boardManager);
+    this.selectHandler = new OffLineSelectHandler(
+      boardManager,
+      this.highlightHandler
+    );
+    this.edgeHandler = new OfflineEdgeToolHandler(boardManager);
+    this.vertexHandler = new OfflineVertexToolHandler(boardManager);
+    this.eraseHandler = new OfflineEraseToolHandler(
+      boardManager,
+      this.highlightHandler
+    );
+    this.pencilHandler = new OfflinePencilToolHandler(boardManager);
+
+    this.handlers = [
+      this.highlightHandler,
+      this.selectHandler,
+      this.edgeHandler,
+      this.vertexHandler,
+      this.eraseHandler,
+      this.pencilHandler,
+    ];
   }
 
-  setSelectToolHandlers() {}
-
-  setVertexToolHandlers() {}
-
-  setEdgeToolHandlers() {
-    this.vertexMouseDown = (event) => {
-      if (!this.isLeftClick(event)) return;
-      const vertex = event.target;
-      const line = this.boardManager.startDrawingLine(vertex);
-      this.boardManager.addLine(line!);
-    };
-    this.mouseMove = (event) => {
-      const point = this.getPointFromEvent(event);
-      this.boardManager.moveLineToPoint(point);
-    };
-    this.vertexMouseUp = (event) => {
-      const vertex = event.target;
-      const edge = this.boardManager.connectVertexes(vertex);
-      if (edge !== undefined) {
-        this.bindEdgeEvents(edge);
-        this.boardManager.draw(edge);
-      }
-    };
-    this.mouseUp = () => {
-      this.boardManager.stopDrawingLine();
-    };
+  public toolChanged(toolName: string) {
+    this.clearHandlers();
+    this.handlers.forEach((handler) => handler.setInactive());
+    switch (toolName) {
+      case "Select":
+        this.selectHandler.setActive(this);
+        break;
+      case "Vertex":
+        this.vertexHandler.setActive(this);
+        break;
+      case "Edge":
+        this.edgeHandler.setActive(this);
+        break;
+      case "Erase":
+        this.eraseHandler.setActive(this);
+        break;
+      case "Pencil":
+        this.pencilHandler.setActive(this);
+        break;
+    }
   }
-
-  setEraseToolHandlers() {}
-
-  setPencilToolHandlers() {}
 
   findLayerById(layerId: string) {
     const stageLayers = this.store.state.layers;

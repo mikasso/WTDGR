@@ -2,6 +2,7 @@ import BoardManager from "@/js/KonvaManager/BoardManager";
 import { TemporaryLine } from "@/js/KonvaManager/EdgeManager";
 import { Vertex } from "@/js/KonvaManager/VertexManager";
 import { ActionFactory } from "@/js/SignalR/Action";
+import { ActionTypes } from "@/js/SignalR/ApiHandler";
 import BoardHub from "@/js/SignalR/Hub";
 import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
@@ -28,7 +29,7 @@ export default class OnlineEdgeToolHandler implements IHandler {
     if (this.intervalId !== null && this.currentLine !== null) {
       clearInterval(this.intervalId);
       const action = this.actionFactory.create(
-        "Delete",
+        ActionTypes.Delete,
         this.currentLine.asDTO()
       );
       await this.hub.sendAction(action);
@@ -42,7 +43,7 @@ export default class OnlineEdgeToolHandler implements IHandler {
       const mousePos = this.boardManager.getMousePosition();
       this.currentLine.updatePosition(mousePos);
       const action = this.actionFactory.create(
-        "Edit",
+        ActionTypes.Edit,
         this.currentLine.asDTO()
       );
       return this.hub.sendAction(action);
@@ -56,7 +57,10 @@ export default class OnlineEdgeToolHandler implements IHandler {
     if (line !== null) {
       this.currentLine = line;
       console.log(this.currentLine.asDTO());
-      const action = this.actionFactory.create("Add", this.currentLine.asDTO());
+      const action = this.actionFactory.create(
+        ActionTypes.Add,
+        this.currentLine.asDTO()
+      );
       this.hub.sendAction(action);
       this.intervalId = window.setInterval(
         () => this.sendLineEdit(),
@@ -70,7 +74,7 @@ export default class OnlineEdgeToolHandler implements IHandler {
     const vertex = event.target as Vertex;
     const edge = this.boardManager.connectVertexes(vertex);
     if (edge !== undefined) {
-      const action = this.actionFactory.create("Add", edge.asDTO());
+      const action = this.actionFactory.create(ActionTypes.Add, edge.asDTO());
       this.hub.sendAction(action);
     }
   }

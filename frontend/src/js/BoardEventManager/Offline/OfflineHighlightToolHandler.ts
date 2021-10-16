@@ -11,6 +11,7 @@ export default class OfflineHighlightToolHandler implements IHandler {
     eventManager.vertexMouseEnter = (event) => this.vertexMouseEnter(event);
     eventManager.vertexMouseLeave = (event) => this.vertexMouseLeave(event);
     eventManager.edgeMouseEnter = (event) => this.edgeMouseEnter(event);
+    eventManager.edgeMouseLeave = (event) => this.edgeMouseLeave(event);
   }
 
   private vertexMouseEnter(event: KonvaEventObject<any>) {

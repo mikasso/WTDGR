@@ -1,5 +1,5 @@
 import Konva from "konva";
-import DraggableManager from "./DraggableManager";
+import { ClassNames } from "./ClassNames";
 import { Cordinates, HighlightConfig, Vertex } from "./VertexManager";
 
 export interface EdgeDTO extends Konva.LineConfig {
@@ -22,6 +22,7 @@ export class Edge extends Konva.Line {
     super(config);
     this.v1 = v1;
     this.v2 = v2;
+    this.className = ClassNames.Edge;
     this.baseConfig = baseConfig;
   }
 
@@ -41,9 +42,9 @@ export class Edge extends Konva.Line {
   asDTO(): EdgeDTO {
     return {
       ...this.attrs,
-      type: "edge",
       v1: this.v1.id(),
       v2: this.v2.id(),
+      type: this.getClassName(),
     };
   }
 }
@@ -57,6 +58,7 @@ export class TemporaryLine extends Konva.Line {
     super(config);
     if (this.id() === "") this.id(Math.random().toString() + v1.id());
     this.v1 = v1;
+    this.className = ClassNames.TemporaryLine;
     this.baseConfig = baseConfig;
   }
 
@@ -76,18 +78,15 @@ export class TemporaryLine extends Konva.Line {
   asDTO(): LineDTO {
     return {
       ...this.attrs,
-      type: "line",
       v1: this.v1.id(),
       endPoint: { x: this.points()[2], y: this.points()[3] },
+      type: this.getClassName(),
     };
   }
 }
 
-export default class EdgeManager extends DraggableManager {
-  constructor() {
-    super();
-    this.dragEnabled = false;
-  }
+export default class EdgeManager {
+  constructor() {}
   private currentLine: TemporaryLine | null = null;
   private draggedEdge: Edge | null = null;
 
@@ -175,7 +174,6 @@ export default class EdgeManager extends DraggableManager {
   }
 
   public stopDraggingEdge() {
-    console.log("stop drag");
     if (!this.draggedEdge) return;
     //this.draggedEdge.updatePosition();
     this.vertexDistances = [0, 0, 0, 0];
@@ -184,7 +182,6 @@ export default class EdgeManager extends DraggableManager {
 
   public dragVertexes(pos: Cordinates) {
     if (!this.draggedEdge) return;
-
     this.draggedEdge.v1.position({
       x: pos.x + this.vertexDistances[0],
       y: pos.y + this.vertexDistances[1],
@@ -228,14 +225,12 @@ export default class EdgeManager extends DraggableManager {
   }
 
   public draw(edge: Edge) {
-    console.log("drawedge()");
     console.log(edge);
     edge.layer.add(edge);
     edge.redraw();
   }
 
   public drawLine(line: TemporaryLine) {
-    console.log("drawline()");
     console.log(line);
     line.layer.add(line);
     line.redraw();

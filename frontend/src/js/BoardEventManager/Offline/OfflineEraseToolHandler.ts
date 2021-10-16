@@ -6,9 +6,15 @@ import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
 
 export default class OfflineEraseToolHandler implements IHandler {
-  constructor(private boardManager: BoardManager) {}
-  setInactive(): void {}
+  constructor(
+    private boardManager: BoardManager,
+    private highlightHandler: IHandler
+  ) {}
+  setInactive(): void {
+    this.highlightHandler.setInactive();
+  }
   setActive(eventManager: BaseBoardEventManager): void {
+    this.highlightHandler.setActive(eventManager);
     eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
     eventManager.edgeClick = (event) => this.edgeClick(event);
     eventManager.pencilClick = (event) => this.pencilClick(event);

@@ -11,8 +11,15 @@ import Konva from "konva";
 import BaseBoardEventManager from "../BoardEventManager/BaseBoardEventManager";
 import { Store } from "vuex";
 import { State } from "@/store";
+import { getTransitionRawChildren } from "@vue/runtime-core";
+import { ClassNames } from "./ClassNames";
 
 export default class BoardManager {
+  addEdge(edge: Edge) {
+    this.eventManager.bindItem(edge);
+    this.draw(edge);
+  }
+
   edgeManager: EdgeManager;
   vertexManager: VertexManager;
   pencilManager: PencilManager;
@@ -62,12 +69,10 @@ export default class BoardManager {
 
   disableDrag() {
     this.vertexManager.disableDrag(this.layers);
-    this.edgeManager.disableDrag(this.layers);
   }
 
   enableDrag() {
     this.vertexManager.enableDrag(this.layers);
-    this.edgeManager.enableDrag(this.layers);
   }
 
   setVertexFollowMousePointerById(vertexId: string, value: boolean) {
@@ -98,7 +103,7 @@ export default class BoardManager {
   ) {
     const layer: Konva.Layer = this.getLayerById(layerId)!;
     const vertex = this.vertexManager.create(layer, position, attrs);
-    this.eventManager.bindVertexEvents(vertex);
+    this.eventManager.bindItem(vertex);
     return vertex;
   }
 
@@ -109,7 +114,7 @@ export default class BoardManager {
       const edge = new Edge(v1, v2, edgeDTO);
       v1.edges.push(edge);
       v2.edges.push(edge);
-      this.eventManager.bindEdgeEvents(edge);
+      this.eventManager.bindItem(edge);
       return edge;
     }
   }
@@ -159,6 +164,7 @@ export default class BoardManager {
   startDrawingLine(vertex: Vertex) {
     if (this.currentLayer !== vertex.layer) return null;
     const line = this.edgeManager.startDrawingLine(vertex);
+    sortItems(this.currentLayer);
     return line;
   }
 
@@ -166,6 +172,7 @@ export default class BoardManager {
     const layer = line.layer;
     layer.add(line);
     sortItems(this.currentLayer);
+    line.moveToBottom();
   }
 
   moveLineToPoint(position: Cordinates): boolean {
@@ -213,7 +220,7 @@ export default class BoardManager {
       position,
       this.currentLayer
     );
-    this.eventManager.bindPencilEvents(pencilDrawing);
+    this.eventManager.bindItem(pencilDrawing);
   }
 
   movePencil(position: Cordinates) {
@@ -256,10 +263,10 @@ export default class BoardManager {
     const layer = this.getLayerById(layerId);
     if (layer == null) return;
     layer
-      .getChildren((node) => node.getClassName() === "Circle")
+      .getChildren((node) => node.getClassName() === ClassNames.Vertex)
       .each((vertex) => this.vertexManager.setHiglight(vertex as Vertex, on));
     layer
-      .getChildren((node) => node.getClassName() === "Line")
+      .getChildren((node) => node.getClassName() === ClassNames.Edge)
       .each((edge) => this.edgeManager.setHiglight(edge as Edge, on));
   }
 

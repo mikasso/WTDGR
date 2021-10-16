@@ -1,5 +1,8 @@
 import BoardManager from "@/js/KonvaManager/BoardManager";
+import { Edge } from "@/js/KonvaManager/EdgeManager";
+import { Vertex } from "@/js/KonvaManager/VertexManager";
 import { ActionFactory } from "@/js/SignalR/Action";
+import { ActionTypes } from "@/js/SignalR/ApiHandler";
 import BoardHub from "@/js/SignalR/Hub";
 import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
@@ -23,19 +26,23 @@ export default class OnlineEraseToolHandler implements IHandler {
   }
 
   private vertexMouseDown(event: KonvaEventObject<any>) {
-    const vertex = event.target;
-    const action = this.actionFactory.create("Delete", vertex.attrs);
+    const vertex = event.target as Vertex;
+    const action = this.actionFactory.create(
+      ActionTypes.Delete,
+      vertex.asDTO()
+    );
     this.hub.sendAction(action);
   }
 
   private edgeClick(event: KonvaEventObject<any>) {
-    const edge = event.target;
-    const action = this.actionFactory.create("Delete", edge.attrs);
+    const edge = event.target as Edge;
+    const action = this.actionFactory.create(ActionTypes.Delete, edge.asDTO());
     this.hub.sendAction(action);
   }
 
   private pencilClick(event: KonvaEventObject<any>) {
     //TODO it is not online
+    console.warn("TODO: only offline method");
     const drawing = event.target;
     this.boardManager.eraseDrawing(drawing);
   }

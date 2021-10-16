@@ -2,6 +2,7 @@ import BoardManager from "@/js/KonvaManager/BoardManager";
 import { Edge } from "@/js/KonvaManager/EdgeManager";
 import { Vertex } from "@/js/KonvaManager/VertexManager";
 import { ActionFactory } from "@/js/SignalR/Action";
+import { ActionTypes } from "@/js/SignalR/ApiHandler";
 import BoardHub from "@/js/SignalR/Hub";
 import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
@@ -34,7 +35,7 @@ export default class OnlineSelectToolHandler implements IHandler {
       this.boardManager.setHighlight("vertex", vertex, false);
       this.sendVertexEdit(vertex).then(() =>
         this.hub.sendAction(
-          this.actionFactory.create("ReleaseItem", vertex.attrs)
+          this.actionFactory.create(ActionTypes.ReleaseItem, vertex.asDTO())
         )
       );
       this.boardManager.setVertexFollowMousePointerById(vertex.attrs.id, false);
@@ -51,7 +52,7 @@ export default class OnlineSelectToolHandler implements IHandler {
   private sendVertexEdit(vertex: Vertex) {
     const mousePos = this.boardManager.getMousePosition();
     vertex.setAttrs({ x: mousePos.x, y: mousePos.y });
-    const action = this.actionFactory.create("Edit", vertex.attrs);
+    const action = this.actionFactory.create(ActionTypes.Edit, vertex.asDTO());
     return this.hub.sendAction(action);
   }
 
@@ -60,8 +61,8 @@ export default class OnlineSelectToolHandler implements IHandler {
     this.currentVertex = vertex;
     this.boardManager.setHighlight("vertex", this.currentVertex, true);
     const action = this.actionFactory.create(
-      "RequestToEdit",
-      event.target.attrs
+      ActionTypes.RequestToEdit,
+      vertex.asDTO()
     );
     this.hub.sendAction(action).then(() => this.sendVertexEdit(vertex));
 
