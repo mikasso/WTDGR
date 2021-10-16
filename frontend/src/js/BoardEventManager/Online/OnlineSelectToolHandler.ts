@@ -24,7 +24,7 @@ export default class OnlineSelectToolHandler implements IHandler {
 
   public setActive(eventManager: BaseBoardEventManager): void {
     eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
-    eventManager.mouseUp = (event) => this.mouseUp(event);
+    eventManager.mouseUp = () => this.mouseUp();
     eventManager.edgeMouseDown = (event) => this.edgeMouseDown(event);
   }
 
@@ -120,7 +120,7 @@ export default class OnlineSelectToolHandler implements IHandler {
     }
   }
 
-  private mouseUp(event: KonvaEventObject<any>) {
+  private mouseUp() {
     this.setInactive();
   }
 
