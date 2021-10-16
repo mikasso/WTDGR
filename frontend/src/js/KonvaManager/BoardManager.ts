@@ -33,7 +33,6 @@ export default class BoardManager {
     this.edgeManager = new EdgeManager();
     this.vertexManager = new VertexManager();
     this.pencilManager = new PencilManager();
-    this.multiselectManager = new MultiselectManager();
   }
 
   get currentLayer(): Konva.Layer {
@@ -247,7 +246,6 @@ export default class BoardManager {
       position,
       this.currentLayer
     );
-    this.eventManager.bindMultiselectEvents(multiselect);
   }
 
   moveMultiselect(position: Cordinates) {
