@@ -1,5 +1,5 @@
 import Konva from "konva";
-import DraggableManager from "./DraggableManager";
+import { ClassNames } from "./ClassNames";
 import { Cordinates, HighlightConfig, Vertex } from "./VertexManager";
 
 export interface EdgeDTO extends Konva.LineConfig {
@@ -16,12 +16,15 @@ export class Edge extends Konva.Line {
   v1: Vertex;
   v2: Vertex;
   baseConfig: Konva.LineConfig;
+  followMousePointer: boolean;
   constructor(v1: Vertex, v2: Vertex, config: Konva.LineConfig) {
     config.points = [v1.x(), v1.y(), v2.x(), v2.y()];
     const baseConfig = Object.assign({}, config);
     super(config);
     this.v1 = v1;
     this.v2 = v2;
+    this.followMousePointer = false;
+    this.className = ClassNames.Edge;
     this.baseConfig = baseConfig;
   }
 
@@ -41,9 +44,9 @@ export class Edge extends Konva.Line {
   asDTO(): EdgeDTO {
     return {
       ...this.attrs,
-      type: "edge",
       v1: this.v1.id(),
       v2: this.v2.id(),
+      type: this.getClassName(),
     };
   }
 }
@@ -57,6 +60,7 @@ export class TemporaryLine extends Konva.Line {
     super(config);
     if (this.id() === "") this.id(Math.random().toString() + v1.id());
     this.v1 = v1;
+    this.className = ClassNames.TemporaryLine;
     this.baseConfig = baseConfig;
   }
 
@@ -76,20 +80,17 @@ export class TemporaryLine extends Konva.Line {
   asDTO(): LineDTO {
     return {
       ...this.attrs,
-      type: "line",
       v1: this.v1.id(),
       endPoint: { x: this.points()[2], y: this.points()[3] },
+      type: this.getClassName(),
     };
   }
 }
 
-export default class EdgeManager extends DraggableManager {
-  constructor() {
-    super();
-    this.dragEnabled = false;
-  }
-  private currentLine: TemporaryLine | undefined;
-  private draggedEdge: Edge | undefined;
+export default class EdgeManager {
+  constructor() {}
+  private currentLine: TemporaryLine | null = null;
+  private draggedEdge: Edge | null = null;
 
   private vertexDistances: number[] = [0, 0, 0, 0];
 
@@ -157,7 +158,7 @@ export default class EdgeManager extends DraggableManager {
   public removeCurrentLine() {
     if (!this.currentLine) return;
     this.removeLine(this.currentLine);
-    this.currentLine = undefined;
+    this.currentLine = null;
   }
 
   removeLine(line: TemporaryLine) {
@@ -175,24 +176,33 @@ export default class EdgeManager extends DraggableManager {
   }
 
   public stopDraggingEdge() {
-    console.log("stop drag");
     if (!this.draggedEdge) return;
     //this.draggedEdge.updatePosition();
     this.vertexDistances = [0, 0, 0, 0];
-    this.draggedEdge = undefined;
+    this.draggedEdge = null;
+  }
+
+  public calculcateNewVerticesPosition(
+    pos: Cordinates
+  ): { v1Pos: Cordinates; v2Pos: Cordinates } {
+    if (!this.draggedEdge) throw Error("edge shouldnt be null");
+    return {
+      v1Pos: {
+        x: pos.x + this.vertexDistances[0],
+        y: pos.y + this.vertexDistances[1],
+      },
+      v2Pos: {
+        x: pos.x + this.vertexDistances[2],
+        y: pos.y + this.vertexDistances[3],
+      },
+    };
   }
 
   public dragVertexes(pos: Cordinates) {
     if (!this.draggedEdge) return;
-
-    this.draggedEdge.v1.position({
-      x: pos.x + this.vertexDistances[0],
-      y: pos.y + this.vertexDistances[1],
-    });
-    this.draggedEdge.v2.position({
-      x: pos.x + this.vertexDistances[2],
-      y: pos.y + this.vertexDistances[3],
-    });
+    const { v1Pos, v2Pos } = this.calculcateNewVerticesPosition(pos);
+    this.draggedEdge.v1.position(v1Pos);
+    this.draggedEdge.v2.position(v2Pos);
     this.dragEdges(this.draggedEdge.v1);
     this.dragEdges(this.draggedEdge.v2);
     this.draggedEdge.redraw();
@@ -228,14 +238,12 @@ export default class EdgeManager extends DraggableManager {
   }
 
   public draw(edge: Edge) {
-    console.log("drawedge()");
     console.log(edge);
     edge.layer.add(edge);
     edge.redraw();
   }
 
   public drawLine(line: TemporaryLine) {
-    console.log("drawline()");
     console.log(line);
     line.layer.add(line);
     line.redraw();

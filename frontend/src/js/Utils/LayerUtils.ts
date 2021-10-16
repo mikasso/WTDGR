@@ -1,13 +1,18 @@
 import { Layer } from "konva/types/Layer";
-import { PencilLine } from "../KonvaManager/PencilManager";
+import { ClassNames } from "../KonvaManager/ClassNames";
 
 export function sortItems(layer: Layer) {
   layer
-    .getChildren((node) => node.getClassName() === "Circle")
+    .getChildren((node) => node.getClassName() === ClassNames.Vertex)
     .each((vertex) => vertex.moveToBottom());
   layer
-    .getChildren((node) => node.getClassName() === "Line") // the checking if it is edge by node.v1 probably didnt work anyway
-    .each((line) => {
-      if (!(line instanceof PencilLine)) line.moveToBottom();
-    });
+    .getChildren((node) => node.getClassName() === ClassNames.Edge)
+    .each((line) => line.moveToBottom());
+}
+
+export function layerAsDTO(layer: Layer) {
+  return {
+    type: "Layer",
+    id: layer.id(),
+  };
 }

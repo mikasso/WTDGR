@@ -32,15 +32,15 @@ namespace Backend.Models
             var value = jObject["type"].ToString();
             switch (value)
             {
-                case "v-circle":
+                case "Vertex":
                     return new Vertex();
                     break;
-                case "layer":
+                case "Layer":
                     return new Layer();
                     break;
-                case "edge":
+                case "Edge":
                     return new Edge();
-                case "line":
+                case "TemporaryLine":
                     return new Line();
                 default:
                     throw new InvalidCastException($"Cant cast when type value is {value}");

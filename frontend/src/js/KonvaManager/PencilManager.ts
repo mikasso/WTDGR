@@ -1,4 +1,5 @@
 import Konva from "konva";
+import { ClassNames } from "./ClassNames";
 import { Cordinates } from "./VertexManager";
 
 export class PencilLine extends Konva.Line {
@@ -6,6 +7,7 @@ export class PencilLine extends Konva.Line {
   constructor(config: Konva.LineConfig, layer: Konva.Layer) {
     super(config);
     this.layer = layer;
+    this.className = ClassNames.PencilLine;
   }
 
   redraw(): void {
