@@ -8,10 +8,20 @@ export interface State {
   currentLayer?: Konva.Layer;
   currentTool: string;
   layers: Konva.Layer[];
-  user: { userId: string; roomId: string; role?: string };
+  roomId: string;
+  user: User;
+  allUsers: User[];
 }
 
 export const key: InjectionKey<Store<State>> = Symbol();
+
+export class User {
+  id: string;
+  role?: string;
+  constructor(id: string) {
+    this.id = id;
+  }
+}
 
 export const store = createStore<State>({
   state: {
@@ -20,7 +30,13 @@ export const store = createStore<State>({
     currentLayer: undefined,
     currentTool: "Select",
     layers: [],
-    user: { userId: Math.random().toString(), roomId: "1" },
+    roomId: "1",
+    user: { id: Math.random().toString() },
+    allUsers: [
+      new User("Test User 1"),
+      new User("Test User 2"),
+      new User("Test User 3"),
+    ],
   },
   getters: {
     isOnline(state) {

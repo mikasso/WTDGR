@@ -16,7 +16,7 @@
         </div>
       </el-main>
 
-      <el-aside class="aside" width="250px">userzy </el-aside>
+      <el-aside class="aside" width="250px"><UsersList></UsersList></el-aside>
     </el-container>
   </el-container>
 </template>
@@ -36,11 +36,7 @@ import { key, State } from "../store";
 import { useWindowSize } from "vue-window-size";
 import Toolbar from "./Toolbar.vue";
 import WelcomeWindow from "./WelcomeWindow.vue";
-
-interface User {
-  userId: string;
-  roomId: string;
-}
+import UsersList from "./UsersList.vue";
 
 interface BoardData {
   eventManager?: BaseBoardEventManager;
@@ -60,6 +56,7 @@ export default defineComponent({
   components: {
     Toolbar,
     WelcomeWindow,
+    UsersList,
   },
   watch: {
     isOnline: {
@@ -129,7 +126,7 @@ export default defineComponent({
           boardManager,
           this.store,
           this.hub as BoardHub,
-          new ActionFactory(this.store.state.user.userId, boardManager)
+          new ActionFactory(this.store.state.user.id, boardManager)
         );
         this.store.commit("setOnline");
       }
@@ -155,7 +152,7 @@ export default defineComponent({
           boardManager,
           this.store,
           hub,
-          new ActionFactory(this.store.state.user.userId, boardManager)
+          new ActionFactory(this.store.state.user.id, boardManager)
         );
         this.hub = hub;
         this.hub?.joinRoomPromise().catch(async () => {

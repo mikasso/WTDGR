@@ -80,7 +80,7 @@ export default class ApiManager {
         }
         case ClassNames.Layer:
           this.boardManager.receiveAddLayer(action.item.id);
-          if (action.userId === this.user.userId)
+          if (action.userId === this.user.id)
             this.boardManager.setCurrentLayer(action.item.id);
           break;
         default:
@@ -134,7 +134,7 @@ export default class ApiManager {
           if (isSucceded) {
             const vertex = this.boardManager.findById(action.item.id) as Vertex;
             this.boardManager.setHighlight(vertex, true);
-            if (this.store.state.user.userId === action.userId) {
+            if (this.store.state.user.id === action.userId) {
               this.boardManager.setFollowMousePointerById(action.item.id, true);
             }
           } else console.error("cannot edit vertex" + action.item.id);
@@ -145,7 +145,7 @@ export default class ApiManager {
             this.boardManager.setHighlight(edge, true);
             this.boardManager.setHighlight(edge.v1, true);
             this.boardManager.setHighlight(edge.v2, true);
-            if (this.store.state.user.userId === action.userId) {
+            if (this.store.state.user.id === action.userId) {
               this.boardManager.setFollowMousePointerById(action.item.id, true);
             }
           } else console.error("cannot edit vertex" + action.item.id);

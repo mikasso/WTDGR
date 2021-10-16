@@ -12,6 +12,9 @@ export default class BoardHub {
   private get user() {
     return this.store.state.user;
   }
+  private get roomId() {
+    return this.store.state.roomId;
+  }
 
   private connection: HubConnection;
   onCloseMethod: (attempt: number) => Promise<void>;
@@ -61,9 +64,9 @@ export default class BoardHub {
   public joinRoomPromise() {
     return this.connection.start().then(() => {
       const request = {
-        Id: this.user.userId,
+        Id: this.user.id,
         Role: "Owner",
-        RoomId: this.user.roomId,
+        RoomId: this.roomId,
       };
       this.connection.invoke("JoinRoom", request).catch((err: Error) => {
         throw new Error("Error during joinning the room: " + err);
