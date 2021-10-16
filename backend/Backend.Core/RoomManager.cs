@@ -133,7 +133,6 @@ namespace Backend.Core
         {
             return actionType switch
             {
-                ActionType.RequestToEdit or ActionType.ReleaseItem => Receviers.caller,
                 _ => isSucceded ? Receviers.all : Receviers.caller,
             };
         }

@@ -7,15 +7,15 @@ namespace Backend.Models
     [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     public enum KonvaType
     {
-        [EnumMember(Value = "v-circle")]
+        [EnumMember(Value = "Vertex")]
         Vertex,
-        [EnumMember(Value = "edge")]
+        [EnumMember(Value = "Edge")]
         Edge,
-        [EnumMember(Value = "layer")]
+        [EnumMember(Value = "Layer")]
         Layer,
-        [EnumMember(Value = "line")]
+        [EnumMember(Value = "TemporaryLine")]
         Line,
-        [EnumMember(Value = "unknown?")]
+        [EnumMember(Value = "PencilLine")]
         PencilLine,
     }
 }

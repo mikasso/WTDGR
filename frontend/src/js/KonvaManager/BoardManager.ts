@@ -12,8 +12,15 @@ import Konva from "konva";
 import BaseBoardEventManager from "../BoardEventManager/BaseBoardEventManager";
 import { Store } from "vuex";
 import { State } from "@/store";
+import { getTransitionRawChildren } from "@vue/runtime-core";
+import { ClassNames } from "./ClassNames";
 
 export default class BoardManager {
+  addEdge(edge: Edge) {
+    this.eventManager.bindItem(edge);
+    this.draw(edge);
+  }
+
   edgeManager: EdgeManager;
   vertexManager: VertexManager;
   pencilManager: PencilManager;
@@ -63,29 +70,39 @@ export default class BoardManager {
     vertex.redraw();
   }
 
-  enableDrag() {
-    this.vertexManager.enableDrag(this.layers);
-    //this.edgeManager.enableDrag(this.layers);
+  disableDrag() {
+    this.vertexManager.disableDrag(this.layers);
   }
 
-  setDraggableVertexById(vertexId: string, value: boolean) {
-    const vertex = this.findById(vertexId);
-    if (vertex) this.vertexManager.setDraggable(vertex, value);
+  enableDrag() {
+    this.vertexManager.enableDrag(this.layers);
+  }
+
+  setFollowMousePointerById(itemId: string, value: boolean) {
+    const item = this.findById(itemId);
+    if (item !== undefined) {
+      const className = item.getClassName();
+      if (className === ClassNames.Vertex) {
+        const vertex = item as Vertex;
+        vertex.followMousePointer = value;
+      } else if (className === ClassNames.Edge) {
+        const edge = item as Edge;
+        edge.followMousePointer = value;
+      }
+    } else {
+      throw new Error("cannot set followMousePointer, item not found");
+    }
   }
 
   dragEdges(vertex: Vertex) {
     this.edgeManager.dragEdges(vertex);
   }
 
-  setHighlight(
-    targetType: string,
-    target: Vertex | Edge,
-    isHighlithed: boolean
-  ) {
+  setHighlight(target: Vertex | Edge, isHighlithed: boolean) {
     if (target.layer.id !== this.currentLayer.id) return;
-    if (targetType === "vertex")
+    if (target.getClassName() === ClassNames.Vertex)
       this.vertexManager.setHiglight(target as Vertex, isHighlithed);
-    else if (targetType === "edge")
+    else if (target.getClassName() === ClassNames.Edge)
       this.edgeManager.setHiglight(target as Edge, isHighlithed);
   }
 
@@ -96,7 +113,7 @@ export default class BoardManager {
   ) {
     const layer: Konva.Layer = this.getLayerById(layerId)!;
     const vertex = this.vertexManager.create(layer, position, attrs);
-    this.eventManager.bindVertexEvents(vertex);
+    this.eventManager.bindItem(vertex);
     return vertex;
   }
 
@@ -107,7 +124,7 @@ export default class BoardManager {
       const edge = new Edge(v1, v2, edgeDTO);
       v1.edges.push(edge);
       v2.edges.push(edge);
-      this.eventManager.bindEdgeEvents(edge);
+      this.eventManager.bindItem(edge);
       return edge;
     }
   }
@@ -161,6 +178,13 @@ export default class BoardManager {
     return line;
   }
 
+  addLine(line: TemporaryLine) {
+    const layer = line.layer;
+    layer.add(line);
+    sortItems(this.currentLayer);
+    line.moveToBottom();
+  }
+
   moveLineToPoint(position: Cordinates): boolean {
     return this.edgeManager.moveLineToPoint(position);
   }
@@ -206,7 +230,7 @@ export default class BoardManager {
       position,
       this.currentLayer
     );
-    this.eventManager.bindPencilEvents(pencilDrawing);
+    this.eventManager.bindItem(pencilDrawing);
   }
 
   movePencil(position: Cordinates) {
@@ -275,10 +299,10 @@ export default class BoardManager {
     const layer = this.getLayerById(layerId);
     if (layer == null) return;
     layer
-      .getChildren((node) => node.getClassName() === "Circle")
+      .getChildren((node) => node.getClassName() === ClassNames.Vertex)
       .each((vertex) => this.vertexManager.setHiglight(vertex as Vertex, on));
     layer
-      .getChildren((node) => node.getClassName() === "Line")
+      .getChildren((node) => node.getClassName() === ClassNames.Edge)
       .each((edge) => this.edgeManager.setHiglight(edge as Edge, on));
   }
 

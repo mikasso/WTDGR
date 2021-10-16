@@ -1,5 +1,7 @@
 import Konva from "konva";
+import { ActionTypes } from "./ApiHandler";
 
+export type DTO = { type: string } & Konva.NodeConfig;
 export default class UserAction {
   actionType: string;
   userId: string;
@@ -17,7 +19,7 @@ export class ActionFactory {
     private layerProvider: { currentLayer: Konva.Layer }
   ) {}
 
-  public create(actionType: string, item: Konva.NodeConfig) {
+  public create(actionType: ActionTypes, item: Konva.NodeConfig) {
     item.layer = this.layerProvider.currentLayer.attrs.id;
     return new UserAction(actionType, this.userId, item);
   }
