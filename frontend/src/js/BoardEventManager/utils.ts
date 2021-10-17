@@ -36,3 +36,7 @@ export function poll<T>(params: {
 
   return new Promise(executePoll);
 }
+
+export enum ItemColors {
+  defaultStroke = "black",
+}

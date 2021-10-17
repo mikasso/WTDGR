@@ -28,7 +28,7 @@ namespace BackendTests
             var userAction = new UserAction()
             {
                 ActionType = ActionType.Add,
-                Item = new Vertex() { Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Type = KonvaType.Vertex } },
                 UserId = "User1"
             };
 
@@ -47,17 +47,17 @@ namespace BackendTests
             var addAction = new UserAction()
             {
                 ActionType = ActionType.Add,
-                Item = new Vertex() { Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Type = KonvaType.Vertex } },
                 UserId = "User1"
             };
 
             var addResult = await _roomManager.ExecuteAction(addAction);
             addResult.IsSucceded.Should().BeTrue();
-            var vertexId = addResult.UserAction.Item.Id;
+            var vertexId = addResult.UserAction.Items.First().Id;
             var deleteAction = new UserAction()
             {
                 ActionType = ActionType.Delete,
-                Item = new Vertex() { Id = vertexId, Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
                 UserId = "User1"
             };
             var deleteResult = await _roomManager.ExecuteAction(deleteAction);
@@ -76,7 +76,7 @@ namespace BackendTests
             var requestAction = new UserAction()
             {
                 ActionType = ActionType.RequestToEdit,
-                Item = new Vertex() { Id = vertexId, Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
                 UserId = "User1"
             };
             var requestResult = await _roomManager.ExecuteAction(requestAction);
@@ -85,7 +85,7 @@ namespace BackendTests
             var editAction = new UserAction()
             {
                 ActionType = ActionType.Edit,
-                Item = new Vertex() { Id = vertexId, Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
                 UserId = "User2"
             };
             var editResult = await _roomManager.ExecuteAction(editAction);
@@ -119,7 +119,7 @@ namespace BackendTests
             var vertex1Id = await AddVertex("User1");
             var addLayerResult = await AddLayer("User1");
             addLayerResult.IsSucceded.Should().Be(true);
-            addLayerResult.UserAction.Item.Id.Should().Be("Layer 2");
+            addLayerResult.UserAction.Items.First().Id.Should().Be("Layer 2");
             var vertex2Id = await AddVertex("User1", "Layer 2");
             var addEdgeResult = await AddEdge("User1", vertex1Id, vertex2Id);
             addEdgeResult.IsSucceded.Should().Be(false);
@@ -142,14 +142,14 @@ namespace BackendTests
             var editAction = new UserAction()
             {
                 ActionType = ActionType.Edit,
-                Item = new Line()
+                Items = new List<IRoomItem>() {  new Line()
                 {
                     Type = KonvaType.Line,
-                    Id = addLineResult.UserAction.Item.Id,
+                    Id = addLineResult.UserAction.Items.First().Id,
                     Layer = "Layer 1",
                     V1 = vertex1Id,
                     Points = new[] { 1, 2, 3, 4 },
-                },
+                } } ,
                 UserId = "User1",
             };
             var editResult = await _roomManager.ExecuteAction(editAction);
@@ -165,11 +165,11 @@ namespace BackendTests
             var deleteLineAction = new UserAction()
             {
                 ActionType = ActionType.Delete,
-                Item = new Line()
+                Items = new List<IRoomItem>() { new Line()
                 {
                     Type = KonvaType.Line,
-                    Id = addLineResult.UserAction.Item.Id,
-                },
+                    Id = addLineResult.UserAction.Items.First().Id,
+                } },
                 UserId = "User1",
             };
             var editResult = await _roomManager.ExecuteAction(deleteLineAction);
@@ -181,12 +181,12 @@ namespace BackendTests
             var addAction = new UserAction()
             {
                 ActionType = ActionType.Add,
-                Item = new Vertex() { Type = KonvaType.Vertex, Layer = layerId },
+                Items = new List<IRoomItem>() { new Vertex() { Type = KonvaType.Vertex, Layer = layerId } },
                 UserId = userId,
             };
             var addResult = await _roomManager.ExecuteAction(addAction);
             addResult.IsSucceded.Should().BeTrue();
-            return addResult.UserAction.Item.Id;
+            return addResult.UserAction.Items.First().Id;
         }
 
         private async Task<ActionResult> AddLine(string userId, string v1, string layerId = "Layer 1")
@@ -194,7 +194,7 @@ namespace BackendTests
             var addAction = new UserAction()
             {
                 ActionType = ActionType.Add,
-                Item = new Line() { Type = KonvaType.Line, Layer = layerId, V1 = v1 },
+                Items = new List<IRoomItem>() { new Line() { Type = KonvaType.Line, Layer = layerId, V1 = v1 } },
                 UserId = userId,
             };
             return await _roomManager.ExecuteAction(addAction);
@@ -205,7 +205,7 @@ namespace BackendTests
             var addAction = new UserAction()
             {
                 ActionType = ActionType.Add,
-                Item = new Edge() { Type = KonvaType.Edge, V1 = v1, V2 = v2 },
+                Items = new List<IRoomItem>() { new Edge() { Type = KonvaType.Edge, V1 = v1, V2 = v2 } },
                 UserId = userId,
             };
             return await _roomManager.ExecuteAction(addAction);
@@ -216,7 +216,7 @@ namespace BackendTests
             var addLayerAction = new UserAction()
             {
                 ActionType = ActionType.Add,
-                Item = new Layer() { Id = "anything", Type = KonvaType.Layer },
+                Items = new List<IRoomItem>() { new Layer() { Id = "anything", Type = KonvaType.Layer } },
                 UserId = "User1"
             };
             return await _roomManager.ExecuteAction(addLayerAction);

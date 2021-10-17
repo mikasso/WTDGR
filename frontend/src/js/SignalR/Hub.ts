@@ -4,11 +4,15 @@ import {
   HubConnectionBuilder,
   LogLevel,
 } from "@microsoft/signalr";
+import { NodeConfig } from "konva/types/Node";
 import { Store } from "vuex";
 import UserAction from "./Action";
 import ApiManager from "./ApiHandler";
 
 export default class BoardHub {
+  userColor() {
+    return this.store.state.userColor;
+  }
   private get user() {
     return this.store.state.user;
   }
@@ -31,8 +35,15 @@ export default class BoardHub {
         this.apiManager.receiveAction(action, isSucceded);
       }
     );
+    this.connection.on("GetGraph", (items: NodeConfig[]) => {
+      console.log(items);
+      this.apiManager.loadItems(items);
+    });
     this.connection.on("ReceiveActionResponse", (actionResponse: string) => {
       this.apiManager.receiveActionResponse(actionResponse);
+    });
+    this.connection.on("ReceiveText", (text: string) => {
+      console.log(text);
     });
 
     this.onCloseMethod = this.reJoinRoom;

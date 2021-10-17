@@ -20,11 +20,11 @@ namespace Backend.Tests
             string actionJson =
                 @"{
                 ""ActionType"": ""Add"",
-                  ""Item"": {
+                  ""Items"": [{
                     ""Id"": ""1"",
-                    ""Type"": ""v-circle"",
+                    ""Type"": ""Vertex"",
                     ""Layer"": ""1"",
-                  },
+                  }],
                   ""UserId"": ""1""
                 }";
             var userAction = JsonConvert.DeserializeObject<UserAction>(actionJson, new Newtonsoft.Json.JsonSerializerSettings
@@ -34,7 +34,7 @@ namespace Backend.Tests
             });
             userAction.Should().BeEquivalentTo(new UserAction{
                 ActionType=ActionType.Add,
-                Item=new Vertex() {Id="1",Type= KonvaType.Vertex, Layer="1"},
+                Items = new List<IRoomItem>() { new Vertex() { Id = "1", Type = KonvaType.Vertex, Layer = "1" } },
                 UserId="1"
             });
         }
@@ -45,7 +45,7 @@ namespace Backend.Tests
             var userAction = new UserAction
             {
                 ActionType = ActionType.Add,
-                Item = new Vertex() { Id = "1", Type = KonvaType.Vertex, Layer = "1" },
+                Items = new List<IRoomItem>() { new Vertex() { Id = "1", Type = KonvaType.Vertex, Layer = "1" } },
                 UserId = "1"
             };
             var userActionStr = JsonConvert.SerializeObject(userAction);
@@ -53,9 +53,9 @@ namespace Backend.Tests
             JObject expectedObject = JObject.Parse(
                 @"{
                   ""ActionType"": ""Add"",
-                  ""Item"": {
+                  ""Items"": [{
                     ""Id"": ""1"",
-                    ""Type"": ""v-circle"",
+                    ""Type"": ""Vertex"",
                     ""Y"": 0.0,
                     ""X"": 0.0,
                     ""Radius"": 0,
@@ -64,7 +64,7 @@ namespace Backend.Tests
                     ""StrokeWidth"": 0,
                     ""Layer"": ""1"",
                     ""EditorId"": null
-                  },
+                  }],
                   ""UserId"": ""1""
                 }");
             receivedObject.ToString().Should().Be(expectedObject.ToString());

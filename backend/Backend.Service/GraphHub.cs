@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System;
 using Serilog;
 using Backend.Core;
+using System.Collections.Generic;
 
 namespace Backend.Service
 {
@@ -17,7 +18,7 @@ namespace Backend.Service
         Task SendText(string message);
         Task ReceiveText(string message);
         Task ReceiveJoinResponse(User user);
-        Task  GetGraph();
+        Task GetGraph(IList<IRoomItem> items);
     }
 
     public partial class GraphHub : Hub<IGraphHub>
@@ -59,12 +60,11 @@ namespace Backend.Service
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "SignalR Users");
             await base.OnDisconnectedAsync(exception);
             if (Room != null && MyUser != null)
             {
                 Room.Users.Delete(MyUser.Id);
-                Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId}");
+                Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n{exception.Message}");
             }
         }
         private async Task<bool> AssignUserToContext(User user)
@@ -81,8 +81,8 @@ namespace Backend.Service
             await MyGroup.ReceiveText(message);
             Log.Information(message);
             await Clients.Caller.ReceiveJoinResponse(user);
+            await Clients.Caller.GetGraph((await Room.GetRoomImage()).SelectAll);
         }
-
 
         public async Task LeaveRoom()
         {
@@ -117,11 +117,13 @@ namespace Backend.Service
             try
             {
                 var room = RoomsContainer.GetRoom(user.RoomId);
-                return !room.Users.Exists(user.Id);
+                var result = room.Users.Exists(user.Id);
+                if (result) Log.Information($"User already exists in this room, id: {user.Id}");
+                return !result;
             }
             catch (Exception e)
             {
-                Log.Error(e, "User failed to connect ");
+                Log.Error(e, $"User: {user.Id} failed to connect to room: {user.RoomId} The room doesnt exists");
                 return false;
             }
         }

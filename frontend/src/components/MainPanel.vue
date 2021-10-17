@@ -116,7 +116,7 @@ export default defineComponent({
   },
   methods: {
     handleConnectionChange(isOnline: boolean) {
-      this.initalizeStageAndLayers();
+      this.initalizeStageAndLayers(isOnline);
       const boardManager = new BoardManager(this.store);
       if (isOnline) {
         const apiManager = new ApiManager(boardManager, this.store);
@@ -146,17 +146,19 @@ export default defineComponent({
 
       this.eventManager?.toolChanged(this.currentTool);
     },
-    initalizeStageAndLayers() {
-      const initLayer = new Konva.Layer({ id: "Layer 1" });
+    initalizeStageAndLayers(isOnline: boolean) {
       const initStage = new Konva.Stage({
         container: "board",
         width: this.getWidth(),
         height: this.getHeigth(),
       });
-      initStage.add(initLayer);
       this.store.commit("setStage", initStage);
-      this.store.commit("setLayers", [initLayer]);
-      this.store.commit("setCurrentLayer", initLayer);
+      if (isOnline === false) {
+        const initLayer = new Konva.Layer({ id: "Layer 1" });
+        initStage.add(initLayer);
+        this.store.commit("setLayers", [initLayer]);
+        this.store.commit("setCurrentLayer", initLayer);
+      }
     },
     getHeigth() {
       if (document.getElementById("root") == null) return 0;
