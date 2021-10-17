@@ -65,6 +65,7 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
+      <a v-on:click="download()" :href="myUrl" download="elo.txt">DOWNLOAD</a>
     </div>
     <div style="display: flex; align-items: center;">
       <el-tag v-if="!isOnline" class="connBadge" type="danger"
@@ -91,6 +92,10 @@ import { computed, defineComponent } from "vue";
 import { useStore } from "vuex";
 import draggable from "vuedraggable";
 import "element-plus/dist/index.css";
+import Konva from "konva";
+import { ClassNames } from "../js/KonvaManager/ClassNames";
+import { Edge } from "../js/KonvaManager/EdgeManager";
+import { Vertex } from "../js/KonvaManager/VertexManager";
 
 interface layerData {
   id: string;
@@ -173,6 +178,7 @@ export default defineComponent({
       addLayer,
       hover,
       emit,
+      store,
     };
   },
   mounted() {
@@ -195,6 +201,7 @@ export default defineComponent({
       edge_style: "line",
     },
     drag: false,
+    myUrl: "",
   }),
   methods: {
     highlightLayer(layerId: string, on: boolean) {
@@ -217,6 +224,44 @@ export default defineComponent({
           index2: event!.moved.newIndex,
         },
       });
+    },
+    download: function() {
+      const jsonData = encodeURIComponent(
+        this.stageToGdf(this.store.state.stage!)
+      );
+      this.myUrl = `data:text/plain;charset=utf-8,${jsonData}`;
+    },
+    stageToGdf(stage: Konva.Stage): string {
+      const layers = stage.getChildren(
+        (node) => node.getClassName() === "Layer"
+      );
+      console.log(layers);
+      let result = "nodedef>name VARCHAR,x DOUBLE,y DOUBLE\n";
+      for (const layer of layers) {
+        const items = layer.getChildren();
+        for (const item of items) {
+          if (item.getClassName() != ClassNames.Vertex) continue;
+          const vString =
+            "" + item._id + "," + item.x() + ".0," + item.y() + ".0,";
+          result += vString + "\n";
+        }
+      }
+      result += "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN\n";
+      for (const layer of layers) {
+        const items = layer.getChildren();
+        for (const item of items) {
+          if (item.getClassName() != ClassNames.Vertex) continue;
+          const vertex = item as Vertex;
+          for (const edge of vertex.edges) {
+            let eString = "" + item._id + ",";
+            let secondVertex = edge.v1;
+            if (secondVertex._id == vertex._id) secondVertex = edge.v2;
+            eString += secondVertex._id + ",false";
+            result += eString + "\n";
+          }
+        }
+      }
+      return result;
     },
   },
 });
