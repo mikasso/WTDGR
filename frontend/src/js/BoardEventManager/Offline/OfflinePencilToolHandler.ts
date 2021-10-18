@@ -5,7 +5,10 @@ import { IHandler } from "../IHandler";
 import { isLeftClick } from "../utils";
 
 export default class OfflinePencilToolHandler implements IHandler {
-  constructor(private boardManager: BoardManager) {}
+  private boardManager: BoardManager;
+  constructor() {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setInactive(): void {}
   setActive(eventManager: BaseBoardEventManager): void {
     eventManager.mouseDown = (event) => this.mouseDown(event);

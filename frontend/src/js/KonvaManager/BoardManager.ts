@@ -20,17 +20,25 @@ export default class BoardManager {
     this.draw(edge);
   }
 
+  private static boardManager: BoardManager;
   edgeManager: EdgeManager;
   vertexManager: VertexManager;
   pencilManager: PencilManager;
   eventManager!: BaseBoardEventManager;
 
   store: Store<State>;
-  constructor(store: Store<State>) {
+  private constructor(store: Store<State>) {
     this.store = store;
     this.edgeManager = new EdgeManager();
     this.vertexManager = new VertexManager();
     this.pencilManager = new PencilManager();
+  }
+
+  public static getBoardManager(store = BoardManager.boardManager.store): BoardManager{
+    if(!BoardManager.boardManager){
+      BoardManager.boardManager = new BoardManager(store);
+    }
+    return BoardManager.boardManager;
   }
 
   get currentLayer(): Konva.Layer {

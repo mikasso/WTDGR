@@ -117,12 +117,11 @@ export default defineComponent({
   methods: {
     handleConnectionChange(isOnline: boolean) {
       this.initalizeStageAndLayers();
-      const boardManager = new BoardManager(this.store);
+      let boardManager = BoardManager.getBoardManager(this.store);
       if (isOnline) {
         const apiManager = new ApiManager(boardManager, this.store);
         const hub = new BoardHub(apiManager, this.store);
         this.eventManager = new OnlineBoardEventManager(
-          boardManager,
           this.store,
           hub,
           new ActionFactory(this.store.state.user.userId, boardManager)
@@ -139,7 +138,6 @@ export default defineComponent({
         }
         this.hub = undefined;
         this.eventManager = new OfflineBoardEventManager(
-          boardManager,
           this.store
         );
       }

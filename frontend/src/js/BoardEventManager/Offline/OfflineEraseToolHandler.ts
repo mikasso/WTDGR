@@ -5,11 +5,13 @@ import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
 
-export default class OfflineEraseToolHandler implements IHandler {
+export default class OfflineEraseToolHandler implements IHandler {  
+  private boardManager: BoardManager;
   constructor(
-    private boardManager: BoardManager,
     private highlightHandler: IHandler
-  ) {}
+  ) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setInactive(): void {
     this.highlightHandler.setInactive();
   }

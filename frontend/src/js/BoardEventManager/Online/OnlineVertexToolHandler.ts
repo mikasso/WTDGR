@@ -8,11 +8,13 @@ import { IHandler } from "../IHandler";
 import { isLeftClick } from "../utils";
 
 export default class OnlineVertextoolHandler implements IHandler {
+  private boardManager: BoardManager;
   constructor(
-    private boardManager: BoardManager,
     private actionFactory: ActionFactory,
     private hub: BoardHub
-  ) {}
+  ) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setInactive(): void {}
   setActive(eventManager: BaseBoardEventManager): void {
     eventManager.click = (event) => this.click(event);
