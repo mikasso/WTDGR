@@ -17,10 +17,10 @@ namespace Backend.Core
 
         public readonly UsersManager Users = new();
 
-        private readonly EdgeManager _edgeManager;
-        private readonly VerticesManager _verticesManager;
-        private readonly LayersManager _layersManager = new LayersManager();
-        private readonly LineManager _lineManager = new LineManager();
+        private readonly EdgeManager _edgeManager = new();
+        private readonly VerticesManager _verticesManager = new();
+        private readonly LayersManager _layersManager = new();
+        private readonly LineManager _lineManager = new ();
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         public RoomManager(string id)
@@ -28,9 +28,9 @@ namespace Backend.Core
             Log.Information($"Starting new room. Id: {id}");
             RoomId = id;
             _layersManager.Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer });
-            _verticesManager = new();
-            _edgeManager = new(_verticesManager);
+            _edgeManager.Initialize(_verticesManager);
             _verticesManager.Initialize(_edgeManager);
+            _layersManager.Initialize(_edgeManager, _verticesManager);
         }
         public User CreateOwner(User owner)
         {

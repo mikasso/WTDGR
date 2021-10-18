@@ -18,7 +18,6 @@ export default class BoardHub {
   }
 
   private connection: HubConnection;
-  onCloseMethod: (attempt: number) => Promise<void>;
   constructor(private apiManager: ApiManager, private store: Store<State>) {
     this.connection = new HubConnectionBuilder()
       .withUrl("http://localhost:5000/graphHub")
@@ -46,12 +45,8 @@ export default class BoardHub {
       console.log(text);
     });
 
-    this.onCloseMethod = this.reJoinRoom;
-    const closeHandler = async (that: BoardHub) => {
-      that.store.commit("setOffline");
-      await that.onCloseMethod(0);
-    };
-    this.connection.onclose(async () => closeHandler(this));
+    this.connection.onclose(() => this.store.commit("setOffline"));
+    this.connection.onreconnected(() => this.store.commit("setOnline"));
   }
 
   public sendAction(action: UserAction) {
@@ -80,25 +75,5 @@ export default class BoardHub {
         throw new Error("Error during joinning the room: " + err);
       });
     });
-  }
-
-  public disconnectPromise() {
-    this.onCloseMethod = () => Promise.resolve();
-    return this.connection.stop();
-  }
-
-  private async reJoinRoom(attempt: number) {
-    console.warn("SignalR: attemp to reconnect");
-    await this.joinRoomPromise()
-      .then(() => {
-        this.store.commit("setOnline");
-      })
-      .catch((err: Error) => {
-        console.error(err);
-        setTimeout(
-          async () => this.reJoinRoom(attempt + 1),
-          Math.pow(2, attempt) * 1000
-        );
-      });
   }
 }

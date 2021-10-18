@@ -33,10 +33,7 @@ namespace Backend.Service
             get { return (IGraphHub)Context.Items["Group"]; }
             set { Context.Items.Add("Group", value); }
         }
-        private RoomManager Room
-        {
-            get { return MyUser != null ? RoomsContainer.GetRoom(MyUser.RoomId) : null; }
-        }
+        private RoomManager? Room => MyUser != null ? RoomsContainer.GetRoom(MyUser.RoomId) : null;
         public async Task CreateRoom(User owner)
         {
             var roomManager = RoomsContainer.CreateRoom();
@@ -64,7 +61,8 @@ namespace Backend.Service
             if (Room != null && MyUser != null)
             {
                 Room.Users.Delete(MyUser.Id);
-                Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n{exception.Message}");
+                var additionalInfo = exception == null ? " No exception catched." : exception.Message;
+                Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
             }
         }
         private async Task<bool> AssignUserToContext(User user)

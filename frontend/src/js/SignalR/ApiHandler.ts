@@ -56,7 +56,7 @@ export default class ApiManager {
           this.receiveDelete(action, item);
           break;
         default:
-          throw Error(`Not implement action type ${action.actionType}`);
+          throw Error(`Not implemented action type ${action.actionType}`);
       }
     }
   }
@@ -97,7 +97,7 @@ export default class ApiManager {
             this.boardManager.setCurrentLayer(item.id);
           break;
         default:
-          throw Error(`Not implement add for ${item.type}`);
+          throw Error(`Not implemented add for ${item.type}`);
       }
   }
 
@@ -117,7 +117,7 @@ export default class ApiManager {
           this.boardManager.deleteLayer(item.id);
           break;
         default:
-          throw Error(`Not implement delete for ${item.type}`);
+          throw Error(`Not implemented  delete for ${item.type}`);
       }
   }
 
@@ -142,7 +142,7 @@ export default class ApiManager {
         );
         break;
       default:
-        throw Error(`Not implement edit for ${item.type}`);
+        throw Error(`Not implemented edit for ${item.type}`);
     }
   }
 
@@ -168,7 +168,7 @@ export default class ApiManager {
           } else console.error("cannot edit vertex" + item.id);
           break;
         default:
-          throw Error(`Not implement edit for ${item.type}`);
+          throw Error(`Not implemented  request to edit for ${item.type}`);
       }
   }
 
@@ -190,7 +190,7 @@ export default class ApiManager {
           }
           break;
         default:
-          throw Error(`Not implement edit for ${item.type}`);
+          throw Error(`Not implemented receive edit for ${item.type}`);
       }
   }
 }

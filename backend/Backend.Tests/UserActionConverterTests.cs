@@ -61,7 +61,6 @@ namespace Backend.Tests
                     ""Radius"": 0,
                     ""Fill"": null,
                     ""Stroke"": null,
-                    ""StrokeWidth"": 0,
                     ""Layer"": ""1"",
                     ""EditorId"": null
                   }],

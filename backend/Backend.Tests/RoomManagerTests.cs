@@ -176,6 +176,26 @@ namespace BackendTests
             editResult.IsSucceded.Should().BeTrue();
         }
 
+        [Fact]
+        public async Task NoItemFromTheLayerShouldRestAfterDeletingIt()
+        {
+            var vertex1Id = await AddVertex("User1");
+            var vertex2Id = await AddVertex("User1");
+            await AddEdge("User1", vertex1Id, vertex2Id);
+            
+            var deleteLayer = new UserAction()
+            {
+                ActionType = ActionType.Delete,
+                Items = new List<IRoomItem>() { new Layer() { Type = KonvaType.Layer, Id = "Layer 1"} },
+                UserId = "User1",
+            };
+
+            var deleteResult = await _roomManager.ExecuteAction(deleteLayer);
+            deleteResult.IsSucceded.Should().BeTrue();
+            var image = await _roomManager.GetRoomImage();
+            image.SelectAll.Should().HaveCount(0);
+        }
+
         private async Task<string> AddVertex(string userId, string layerId = "Layer 1")
         {
             var addAction = new UserAction()

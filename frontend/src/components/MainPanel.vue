@@ -128,15 +128,10 @@ export default defineComponent({
           new ActionFactory(this.store.state.user.userId, boardManager)
         );
         this.hub = hub;
-        this.hub?.joinRoomPromise().catch(async () => {
+        this.hub.joinRoomPromise().catch(async () => {
           alert("Failed to connect with hub, switching to ofline");
         });
       } else {
-        if (this.hub !== undefined) {
-          this.hub.disconnectPromise().catch(async () => {
-            alert("Failed to connect with hub, switching to ofline");
-          });
-        }
         this.hub = undefined;
         this.eventManager = new OfflineBoardEventManager(
           boardManager,

@@ -24,11 +24,16 @@ export class ActionFactory {
     item: Konva.NodeConfig | Konva.NodeConfig[]
   ) {
     if (!Array.isArray(item)) {
-      item.layer = this.layerProvider.currentLayer.attrs.id;
+      item.layer = this.specifyLayerId(item);
       return new UserAction(actionType, this.userId, [item]);
     } else {
-      item.every((it) => (it.layer = this.layerProvider.currentLayer.attrs.id));
+      item.every((it) => (it.layer = this.specifyLayerId(item)));
       return new UserAction(actionType, this.userId, item);
     }
+  }
+
+  private specifyLayerId(item: Konva.NodeConfig): string {
+    if (item.layer !== undefined) return item.layer;
+    else return this.layerProvider.currentLayer.attrs.id;
   }
 }

@@ -15,7 +15,7 @@ export interface State {
 export const key: InjectionKey<Store<State>> = Symbol();
 
 function selectColor(number: number) {
-  const hue = number * 137.508; // use golden angle approximation
+  const hue = number * 137.508;
   return `hsl(${hue},50%,75%)`;
 }
 
@@ -51,9 +51,11 @@ export const store = createStore<State>({
   },
   mutations: {
     setOnline(state) {
+      console.log("set online");
       state.isOnline = true;
     },
     setOffline(state) {
+      console.log("set offline");
       state.isOnline = false;
     },
     setUserColor(state, color) {

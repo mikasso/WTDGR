@@ -177,7 +177,6 @@ export default class EdgeManager {
 
   public stopDraggingEdge() {
     if (!this.draggedEdge) return;
-    //this.draggedEdge.updatePosition();
     this.vertexDistances = [0, 0, 0, 0];
     this.draggedEdge = null;
   }
