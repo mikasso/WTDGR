@@ -65,7 +65,8 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-      <a v-on:click="download()" :href="myUrl" download="elo.txt">DOWNLOAD</a>
+      <a v-on:click="download()" :href="myUrl" download="elo.gdf">DOWNLOAD</a>
+      <input type="file" @change="previewFiles" multiple>
     </div>
     <div style="display: flex; align-items: center;">
       <el-tag v-if="!isOnline" class="connBadge" type="danger"
@@ -95,7 +96,7 @@ import "element-plus/dist/index.css";
 import Konva from "konva";
 import { ClassNames } from "../js/KonvaManager/ClassNames";
 import { Vertex } from "../js/KonvaManager/VertexManager";
-import { exportStage } from "../js/Utils/FileUtils";
+import { exportStage, importStage } from "../js/Utils/FileUtils";
 
 interface layerData {
   id: string;
@@ -226,8 +227,11 @@ export default defineComponent({
       });
     },
     download: function() {
-      this.myUrl = exportStage(this.store.state.stage!, "GDF");
+      this.myUrl = exportStage("gdf");
     },
+    previewFiles(event: any) {
+      importStage(event!.target.files[0]);
+    }
   },
 });
 </script>
