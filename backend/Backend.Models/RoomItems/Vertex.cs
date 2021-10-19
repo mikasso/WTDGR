@@ -9,7 +9,6 @@
         public int Radius { get; set; }
         public string Fill { get; set; }
         public string Stroke { get; set; }
-        public int StrokeWidth { get; set; }
         public string Layer { get; set; }
         public string? EditorId { get; set; } = null;
     }

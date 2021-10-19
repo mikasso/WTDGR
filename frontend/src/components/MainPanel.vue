@@ -61,8 +61,8 @@ export default defineComponent({
   watch: {
     isOnline: {
       deep: true,
-      handler(isOnline: boolean) {
-        this.handleConnectionChange(isOnline);
+      async handler(isOnline: boolean) {
+        await this.handleConnectionChange(isOnline);
       },
     },
     currentTool: {
@@ -111,12 +111,12 @@ export default defineComponent({
       windowHeight: height,
     };
   },
-  mounted() {
-    this.handleConnectionChange(this.isOnline);
+  async mounted() {
+    await this.handleConnectionChange(this.isOnline);
   },
   methods: {
-    handleConnectionChange(isOnline: boolean) {
-      this.initalizeStageAndLayers();
+    async handleConnectionChange(isOnline: boolean) {
+      this.initalizeStageAndLayers(isOnline);
       const boardManager = new BoardManager(this.store);
       if (isOnline) {
         const apiManager = new ApiManager(boardManager, this.store);
@@ -128,16 +128,14 @@ export default defineComponent({
           new ActionFactory(this.store.state.user.userId, boardManager)
         );
         this.hub = hub;
-        this.hub?.joinRoomPromise().catch(async () => {
+        this.hub.joinRoom().catch(async () => {
           alert("Failed to connect with hub, switching to ofline");
         });
       } else {
         if (this.hub !== undefined) {
-          this.hub.disconnectPromise().catch(async () => {
-            alert("Failed to connect with hub, switching to ofline");
-          });
+          await this.hub.disconnect();
+          this.hub = undefined;
         }
-        this.hub = undefined;
         this.eventManager = new OfflineBoardEventManager(
           boardManager,
           this.store
@@ -146,17 +144,22 @@ export default defineComponent({
 
       this.eventManager?.toolChanged(this.currentTool);
     },
-    initalizeStageAndLayers() {
-      const initLayer = new Konva.Layer({ id: "Layer 1" });
+    initalizeStageAndLayers(isOnline: boolean) {
       const initStage = new Konva.Stage({
         container: "board",
         width: this.getWidth(),
         height: this.getHeigth(),
       });
-      initStage.add(initLayer);
       this.store.commit("setStage", initStage);
-      this.store.commit("setLayers", [initLayer]);
-      this.store.commit("setCurrentLayer", initLayer);
+      if (isOnline === false) {
+        const initLayer = new Konva.Layer({ id: "Layer 1" });
+        initStage.add(initLayer);
+        this.store.commit("setLayers", [initLayer]);
+        this.store.commit("setCurrentLayer", initLayer);
+      } else {
+        this.store.commit("setLayers", []);
+        this.store.commit("setCurrentLayer", null);
+      }
     },
     getHeigth() {
       if (document.getElementById("root") == null) return 0;

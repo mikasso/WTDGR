@@ -34,10 +34,13 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     super(boardManager, store);
     this.actionFactory = actionFactory;
     this.hub = hub;
+    this.highlightHandler = new OfflineHighlightToolHandler(this.boardManager);
+    this.pencilHandler = new OfflinePencilToolHandler(this.boardManager);
     this.selectHandler = new OnlineSelectToolHandler(
       this.boardManager,
       this.actionFactory,
-      this.hub
+      this.hub,
+      this.highlightHandler
     );
     this.edgeHandler = new OnlineEdgeToolHandler(
       this.boardManager,
@@ -49,9 +52,6 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.actionFactory,
       this.hub
     );
-    this.highlightHandler = new OfflineHighlightToolHandler(this.boardManager);
-    this.pencilHandler = new OfflinePencilToolHandler(this.boardManager);
-
     this.eraseHandler = new OnlineEraseToolHandler(
       this.boardManager,
       this.actionFactory,

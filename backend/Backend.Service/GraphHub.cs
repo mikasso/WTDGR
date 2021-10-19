@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System;
 using Serilog;
 using Backend.Core;
+using System.Collections.Generic;
 
 namespace Backend.Service
 {
@@ -12,12 +13,11 @@ namespace Backend.Service
     {
         Task SendAction(UserAction userAction);
         Task ReceiveAction(UserAction userAction, bool isSucceded = true);
-
         Task ReceiveActionResponse(UserActionFailure actionResponse);
         Task SendText(string message);
         Task ReceiveText(string message);
         Task ReceiveJoinResponse(User user);
-        Task  GetGraph();
+        Task GetGraph(IList<IRoomItem> items);
     }
 
     public partial class GraphHub : Hub<IGraphHub>
@@ -32,10 +32,7 @@ namespace Backend.Service
             get { return (IGraphHub)Context.Items["Group"]; }
             set { Context.Items.Add("Group", value); }
         }
-        private RoomManager Room
-        {
-            get { return MyUser != null ? RoomsContainer.GetRoom(MyUser.RoomId) : null; }
-        }
+        private RoomManager? Room => MyUser != null ? RoomsContainer.GetRoom(MyUser.RoomId) : null;
         public async Task CreateRoom(User owner)
         {
             var roomManager = RoomsContainer.CreateRoom();
@@ -59,31 +56,14 @@ namespace Backend.Service
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "SignalR Users");
             await base.OnDisconnectedAsync(exception);
             if (Room != null && MyUser != null)
             {
                 Room.Users.Delete(MyUser.Id);
-                Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId}");
+                var additionalInfo = exception == null ? " No exception catched." : exception.Message;
+                Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
             }
         }
-        private async Task<bool> AssignUserToContext(User user)
-        {
-            MyUser = user;
-            await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
-            MyGroup = Clients.Group(user.RoomId);
-            return Room.Users.Add(user);
-        }
-
-        private async Task ReplyForJoin(User user)
-        {
-            var message = $"{MyUser.Id}:  has joined the room {MyUser.RoomId}.";
-            await MyGroup.ReceiveText(message);
-            Log.Information(message);
-            await Clients.Caller.ReceiveJoinResponse(user);
-        }
-
-
         public async Task LeaveRoom()
         {
             Room.Users.Delete(MyUser.Id);
@@ -112,16 +92,35 @@ namespace Backend.Service
             }
         }
 
+        private async Task<bool> AssignUserToContext(User user)
+        {
+            MyUser = user;
+            await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
+            MyGroup = Clients.Group(user.RoomId);
+            return Room.Users.Add(user);
+        }
+
+        private async Task ReplyForJoin(User user)
+        {
+            var message = $"{MyUser.Id}:  has joined the room {MyUser.RoomId}.";
+            await MyGroup.ReceiveText(message);
+            Log.Information(message);
+            await Clients.Caller.ReceiveJoinResponse(user);
+            await Clients.Caller.GetGraph((await Room.GetRoomImage()).SelectAll);
+        }
+
         private static bool CanJoinToRoom(User user)
         {
             try
             {
                 var room = RoomsContainer.GetRoom(user.RoomId);
-                return !room.Users.Exists(user.Id);
+                var result = room.Users.Exists(user.Id);
+                if (result) Log.Information($"User already exists in this room, id: {user.Id}");
+                return !result;
             }
             catch (Exception e)
             {
-                Log.Error(e, "User failed to connect ");
+                Log.Error(e, $"User: {user.Id} failed to connect to room: {user.RoomId} The room doesnt exists");
                 return false;
             }
         }

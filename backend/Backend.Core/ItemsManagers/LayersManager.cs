@@ -3,6 +3,8 @@ using Backend.Models.RoomItems;
 using System.Collections.Generic;
 using System.Linq;
 using Serilog;
+using System;
+
 namespace Backend.Core
 {
     internal class LayersManager : IRoomItemsManager
@@ -10,7 +12,14 @@ namespace Backend.Core
         private List<Layer> _layers = new List<Layer>();
         public int Count => _layers.Count;
         private int _layerNameCount = 1;
+        private IRoomItemsManager _edgeManager;
+        private IRoomItemsManager _vertexManager;
 
+        internal void Initialize(EdgeManager edgeManager, VerticesManager verticesManager)
+        {
+            this._edgeManager = edgeManager;
+            this._vertexManager = verticesManager;
+        }
         public bool Add(IRoomItem item) {
             var layer = (Layer)item;
             layer.Id = $"Layer {_layerNameCount}";
@@ -29,12 +38,17 @@ namespace Backend.Core
                 Log.Warning($"Failed to delete layer: \"{Id}\" from layers: {layersStr}");
                 return false;
             }
-            return result;
+
+            var vertexDeleteResult = _vertexManager.GetAll().Cast<Vertex>()
+                .Where(v => v.Layer == Id)
+                .All(toDelete => _vertexManager.Delete(toDelete.Id));   //Removing vertex causes remove all of edges
+            return result && vertexDeleteResult;
         }
 
         public bool Exists(string Id) => GetIndex(Id) != -1;
 
         public IRoomItem Get(string Id) => _layers.Find((Layer layer) => layer.Id == Id);
+
 
         public int GetIndex(string Id)
         {

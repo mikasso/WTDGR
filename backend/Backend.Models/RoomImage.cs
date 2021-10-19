@@ -12,5 +12,7 @@ namespace Backend.Models
         public List<Vertex> Vertices { get; set; }
         public List<Edge> Edges { get; set; }
         public List<Layer> Layers { get; set; }
+
+        public List<IRoomItem>SelectAll { get => Layers.Cast<IRoomItem>().Concat(Vertices).Concat(Edges).ToList(); }
     }
 }

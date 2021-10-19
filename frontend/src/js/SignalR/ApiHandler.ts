@@ -1,6 +1,8 @@
 import { State } from "@/store";
 import Konva from "konva";
+import { NodeConfig } from "konva/types/Node";
 import { Store } from "vuex";
+import { ItemColors } from "../BoardEventManager/utils";
 import BoardManager from "../KonvaManager/BoardManager";
 import { ClassNames } from "../KonvaManager/ClassNames";
 import { Edge, EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
@@ -15,165 +17,183 @@ export enum ActionTypes {
   Delete = "Delete",
 }
 export default class ApiManager {
-  constructor(
+  public constructor(
     private boardManager: BoardManager,
     private store: Store<State>
   ) {}
-
-  private get user() {
-    return this.store.state.user;
-  }
 
   public receiveActionResponse(response: string) {
     console.log(response);
   }
 
-  public receiveAction(action: UserAction, isSucceded: boolean) {
-    console.log("Recieved action", action);
-    switch (action.actionType) {
-      case ActionTypes.Add:
-        this.receiveAdd(action);
-        break;
-      case ActionTypes.Edit:
-        this.receiveEdit(action);
-        break;
-      case ActionTypes.RequestToEdit:
-        this.receiveRequestToEdit(action, isSucceded);
-        break;
-      case ActionTypes.ReleaseItem:
-        this.receiveReleaseItem(action);
-        break;
-      case ActionTypes.Delete:
-        this.receiveDelete(action);
-        break;
-      default:
-        throw Error(`Not implement action type ${action.actionType}`);
+  public loadItems(items: NodeConfig[]) {
+    for (const item of items) {
+      this.receiveAdd("room", item);
     }
   }
 
-  private receiveAdd(action: UserAction) {
-    if (action.item.id)
-      switch (action.item.type) {
+  public receiveAction(action: UserAction, isSucceded: boolean) {
+    console.log("Recieved action", action);
+    for (const item of action.items) {
+      switch (action.actionType) {
+        case ActionTypes.Add:
+          this.receiveAdd(action.userId, item);
+          break;
+        case ActionTypes.Edit:
+          this.receiveEdit(action, item);
+          break;
+        case ActionTypes.RequestToEdit:
+          this.receiveRequestToEdit(action, item, isSucceded);
+          break;
+        case ActionTypes.ReleaseItem:
+          this.receiveReleaseItem(action, item);
+          break;
+        case ActionTypes.Delete:
+          this.receiveDelete(action, item);
+          break;
+        default:
+          throw Error(`Not implemented action type ${action.actionType}`);
+      }
+    }
+  }
+
+  private get user() {
+    return this.store.state.user;
+  }
+
+  private receiveAdd(actionUserId: string, item: NodeConfig) {
+    if (item.id)
+      switch (item.type) {
         case ClassNames.Vertex: {
           const vertex = this.boardManager.createVertex(
             {
-              x: action.item.x as number,
-              y: action.item.y as number,
+              x: item.x as number,
+              y: item.y as number,
             },
-            action.item as Konva.CircleConfig,
-            action.item.layer as string
+            item as Konva.CircleConfig,
+            item.layer as string
           );
           this.boardManager.draw(vertex);
           break;
         }
         case ClassNames.Edge: {
-          console.log(action.item);
-          const edge = this.boardManager.createEdge(action.item as EdgeDTO);
+          console.log(item);
+          const edge = this.boardManager.createEdge(item as EdgeDTO);
           if (edge !== undefined) this.boardManager.draw(edge);
           break;
         }
         case ClassNames.TemporaryLine: {
-          console.log(action.item);
-          const line = this.boardManager.createLine(action.item as LineDTO);
+          console.log(item);
+          const line = this.boardManager.createLine(item as LineDTO);
           if (line !== undefined) this.boardManager.draw(line);
           break;
         }
         case ClassNames.Layer:
-          this.boardManager.receiveAddLayer(action.item.id);
-          if (action.userId === this.user.userId)
-            this.boardManager.setCurrentLayer(action.item.id);
+          this.boardManager.receiveAddLayer(item.id);
+          if (
+            actionUserId === this.user.userId ||
+            this.store.state.currentLayer === undefined ||
+            this.store.state.currentLayer === null
+          )
+            this.boardManager.setCurrentLayer(item.id);
           break;
         default:
-          throw Error(`Not implement add for ${action.item.type}`);
+          throw Error(`Not implemented add for ${item.type}`);
       }
   }
 
-  private receiveDelete(action: UserAction) {
-    if (action.item.id)
-      switch (action.item.type) {
+  private receiveDelete(action: UserAction, item: NodeConfig) {
+    if (item.id)
+      switch (item.type) {
         case ClassNames.Vertex:
-          this.boardManager.eraseVertexById(action.item.id);
+          this.boardManager.eraseVertexById(item.id);
           break;
         case ClassNames.TemporaryLine:
-          this.boardManager.deleteLine(action.item.id);
+          this.boardManager.deleteLine(item.id);
           break;
         case ClassNames.Edge:
-          this.boardManager.deleteEdge(action.item.id);
+          this.boardManager.deleteEdge(item.id);
           break;
         case ClassNames.Layer:
-          this.boardManager.deleteLayer(action.item.id);
+          this.boardManager.deleteLayer(item.id);
           break;
         default:
-          throw Error(`Not implement delete for ${action.item.type}`);
+          throw Error(`Not implemented  delete for ${item.type}`);
       }
   }
 
-  private receiveEdit(action: UserAction) {
-    switch (action.item.type) {
+  private receiveEdit(action: UserAction, item: NodeConfig) {
+    switch (item.type) {
       case ClassNames.Vertex:
-        this.boardManager.updateVertex(action.item);
+        this.boardManager.updateVertex(item);
         break;
+      case ClassNames.Edge: {
+        const edge = this.boardManager.findById(item.id) as Edge;
+        edge.setAttrs(item);
+        edge.redraw();
+        break;
+      }
       case ClassNames.TemporaryLine:
-        this.boardManager.editLine(action.item as LineDTO);
+        this.boardManager.editLine(item as LineDTO);
         break;
       case ClassNames.Layer:
         this.boardManager.reorderLayers(
-          action.item.id! as string,
-          action.item.replaceWithId! as string
+          item.id as string,
+          item.replaceWithId as string
         );
         break;
       default:
-        throw Error(`Not implement edit for ${action.item.type}`);
+        throw Error(`Not implemented edit for ${item.type}`);
     }
   }
 
-  private receiveRequestToEdit(action: UserAction, isSucceded: boolean) {
-    if (action.item.id)
-      switch (action.item.type) {
+  private receiveRequestToEdit(
+    action: UserAction,
+    item: NodeConfig,
+    isSucceded: boolean
+  ) {
+    if (item.id)
+      switch (item.type) {
         case ClassNames.Vertex:
           if (isSucceded) {
-            const vertex = this.boardManager.findById(action.item.id) as Vertex;
-            this.boardManager.setHighlight(vertex, true);
             if (this.store.state.user.userId === action.userId) {
-              this.boardManager.setFollowMousePointerById(action.item.id, true);
+              this.boardManager.setFollowMousePointerById(item.id, true);
             }
-          } else console.error("cannot edit vertex" + action.item.id);
+          } else console.error("cannot edit vertex" + item.id);
           break;
         case ClassNames.Edge:
           if (isSucceded) {
-            const edge = this.boardManager.findById(action.item.id) as Edge;
-            this.boardManager.setHighlight(edge, true);
-            this.boardManager.setHighlight(edge.v1, true);
-            this.boardManager.setHighlight(edge.v2, true);
             if (this.store.state.user.userId === action.userId) {
-              this.boardManager.setFollowMousePointerById(action.item.id, true);
+              this.boardManager.setFollowMousePointerById(item.id, true);
             }
-          } else console.error("cannot edit vertex" + action.item.id);
+          } else console.error("cannot edit vertex" + item.id);
           break;
         default:
-          throw Error(`Not implement edit for ${action.item.type}`);
+          throw Error(`Not implemented  request to edit for ${item.type}`);
       }
   }
 
-  private receiveReleaseItem(action: UserAction) {
-    if (action.item.id)
-      switch (action.item.type) {
+  private receiveReleaseItem(action: UserAction, item: NodeConfig) {
+    if (item.id)
+      switch (item.type) {
         case ClassNames.Vertex:
           {
-            const vertex = this.boardManager.findById(action.item.id) as Vertex;
-            this.boardManager.setHighlight(vertex, false);
+            const vertex = this.boardManager.findById(item.id) as Vertex;
+            vertex.setAttrs({
+              stroke: ItemColors.defaultStroke,
+            });
+            vertex.redraw();
           }
           break;
         case ClassNames.Edge:
           {
-            const edge = this.boardManager.findById(action.item.id) as Edge;
-            this.boardManager.setHighlight(edge, false);
-            this.boardManager.setHighlight(edge.v1, false);
-            this.boardManager.setHighlight(edge.v2, false);
+            const edge = this.boardManager.findById(item.id) as Edge;
+            edge.setAttrs({ stroke: ItemColors.defaultStroke });
+            edge.redraw();
           }
           break;
         default:
-          throw Error(`Not implement edit for ${action.item.type}`);
+          throw Error(`Not implemented receive edit for ${item.type}`);
       }
   }
 }

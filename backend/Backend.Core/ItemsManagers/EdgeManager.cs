@@ -7,9 +7,9 @@ namespace Backend.Core
 {
     public class EdgeManager : IRoomItemsManager
     {
-        private readonly VerticesManager _verticesManager;
+        private VerticesManager _verticesManager;
         private readonly Dictionary<string, Edge> _edges = new Dictionary<string, Edge>();
-        public EdgeManager(VerticesManager verticesManager)
+        public void Initialize(VerticesManager verticesManager)
         {
             _verticesManager = verticesManager;
         }
@@ -31,8 +31,7 @@ namespace Backend.Core
 
         internal bool DeleteWithVertex(string id) => EdgesList
                 .Where(x => x.V1 == id || x.V2 == id)
-                .Select(x => Delete(x.Id))
-                .All(x => x);
+                .All(x => Delete(x.Id));
         
         public bool Delete(string Id) => _edges.Remove(Id);
 
