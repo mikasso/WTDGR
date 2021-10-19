@@ -61,8 +61,8 @@ export default defineComponent({
   watch: {
     isOnline: {
       deep: true,
-      handler(isOnline: boolean) {
-        this.handleConnectionChange(isOnline);
+      async handler(isOnline: boolean) {
+        await this.handleConnectionChange(isOnline);
       },
     },
     currentTool: {
@@ -111,11 +111,11 @@ export default defineComponent({
       windowHeight: height,
     };
   },
-  mounted() {
-    this.handleConnectionChange(this.isOnline);
+  async mounted() {
+    await this.handleConnectionChange(this.isOnline);
   },
   methods: {
-    handleConnectionChange(isOnline: boolean) {
+    async handleConnectionChange(isOnline: boolean) {
       this.initalizeStageAndLayers(isOnline);
       const boardManager = new BoardManager(this.store);
       if (isOnline) {
@@ -128,11 +128,14 @@ export default defineComponent({
           new ActionFactory(this.store.state.user.userId, boardManager)
         );
         this.hub = hub;
-        this.hub.joinRoomPromise().catch(async () => {
+        this.hub.joinRoom().catch(async () => {
           alert("Failed to connect with hub, switching to ofline");
         });
       } else {
-        this.hub = undefined;
+        if (this.hub !== undefined) {
+          await this.hub.disconnect();
+          this.hub = undefined;
+        }
         this.eventManager = new OfflineBoardEventManager(
           boardManager,
           this.store
@@ -153,6 +156,9 @@ export default defineComponent({
         initStage.add(initLayer);
         this.store.commit("setLayers", [initLayer]);
         this.store.commit("setCurrentLayer", initLayer);
+      } else {
+        this.store.commit("setLayers", []);
+        this.store.commit("setCurrentLayer", null);
       }
     },
     getHeigth() {

@@ -17,14 +17,10 @@ export enum ActionTypes {
   Delete = "Delete",
 }
 export default class ApiManager {
-  constructor(
+  public constructor(
     private boardManager: BoardManager,
     private store: Store<State>
   ) {}
-
-  private get user() {
-    return this.store.state.user;
-  }
 
   public receiveActionResponse(response: string) {
     console.log(response);
@@ -61,6 +57,10 @@ export default class ApiManager {
     }
   }
 
+  private get user() {
+    return this.store.state.user;
+  }
+
   private receiveAdd(actionUserId: string, item: NodeConfig) {
     if (item.id)
       switch (item.type) {
@@ -92,7 +92,8 @@ export default class ApiManager {
           this.boardManager.receiveAddLayer(item.id);
           if (
             actionUserId === this.user.userId ||
-            this.store.state.currentLayer === undefined
+            this.store.state.currentLayer === undefined ||
+            this.store.state.currentLayer === null
           )
             this.boardManager.setCurrentLayer(item.id);
           break;
@@ -137,8 +138,8 @@ export default class ApiManager {
         break;
       case ClassNames.Layer:
         this.boardManager.reorderLayers(
-          item.id! as string,
-          item.replaceWithId! as string
+          item.id as string,
+          item.replaceWithId as string
         );
         break;
       default:
@@ -178,7 +179,9 @@ export default class ApiManager {
         case ClassNames.Vertex:
           {
             const vertex = this.boardManager.findById(item.id) as Vertex;
-            vertex.setAttrs({ stroke: ItemColors.defaultStroke });
+            vertex.setAttrs({
+              stroke: ItemColors.defaultStroke,
+            });
             vertex.redraw();
           }
           break;

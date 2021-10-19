@@ -13,7 +13,6 @@ namespace Backend.Service
     {
         Task SendAction(UserAction userAction);
         Task ReceiveAction(UserAction userAction, bool isSucceded = true);
-
         Task ReceiveActionResponse(UserActionFailure actionResponse);
         Task SendText(string message);
         Task ReceiveText(string message);
@@ -65,23 +64,6 @@ namespace Backend.Service
                 Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
             }
         }
-        private async Task<bool> AssignUserToContext(User user)
-        {
-            MyUser = user;
-            await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
-            MyGroup = Clients.Group(user.RoomId);
-            return Room.Users.Add(user);
-        }
-
-        private async Task ReplyForJoin(User user)
-        {
-            var message = $"{MyUser.Id}:  has joined the room {MyUser.RoomId}.";
-            await MyGroup.ReceiveText(message);
-            Log.Information(message);
-            await Clients.Caller.ReceiveJoinResponse(user);
-            await Clients.Caller.GetGraph((await Room.GetRoomImage()).SelectAll);
-        }
-
         public async Task LeaveRoom()
         {
             Room.Users.Delete(MyUser.Id);
@@ -108,6 +90,23 @@ namespace Backend.Service
             {
                 Log.Error($"Cannot execute action for user {userAction.UserId}\n" + userAction.ToString());
             }
+        }
+
+        private async Task<bool> AssignUserToContext(User user)
+        {
+            MyUser = user;
+            await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
+            MyGroup = Clients.Group(user.RoomId);
+            return Room.Users.Add(user);
+        }
+
+        private async Task ReplyForJoin(User user)
+        {
+            var message = $"{MyUser.Id}:  has joined the room {MyUser.RoomId}.";
+            await MyGroup.ReceiveText(message);
+            Log.Information(message);
+            await Clients.Caller.ReceiveJoinResponse(user);
+            await Clients.Caller.GetGraph((await Room.GetRoomImage()).SelectAll);
         }
 
         private static bool CanJoinToRoom(User user)

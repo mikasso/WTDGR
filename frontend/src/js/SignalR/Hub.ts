@@ -2,6 +2,7 @@ import { State } from "@/store";
 import {
   HubConnection,
   HubConnectionBuilder,
+  HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
 import { NodeConfig } from "konva/types/Node";
@@ -10,13 +11,6 @@ import UserAction from "./Action";
 import ApiManager from "./ApiHandler";
 
 export default class BoardHub {
-  userColor() {
-    return this.store.state.userColor;
-  }
-  private get user() {
-    return this.store.state.user;
-  }
-
   private connection: HubConnection;
   constructor(private apiManager: ApiManager, private store: Store<State>) {
     this.connection = new HubConnectionBuilder()
@@ -49,6 +43,13 @@ export default class BoardHub {
     this.connection.onreconnected(() => this.store.commit("setOnline"));
   }
 
+  public userColor() {
+    return this.store.state.userColor;
+  }
+  private get user() {
+    return this.store.state.user;
+  }
+
   public sendAction(action: UserAction) {
     return this.connection
       .invoke("SendAction", action)
@@ -64,7 +65,7 @@ export default class BoardHub {
     });
   }
 
-  public joinRoomPromise() {
+  public joinRoom() {
     return this.connection.start().then(() => {
       const request = {
         Id: this.user.userId,
@@ -75,5 +76,10 @@ export default class BoardHub {
         throw new Error("Error during joinning the room: " + err);
       });
     });
+  }
+
+  public async disconnect() {
+    if (this.connection.state == HubConnectionState.Connected)
+      return await this.connection.stop();
   }
 }
