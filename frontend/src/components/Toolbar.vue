@@ -65,9 +65,10 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-      <a v-on:click="download()" :href="myUrl" download="elo.gdf">DOWNLOAD</a>
-      <input type="file" @change="previewFiles" multiple>
     </div>
+    <el-button @click="openFileHandler">
+      FILES
+    </el-button>
     <div style="display: flex; align-items: center;">
       <el-tag v-if="!isOnline" class="connBadge" type="danger"
         >Disconnected</el-tag
@@ -96,7 +97,6 @@ import "element-plus/dist/index.css";
 import Konva from "konva";
 import { ClassNames } from "../js/KonvaManager/ClassNames";
 import { Vertex } from "../js/KonvaManager/VertexManager";
-import { exportStage, importStage } from "../js/Utils/FileUtils";
 
 interface layerData {
   id: string;
@@ -202,7 +202,6 @@ export default defineComponent({
       edge_style: "line",
     },
     drag: false,
-    myUrl: "",
   }),
   methods: {
     highlightLayer(layerId: string, on: boolean) {
@@ -226,12 +225,11 @@ export default defineComponent({
         },
       });
     },
-    download: function() {
-      this.myUrl = exportStage("gdf");
+    openFileHandler() {
+      this.emit("toolbarAction", {
+        type: "openFileHandler",
+      });
     },
-    previewFiles(event: any) {
-      importStage(event!.target.files[0]);
-    }
   },
 });
 </script>
