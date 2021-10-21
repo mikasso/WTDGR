@@ -93,6 +93,32 @@ namespace BackendTests
         }
 
         [Fact]
+        public async Task EditShouldNotChangeEditor()
+        {
+            var vertexId = await AddVertex("User1");
+            var requestAction = new UserAction()
+            {
+                ActionType = ActionType.RequestToEdit,
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
+                UserId = "User1"
+            };
+            var requestResult = await _roomManager.ExecuteAction(requestAction);
+            requestResult.IsSucceded.Should().Be(true);
+
+            var editAction = new UserAction()
+            {
+                ActionType = ActionType.Edit,
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex, EditorId=null } },
+                UserId = "User1"
+            };
+            var editResult = await _roomManager.ExecuteAction(editAction);
+            var vertex = (await _roomManager.GetRoomImage()).Vertices[0];
+            editResult.IsSucceded.Should().Be(true);
+            vertex.EditorId.Should().Be("User1");
+
+        }
+
+        [Fact]
         public async Task ShouldConnectVerticesWhenLayOnTheSameLayer()
         {
             var vertex1Id = await AddVertex("User1");
@@ -123,6 +149,19 @@ namespace BackendTests
             var vertex2Id = await AddVertex("User1", "Layer 2");
             var addEdgeResult = await AddEdge("User1", vertex1Id, vertex2Id);
             addEdgeResult.IsSucceded.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task ShouldNotConnectTheSameVerticesTwice()
+        {
+            var vertex1Id = await AddVertex("User1");
+            var vertex2Id = await AddVertex("User2");
+            var addEdgeResult1 = await AddEdge("User1", vertex1Id, vertex2Id);
+            var addEdgeResult2 = await AddEdge("User1", vertex1Id, vertex2Id);
+            var addEdgeResult3 = await AddEdge("User2",  vertex2Id,vertex1Id);
+            addEdgeResult1.IsSucceded.Should().Be(true);
+            addEdgeResult2.IsSucceded.Should().Be(false);
+            addEdgeResult3.IsSucceded.Should().Be(false);
         }
 
         [Fact]

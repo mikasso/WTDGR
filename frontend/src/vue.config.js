@@ -16,12 +16,4 @@ module.exports = {
         };
       });
   },
-  devServer: {
-    proxy: {
-      "^/graphHub": {
-        target: "http://localhost:5000",
-        changeOrigin: true,
-      },
-    },
-  },
 };

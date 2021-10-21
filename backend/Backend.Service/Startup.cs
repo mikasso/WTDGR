@@ -3,10 +3,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
 using Backend.Core;
 using Backend.Models;
-using Backend.Core.MongoUtils;
 
 namespace Backend.Service
 {
@@ -25,22 +23,12 @@ namespace Backend.Service
             };
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
-            services.AddSingleton<IDatabaseSettings>(sp => sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
-            //Dependency inversion for this classes
-
-            services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IRoomService, RoomService>();
             //Start room 1 TODO delete this line
             RoomsContainer.CreateRoom();
             //Configure SPA service 
-            services.AddSpaStaticFiles(configuration: options => { options.RootPath = "wwwroot"; });
             services.AddControllers();
-
             services.AddCors(options =>
             {
                 options.AddPolicy(vue.CorsPolicyName, builder =>
@@ -51,38 +39,23 @@ namespace Backend.Service
                     .AllowCredentials();
                 });
             });
-
-
             services.AddSignalR().AddNewtonsoftJsonProtocol((x) =>
             {
                 x.PayloadSerializerSettings.Converters.Add(new RoomItemConverter());
             });
-            services.AddMvc(option => option.EnableEndpointRouting = false).AddNewtonsoftJson();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseRouting();
-
             app.UseCors(vue.CorsPolicyName);
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<GraphHub>("/graphHub");
-            });
-
-            app.UseSpaStaticFiles();
-            app.UseSpa(configuration: builder =>
-            {
-                if (env.IsDevelopment())
-                {
-                    builder.UseProxyToSpaDevelopmentServer(vue.Url);
-                }
             });
         }
     }

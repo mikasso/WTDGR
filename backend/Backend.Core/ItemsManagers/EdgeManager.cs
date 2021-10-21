@@ -22,7 +22,7 @@ namespace Backend.Core
             var v1 = (Vertex)_verticesManager.Get(edge.V1);
             var v2 = (Vertex)_verticesManager.Get(edge.V2);
             if (v1 != null && v2 != null && v1.Layer == v2.Layer &&
-                    !EdgesList.Any(x => x.V1 == edge.V1 && x.V2 == edge.V2))
+                    !EdgesList.Any(x => (x.V1 == edge.V1 && x.V2 == edge.V2) || (x.V1 == edge.V2 && x.V2 == edge.V1)))
             {
                 return _edges.TryAdd(edge.Id, edge);
             }

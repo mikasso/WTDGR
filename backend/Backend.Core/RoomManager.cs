@@ -119,6 +119,7 @@ namespace Backend.Core
                         actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
                         break;
                     case ActionType.Edit:
+                        item.EditorId = userAction.UserId;
                         actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
                         break;
                     case ActionType.Delete:
