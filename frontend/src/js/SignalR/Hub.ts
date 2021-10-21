@@ -7,14 +7,15 @@ import {
 } from "@microsoft/signalr";
 import { NodeConfig } from "konva/types/Node";
 import { Store } from "vuex";
+import { getAppConfig } from "../BoardEventManager/utils";
 import UserAction from "./Action";
 import ApiManager from "./ApiHandler";
-
 export default class BoardHub {
   private connection: HubConnection;
   constructor(private apiManager: ApiManager, private store: Store<State>) {
+    const config = getAppConfig();
     this.connection = new HubConnectionBuilder()
-      .withUrl("http://localhost:5000/graphHub")
+      .withUrl(config.hubEndPoint)
       .configureLogging(LogLevel.Information)
       .build();
 
