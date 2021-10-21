@@ -25,12 +25,13 @@ function getFormater(hub: BoardHub, fileExtension: string) {
 }
 
 abstract class Formater {
+  boardManager: BoardManager;
   stage: Konva.Stage;
   store: Store<State>;
   constructor(private hub: BoardHub) {
-    const boardManager = BoardManager.getBoardManager();
-    this.store = boardManager.store;
-    this.stage = boardManager.store.state.stage!;
+    this.boardManager = BoardManager.getBoardManager();
+    this.store = this.boardManager.store;
+    this.stage = this.boardManager.store.state.stage!;
   }
 
   exportStage(): string {
@@ -43,20 +44,34 @@ abstract class Formater {
   abstract stageToString(): string;
   abstract fileToStage(file: File): void;
 
-  createVertex(position: Cordinates, id: string) {
-    const boardManager = BoardManager.getBoardManager();
+  createVertex(position: Cordinates) {
+    const vertex = this.boardManager.createVertex(position);
     if (this.store.state.isOnline) {
-      const vertex = boardManager.createVertex(position);
       const actionFactory = new ActionFactory(
         this.store.state.user.userId,
-        boardManager
+        this.boardManager
       );
       const action = actionFactory.create(ActionTypes.Add, vertex.asDTO());
       this.hub.sendAction(action);
     } else {
-      const vertex = boardManager.createVertex(position);
-      vertex.id(id);
-      boardManager.draw(vertex);
+      this.boardManager.draw(vertex);
+    }
+  }
+
+  createEdge(v1: Vertex, v2: Vertex) {
+    const line = this.boardManager.startDrawingLine(v1);
+    if (line) this.boardManager.addLine(line);
+    const edge = this.boardManager.connectVertexes(v2);
+    if (edge == undefined) return;
+    if (this.store.state.isOnline) {
+      const actionFactory = new ActionFactory(
+        this.store.state.user.userId,
+        this.boardManager
+      );
+      const action = actionFactory.create(ActionTypes.Add, edge.asDTO());
+      this.hub.sendAction(action);
+    } else {
+      this.boardManager.addEdge(edge);
     }
   }
 
@@ -96,16 +111,52 @@ class GdfFormater extends Formater {
     return nodesString + edgesString;
   }
 
-  fileToStage(file: File) {
+  async fileToStage(file: File) {
     const reader = new FileReader();
     reader.readAsText(file);
-    reader.onload = () => {
+    reader.onload = async () => {
       const result = reader.result as string;
+      const addedVertexes: { [name: string]: Cordinates } = {};
+
       const fileLines = result.split("\n");
       let i = 1;
       while (!fileLines[i].includes("edgedef")) {
         const vertexData = this.readVertexData(fileLines[i]);
-        this.createVertex(vertexData.cords, vertexData.id);
+        this.createVertex(vertexData.cords);
+        addedVertexes[vertexData.id] = vertexData.cords;
+        i++;
+      }
+      i++;
+      const edgesToSkip: string[] = [];
+      while (fileLines[i]) {
+        const edgeData = this.readEdgeData(fileLines[i]);
+        if (edgesToSkip.includes(edgeData.v1 + edgeData.v2)) {
+          i++;
+          continue;
+        }
+
+        const v1Cords = addedVertexes[edgeData.v1];
+        const v2Cords = addedVertexes[edgeData.v2];
+
+        const retries = 0;
+        let v1;
+        let v2;
+        while (retries < 10) {
+          v1 = this.findVertexByCords(v1Cords);
+          v2 = this.findVertexByCords(v2Cords);
+          if (v1 && v2) {
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 200));
+        }
+
+        if (!v1 || !v2) {
+          i++;
+          continue;
+        }
+        this.createEdge(v1, v2);
+
+        edgesToSkip.push(edgeData.v2 + edgeData.v1);
         i++;
       }
     };
@@ -122,5 +173,23 @@ class GdfFormater extends Formater {
       id: id,
       cords: cords,
     };
+  }
+
+  readEdgeData(line: string) {
+    const args = line.split(",");
+    return {
+      v1: args[0],
+      v2: args[1],
+    };
+  }
+
+  findVertexByCords(cords: Cordinates) {
+    const layers = this.getLayers();
+    for (const layer of layers) {
+      const vertexes = this.getVertexes(layer as Konva.Layer);
+      for (const vertex of vertexes) {
+        if (vertex.x() == cords.x && vertex.y() == cords.y) return vertex;
+      }
+    }
   }
 }
