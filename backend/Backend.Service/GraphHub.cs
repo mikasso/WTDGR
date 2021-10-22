@@ -22,6 +22,11 @@ namespace Backend.Service
 
     public partial class GraphHub : Hub<IGraphHub>
     {
+        private IRoomsContainer _roomsContainer;
+        public GraphHub(IRoomsContainer roomsContainer) 
+        {
+            _roomsContainer = roomsContainer;
+        }
         private User MyUser
         {
             get { return (User)Context.Items["User"]; }
@@ -32,10 +37,10 @@ namespace Backend.Service
             get { return (IGraphHub)Context.Items["Group"]; }
             set { Context.Items.Add("Group", value); }
         }
-        private RoomManager? Room => MyUser != null ? RoomsContainer.GetRoom(MyUser.RoomId) : null;
+        private IRoomManager? Room => MyUser != null ? _roomsContainer.GetRoom(MyUser.RoomId) : null;
         public async Task CreateRoom(User owner)
         {
-            var roomManager = RoomsContainer.CreateRoom();
+            var roomManager = _roomsContainer.CreateRoom();
             owner = roomManager.CreateOwner(owner);
             await AssignUserToContext(owner);
             await ReplyForJoin(owner);
@@ -59,9 +64,14 @@ namespace Backend.Service
             await base.OnDisconnectedAsync(exception);
             if (Room != null && MyUser != null)
             {
-                Room.Users.Delete(MyUser.Id);
                 var additionalInfo = exception == null ? " No exception catched." : exception.Message;
                 Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
+                var actionResults = Room.HandleUserDisconnectAsync(MyUser.Id);
+                await foreach(ActionResult actionResult in actionResults)
+                {
+                    await HandleReceiveActionResult(actionResult,MyUser.Id);
+                }
+                Room.Users.Delete(MyUser.Id);
             }
         }
         public async Task LeaveRoom()
@@ -83,12 +93,17 @@ namespace Backend.Service
             {
                 await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason="You re not in any group"});
             }
-            var actionResult = await Room.ExecuteAction(userAction);
+            var actionResult = await Room.ExecuteActionAsync(userAction);
+            await HandleReceiveActionResult(actionResult, userAction.UserId);
+        }
+
+        private async Task HandleReceiveActionResult(ActionResult actionResult, string userId)
+        {
             var receiver = actionResult.Receviers == Receviers.all ? MyGroup : Clients.Caller;
             await receiver.ReceiveAction(actionResult.UserAction, actionResult.IsSucceded);
             if (!actionResult.IsSucceded)
             {
-                Log.Error($"Cannot execute action for user {userAction.UserId}\n" + userAction.ToString());
+                Log.Error($"Cannot execute action for user {userId}\n");
             }
         }
 
@@ -106,14 +121,14 @@ namespace Backend.Service
             await MyGroup.ReceiveText(message);
             Log.Information(message);
             await Clients.Caller.ReceiveJoinResponse(user);
-            await Clients.Caller.GetGraph((await Room.GetRoomImage()).SelectAll);
+            await Clients.Caller.GetGraph(Room.GetRoomImage());
         }
 
-        private static bool CanJoinToRoom(User user)
+        private bool CanJoinToRoom(User user)
         {
             try
             {
-                var room = RoomsContainer.GetRoom(user.RoomId);
+                var room = _roomsContainer.GetRoom(user.RoomId);
                 var result = room.Users.Exists(user.Id);
                 if (result) Log.Information($"User already exists in this room, id: {user.Id}");
                 return !result;

@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, computed } from "vue";
 import OnlineBoardEventManager from "../js/BoardEventManager/OnlineBoardEventManager";
 import OfflineBoardEventManager from "../js/BoardEventManager/OfflineBoardEventManager";
 import BoardManager from "../js/KonvaManager/BoardManager";
@@ -34,11 +34,6 @@ import { useStore } from "vuex";
 import { key, State } from "../store";
 import { useWindowSize } from "vue-window-size";
 import Toolbar from "./Toolbar.vue";
-
-interface User {
-  userId: string;
-  roomId: string;
-}
 
 interface BoardData {
   eventManager?: BaseBoardEventManager;
@@ -117,6 +112,9 @@ export default defineComponent({
   methods: {
     async handleConnectionChange(isOnline: boolean) {
       this.initalizeStageAndLayers(isOnline);
+      if (this.eventManager !== undefined) {
+        this.eventManager.toolChanged("None");
+      }
       const boardManager = new BoardManager(this.store);
       if (isOnline) {
         const apiManager = new ApiManager(boardManager, this.store);

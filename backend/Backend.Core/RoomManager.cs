@@ -15,22 +15,23 @@ namespace Backend.Core
         public string RoomId { get; init; }
         public User Owner { get; private set; }
 
-        public readonly UsersManager Users = new();
 
-        private readonly EdgeManager _edgeManager = new();
-        private readonly VerticesManager _verticesManager = new();
-        private readonly LayersManager _layersManager = new();
-        private readonly LineManager _lineManager = new ();
+        public IRoomUsersManager Users { get; init; }
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
-        public RoomManager(string id)
+        private readonly IRoomItemsManager _verticesManager;
+        private readonly IRoomItemsManager _edgeManager;
+        private readonly IRoomItemsManager _lineManager;
+        private readonly IRoomItemsManager _layersManager;
+        public RoomManager(string id, IRoomUsersManager usersManager, IRoomItemsManager verticesManager, IRoomItemsManager edgeManager, IRoomItemsManager lineManager, IRoomItemsManager layersManager)
         {
             Log.Information($"Starting new room. Id: {id}");
             RoomId = id;
-            _layersManager.Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer });
-            _edgeManager.Initialize(_verticesManager);
-            _verticesManager.Initialize(_edgeManager);
-            _layersManager.Initialize(_edgeManager, _verticesManager);
+            Users = usersManager;
+            _verticesManager = verticesManager;
+            _edgeManager = edgeManager;
+            _lineManager = lineManager;
+            _layersManager = layersManager;
         }
         public User CreateOwner(User owner)
         {
@@ -42,17 +43,48 @@ namespace Backend.Core
             return owner;
         }
 
-        public async Task<RoomImage> GetRoomImage()
+        public async IAsyncEnumerable<ActionResult> HandleUserDisconnectAsync(string userId)
         {
-            return new RoomImage()
+            var actionsToExcute = new List<UserAction>();
+            var line = _lineManager.GetAll().FirstOrDefault(x => x.EditorId == userId);
+            if (line != default)
             {
-                Vertices = _verticesManager.GetAll().Cast<Vertex>().ToList(),
-                Edges = _edgeManager.GetAll().Cast<Edge>().ToList(),
-                Layers = _layersManager.GetAll().Cast<Layer>().ToList(),
-            };
+                actionsToExcute.Add(new UserAction()
+                {
+                    ActionType = ActionType.Delete,
+                    Items = new List<IRoomItem>(){ new Line() { Id = line.Id, Type = KonvaType.Line } },
+                    UserId = userId
+                });
+            }
+
+            var edges = _edgeManager.GetAll().Where(x => x.EditorId == userId);
+            var vertices = _verticesManager.GetAll().Where(x => x.EditorId == userId);
+            var items = edges.Concat(vertices).ToList();
+            if (items.Count >= 1)
+            {
+                var releaseAction = new UserAction()
+                {
+                    ActionType = ActionType.ReleaseItem,
+                    Items = items,
+                    UserId = userId
+
+                };
+                actionsToExcute.Add(releaseAction);
+            }
+            foreach (var userAction in actionsToExcute)
+                yield return await ExecuteActionAsync(userAction);
         }
 
-        public async Task<ActionResult> ExecuteAction(UserAction userAction)
+        public IList<IRoomItem> GetRoomImage()
+        {
+            return _layersManager.GetAll()
+                .Concat(_verticesManager.GetAll())
+                .Concat(_edgeManager.GetAll())
+                .Concat(_lineManager.GetAll())
+                .ToList();
+        }
+
+        public async Task<ActionResult> ExecuteActionAsync(UserAction userAction)
         {
             var actionResult = new ActionResult() { IsSucceded = false, Receviers = Receviers.caller };
             try
@@ -108,17 +140,23 @@ namespace Backend.Core
                     case ActionType.Add:
                         if (item.Id == null)
                             item.Id = Guid.NewGuid().ToString();
-                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Add(item); });
+                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Add(item,userId); });
                         break;
                     case ActionType.RequestToEdit:
-                        item.EditorId = userAction.UserId;
-                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
+                        item.EditorId = userId;
+                        //var user = Users.Get(userId);
+                        actions.Add(() =>
+                        {
+                            throwIfNotFree(item, userId);
+                            return itemManager.Update(item);
+                        });
                         break;
                     case ActionType.ReleaseItem:
                         item.EditorId = null;
                         actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
                         break;
                     case ActionType.Edit:
+                        item.EditorId = userId;
                         actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
                         break;
                     case ActionType.Delete:
@@ -164,7 +202,6 @@ namespace Backend.Core
                 _ => throw new NotImplementedException(),
             };
         }
-
 
 
     }

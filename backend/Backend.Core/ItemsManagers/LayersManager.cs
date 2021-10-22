@@ -11,16 +11,17 @@ namespace Backend.Core
     {
         private List<Layer> _layers = new List<Layer>();
         public int Count => _layers.Count;
-        private int _layerNameCount = 1;
-        private IRoomItemsManager _edgeManager;
+        private int _layerNameCount ;
         private IRoomItemsManager _vertexManager;
 
-        internal void Initialize(EdgeManager edgeManager, VerticesManager verticesManager)
+        public void Initialize(IRoomItemsManager verticesManager)
         {
-            this._edgeManager = edgeManager;
-            this._vertexManager = verticesManager;
+            _vertexManager = verticesManager;
+            _layerNameCount = 1;
+            Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer },"");
         }
-        public bool Add(IRoomItem item) {
+        public bool Add(IRoomItem item,string userId)
+        {
             var layer = (Layer)item;
             layer.Id = $"Layer {_layerNameCount}";
             _layerNameCount++;
@@ -30,7 +31,7 @@ namespace Backend.Core
 
         public bool Delete(string Id)
         {
-            bool result = _layers.Remove((Layer) Get(Id));
+            bool result = _layers.Remove((Layer)Get(Id));
             if (!result)
             {
                 string layersStr = "";
@@ -54,7 +55,7 @@ namespace Backend.Core
         {
             for (int i = 0; i < _layers.Count; i++)
             {
-                if (_layers[i].Id == Id) return i; 
+                if (_layers[i].Id == Id) return i;
             }
             return -1;
         }
@@ -65,7 +66,7 @@ namespace Backend.Core
         {
             if (Exists(obj.Id))
             {
-                Layer layer = (Layer) obj;
+                Layer layer = (Layer)obj;
                 if (layer.ReplaceWithId != null)
                 {
                     int replaceWithIndex = GetIndex(layer.ReplaceWithId);
