@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Backend.Core;
 using Backend.Models;
+using Microsoft.AspNet.SignalR;
 
 namespace Backend.Service
 {
@@ -26,7 +27,8 @@ namespace Backend.Service
         public void ConfigureServices(IServiceCollection services)
         {
             //Start room 1 TODO delete this line
-            RoomsContainer.CreateRoom();
+            services.AddSingleton<IRoomManagerFactory, RoomManagerFactory>();
+            services.AddSingleton<IRoomsContainer, RoomsContainer>();
             //Configure SPA service 
             services.AddControllers();
             services.AddCors(options =>

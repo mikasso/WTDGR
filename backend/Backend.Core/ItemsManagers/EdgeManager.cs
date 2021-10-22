@@ -7,9 +7,9 @@ namespace Backend.Core
 {
     public class EdgeManager : IRoomItemsManager
     {
-        private VerticesManager _verticesManager;
+        private IRoomItemsManager _verticesManager;
         private readonly Dictionary<string, Edge> _edges = new Dictionary<string, Edge>();
-        public void Initialize(VerticesManager verticesManager)
+        public void Initialize(IRoomItemsManager verticesManager)
         {
             _verticesManager = verticesManager;
         }
@@ -21,7 +21,7 @@ namespace Backend.Core
             var edge = (Edge)item;
             var v1 = (Vertex)_verticesManager.Get(edge.V1);
             var v2 = (Vertex)_verticesManager.Get(edge.V2);
-            if (v1 != null && v2 != null && v1.Layer == v2.Layer &&
+            if (v1 != null && v2 != null && v1.Id != v2.Id && v1.Layer == v2.Layer &&
                     !EdgesList.Any(x => (x.V1 == edge.V1 && x.V2 == edge.V2) || (x.V1 == edge.V2 && x.V2 == edge.V1)))
             {
                 return _edges.TryAdd(edge.Id, edge);

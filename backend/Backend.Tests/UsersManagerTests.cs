@@ -24,28 +24,29 @@ namespace BackendTests
             }
         }
 
-
+        private IRoomUsersManager _sut;
+            public UsersManagerTests()
+        {
+            //Arrange
+            _sut = new RoomUsersManager("1");
+        }
         [Fact]
         public void UserExists_AfterAddShouldReturnTrue()
         {
-            //Arrange
-            var Users = new UsersManager();
             //Act
-            Users.Add(NewUser);
+            _sut.Add(NewUser);
             //Assert
-            Assert.True(Users.Exists(NewUser));
+            Assert.True(_sut.Exists(NewUser));
         }
 
         [Fact]
         public void UserExists_AfterAddOtherShouldReturnFalse()
         {
-            //Arange
-            var Users = new UsersManager();
             var Added = NewUser;
             Added.Id = "XXX";
-            Users.Add(Added);
+            _sut.Add(Added);
             //Act
-            var exists = Users.Exists(NewUser);
+            var exists = _sut.Exists(NewUser);
             //Assert
             Assert.False(exists);
         }
@@ -53,10 +54,8 @@ namespace BackendTests
         [Fact]
         public void UserExists_ShouldReturnFalse()
         {
-            //Arange
-            var Users = new UsersManager();
             //Act
-            var exists = Users.Exists(NewUser);
+            var exists = _sut.Exists(NewUser);
             //Assert
             Assert.False(exists);
         }
@@ -64,13 +63,11 @@ namespace BackendTests
         [Fact]
         public void UserUpdate_ShouldReturnTrue()
         {
-            //Arange
-            var Users = new UsersManager();
             var Added = NewUser;
-            Users.Add(Added);
+            _sut.Add(Added);
             //Act
-            Users.SetAdmin(NewUser.Id);
-            var newRole = Users.Get(Added.Id).Role;
+            _sut.SetAdmin(NewUser.Id);
+            var newRole = _sut.Get(Added.Id).Role;
             //Assert
             Assert.True(newRole == "Admin");
         }
@@ -79,12 +76,10 @@ namespace BackendTests
         [Fact]
         public void Get_ShouldReturnGivenUser()
         {
-            //Arange
-            var Users = new UsersManager();
             var Given = NewUser;
-            Users.Add(Given);
+            _sut.Add(Given);
             //Act
-            var Founded = Users.Get(Given.Id);
+            var Founded = _sut.Get(Given.Id);
             //Assert
             Assert.Equal(Founded.Id, Given.Id);
             Assert.Equal(Founded.Role, Given.Role);
@@ -93,20 +88,16 @@ namespace BackendTests
         [Fact]
         public void Delete_ShouldNotFindUserAfterDelete()
         {
-            //Arrange
-            var Users = new UsersManager();
-            Users.Add(NewUser);
+            _sut.Add(NewUser);
             //Act
-            Users.Delete(NewUser.Id);
+            _sut.Delete(NewUser.Id);
             //Assert
-            Assert.False(Users.Exists(NewUser));
+            Assert.False(_sut.Exists(NewUser));
         }
 
         [Fact]
         public void GetAll_ShouldReturnAllUsers()
         {
-            //Arrange
-            var Users = new UsersManager();
             List<User> myUsers = new()
             {
                 NewUser,
@@ -118,10 +109,10 @@ namespace BackendTests
             {
                 user.Id = id.ToString();
                 id++;
-                Users.Add(user);
+                _sut.Add(user);
             }
             //Act
-            var FoundedUsers = Users.GetAll();
+            var FoundedUsers = _sut.GetAll();
             //Assert
             var allUsers = FoundedUsers.Zip(myUsers, (first, second) =>
                {

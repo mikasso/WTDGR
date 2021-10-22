@@ -15,22 +15,23 @@ namespace Backend.Core
         public string RoomId { get; init; }
         public User Owner { get; private set; }
 
-        public readonly UsersManager Users = new();
 
-        private readonly EdgeManager _edgeManager = new();
-        private readonly VerticesManager _verticesManager = new();
-        private readonly LayersManager _layersManager = new();
-        private readonly LineManager _lineManager = new ();
+         public  IRoomUsersManager Users { get; init; }
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
-        public RoomManager(string id)
+        private readonly IRoomItemsManager _verticesManager;
+        private readonly IRoomItemsManager _edgeManager;
+        private readonly IRoomItemsManager _lineManager;
+        private readonly IRoomItemsManager _layersManager;
+        public RoomManager(string id,IRoomUsersManager usersManager, IRoomItemsManager verticesManager, IRoomItemsManager edgeManager, IRoomItemsManager lineManager, IRoomItemsManager layersManager)
         {
             Log.Information($"Starting new room. Id: {id}");
             RoomId = id;
-            _layersManager.Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer });
-            _edgeManager.Initialize(_verticesManager);
-            _verticesManager.Initialize(_edgeManager);
-            _layersManager.Initialize(_edgeManager, _verticesManager);
+            Users = usersManager;
+            _verticesManager = verticesManager;
+            _edgeManager = edgeManager;
+            _lineManager = lineManager;
+            _layersManager = layersManager;
         }
         public User CreateOwner(User owner)
         {
@@ -42,17 +43,20 @@ namespace Backend.Core
             return owner;
         }
 
-        public async Task<RoomImage> GetRoomImage()
+        public void HandleUserDisconnect(string userId)
         {
-            return new RoomImage()
-            {
-                Vertices = _verticesManager.GetAll().Cast<Vertex>().ToList(),
-                Edges = _edgeManager.GetAll().Cast<Edge>().ToList(),
-                Layers = _layersManager.GetAll().Cast<Layer>().ToList(),
-            };
+            throw new NotImplementedException();
         }
 
-        public async Task<ActionResult> ExecuteAction(UserAction userAction)
+        public IList<IRoomItem> GetRoomImage()
+        {
+            return _layersManager.GetAll()
+                .Concat(_verticesManager.GetAll())
+                .Concat(_edgeManager.GetAll())
+                .ToList();
+        }
+
+        public async Task<ActionResult> ExecuteActionAsync(UserAction userAction)
         {
             var actionResult = new ActionResult() { IsSucceded = false, Receviers = Receviers.caller };
             try
@@ -166,7 +170,6 @@ namespace Backend.Core
             };
         }
 
-
-
+ 
     }
 }
