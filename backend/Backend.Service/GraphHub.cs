@@ -64,9 +64,14 @@ namespace Backend.Service
             await base.OnDisconnectedAsync(exception);
             if (Room != null && MyUser != null)
             {
-                Room.Users.Delete(MyUser.Id);
                 var additionalInfo = exception == null ? " No exception catched." : exception.Message;
                 Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
+                var actionResults = Room.HandleUserDisconnectAsync(MyUser.Id);
+                await foreach(ActionResult actionResult in actionResults)
+                {
+                    await HandleReceiveActionResult(actionResult,MyUser.Id);
+                }
+                Room.Users.Delete(MyUser.Id);
             }
         }
         public async Task LeaveRoom()
@@ -89,11 +94,16 @@ namespace Backend.Service
                 await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason="You re not in any group"});
             }
             var actionResult = await Room.ExecuteActionAsync(userAction);
+            await HandleReceiveActionResult(actionResult, userAction.UserId);
+        }
+
+        private async Task HandleReceiveActionResult(ActionResult actionResult, string userId)
+        {
             var receiver = actionResult.Receviers == Receviers.all ? MyGroup : Clients.Caller;
             await receiver.ReceiveAction(actionResult.UserAction, actionResult.IsSucceded);
             if (!actionResult.IsSucceded)
             {
-                Log.Error($"Cannot execute action for user {userAction.UserId}\n" + userAction.ToString());
+                Log.Error($"Cannot execute action for user {userId}\n");
             }
         }
 

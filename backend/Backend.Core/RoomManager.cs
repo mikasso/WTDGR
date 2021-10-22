@@ -16,14 +16,14 @@ namespace Backend.Core
         public User Owner { get; private set; }
 
 
-         public  IRoomUsersManager Users { get; init; }
+        public IRoomUsersManager Users { get; init; }
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         private readonly IRoomItemsManager _verticesManager;
         private readonly IRoomItemsManager _edgeManager;
         private readonly IRoomItemsManager _lineManager;
         private readonly IRoomItemsManager _layersManager;
-        public RoomManager(string id,IRoomUsersManager usersManager, IRoomItemsManager verticesManager, IRoomItemsManager edgeManager, IRoomItemsManager lineManager, IRoomItemsManager layersManager)
+        public RoomManager(string id, IRoomUsersManager usersManager, IRoomItemsManager verticesManager, IRoomItemsManager edgeManager, IRoomItemsManager lineManager, IRoomItemsManager layersManager)
         {
             Log.Information($"Starting new room. Id: {id}");
             RoomId = id;
@@ -43,9 +43,36 @@ namespace Backend.Core
             return owner;
         }
 
-        public void HandleUserDisconnect(string userId)
+        public async IAsyncEnumerable<ActionResult> HandleUserDisconnectAsync(string userId)
         {
-            throw new NotImplementedException();
+            var actionsToExcute = new List<UserAction>();
+            var line = _lineManager.GetAll().FirstOrDefault(x => x.EditorId == userId);
+            if (line != default)
+            {
+                actionsToExcute.Add(new UserAction()
+                {
+                    ActionType = ActionType.Delete,
+                    Items = new List<IRoomItem>(){ new Line() { Id = line.Id, Type = KonvaType.Line } },
+                    UserId = userId
+                });
+            }
+
+            var edges = _edgeManager.GetAll().Where(x => x.EditorId == userId);
+            var vertices = _verticesManager.GetAll().Where(x => x.EditorId == userId);
+            var items = edges.Concat(vertices).ToList();
+            if (items.Count >= 1)
+            {
+                var releaseAction = new UserAction()
+                {
+                    ActionType = ActionType.ReleaseItem,
+                    Items = items,
+                    UserId = userId
+
+                };
+                actionsToExcute.Add(releaseAction);
+            }
+            foreach (var userAction in actionsToExcute)
+                yield return await ExecuteActionAsync(userAction);
         }
 
         public IList<IRoomItem> GetRoomImage()
@@ -53,6 +80,7 @@ namespace Backend.Core
             return _layersManager.GetAll()
                 .Concat(_verticesManager.GetAll())
                 .Concat(_edgeManager.GetAll())
+                .Concat(_lineManager.GetAll())
                 .ToList();
         }
 
@@ -112,18 +140,23 @@ namespace Backend.Core
                     case ActionType.Add:
                         if (item.Id == null)
                             item.Id = Guid.NewGuid().ToString();
-                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Add(item); });
+                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Add(item,userId); });
                         break;
                     case ActionType.RequestToEdit:
-                        item.EditorId = userAction.UserId;
-                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
+                        item.EditorId = userId;
+                        //var user = Users.Get(userId);
+                        actions.Add(() =>
+                        {
+                            throwIfNotFree(item, userId);
+                            return itemManager.Update(item);
+                        });
                         break;
                     case ActionType.ReleaseItem:
                         item.EditorId = null;
                         actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
                         break;
                     case ActionType.Edit:
-                        item.EditorId = userAction.UserId;
+                        item.EditorId = userId;
                         actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
                         break;
                     case ActionType.Delete:
@@ -170,6 +203,6 @@ namespace Backend.Core
             };
         }
 
- 
+
     }
 }

@@ -16,7 +16,7 @@ namespace Backend.Core
         public int Count => _edges.Count;
         private List<Edge> EdgesList { get => _edges.Values.ToList(); }
 
-        public bool Add(IRoomItem item)
+        public bool Add(IRoomItem item, string userId)
         {
             var edge = (Edge)item;
             var v1 = (Vertex)_verticesManager.Get(edge.V1);

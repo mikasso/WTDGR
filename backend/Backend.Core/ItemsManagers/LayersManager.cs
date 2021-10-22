@@ -18,9 +18,9 @@ namespace Backend.Core
         {
             _vertexManager = verticesManager;
             _layerNameCount = 1;
-            Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer });
+            Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer },"");
         }
-        public bool Add(IRoomItem item)
+        public bool Add(IRoomItem item,string userId)
         {
             var layer = (Layer)item;
             layer.Id = $"Layer {_layerNameCount}";

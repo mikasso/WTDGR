@@ -54,7 +54,7 @@ export default class BoardHub {
   public sendAction(action: UserAction) {
     return this.connection
       .invoke("SendAction", action)
-      .catch((err: Error) => alert(err.toString()));
+      .catch((err: Error) => console.error(err.toString()));
   }
 
   public createRoom(username: string) {
