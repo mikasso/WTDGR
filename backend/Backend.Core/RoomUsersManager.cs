@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Backend.Core
 {
-    public interface IUserManager
+    public interface IRoomUsersManager
     {
         public bool SetAdmin(string username);
         public bool RemoveAdmin(string username);
@@ -15,9 +15,14 @@ namespace Backend.Core
         public bool Exists(User user);
         public bool Exists(string userName);
     }
-    public class UsersManager : IUserManager
+    public class RoomUsersManager : IRoomUsersManager
     {
         private Dictionary<string, User> _users = new Dictionary<string, User>();
+        private string _roomId;
+        public RoomUsersManager(string id)
+        {
+            _roomId = id;
+        }
         public bool SetAdmin(string username)
         {
             if (!Exists(username))

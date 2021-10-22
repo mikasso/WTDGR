@@ -7,22 +7,22 @@ namespace Backend.Core
 {
     public class EdgeManager : IRoomItemsManager
     {
-        private readonly VerticesManager _verticesManager;
+        private IRoomItemsManager _verticesManager;
         private readonly Dictionary<string, Edge> _edges = new Dictionary<string, Edge>();
-        public EdgeManager(VerticesManager verticesManager)
+        public void Initialize(IRoomItemsManager verticesManager)
         {
             _verticesManager = verticesManager;
         }
         public int Count => _edges.Count;
         private List<Edge> EdgesList { get => _edges.Values.ToList(); }
 
-        public bool Add(IRoomItem item)
+        public bool Add(IRoomItem item, string userId)
         {
             var edge = (Edge)item;
             var v1 = (Vertex)_verticesManager.Get(edge.V1);
             var v2 = (Vertex)_verticesManager.Get(edge.V2);
-            if (v1 != null && v2 != null && v1.Layer == v2.Layer &&
-                    !EdgesList.Any(x => x.V1 == edge.V1 && x.V2 == edge.V2))
+            if (v1 != null && v2 != null && v1.Id != v2.Id && v1.Layer == v2.Layer &&
+                    !EdgesList.Any(x => (x.V1 == edge.V1 && x.V2 == edge.V2) || (x.V1 == edge.V2 && x.V2 == edge.V1)))
             {
                 return _edges.TryAdd(edge.Id, edge);
             }
@@ -31,8 +31,7 @@ namespace Backend.Core
 
         internal bool DeleteWithVertex(string id) => EdgesList
                 .Where(x => x.V1 == id || x.V2 == id)
-                .Select(x => Delete(x.Id))
-                .All(x => x);
+                .All(x => Delete(x.Id));
         
         public bool Delete(string Id) => _edges.Remove(Id);
 

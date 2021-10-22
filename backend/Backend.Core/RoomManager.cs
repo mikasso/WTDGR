@@ -3,6 +3,7 @@ using Backend.Models;
 using Backend.Models.RoomItems;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,22 +15,23 @@ namespace Backend.Core
         public string RoomId { get; init; }
         public User Owner { get; private set; }
 
-        public readonly UsersManager Users = new();
 
-        private readonly EdgeManager _edgeManager;
-        private readonly VerticesManager _verticesManager;
-        private readonly LayersManager _layersManager = new LayersManager();
-        private readonly LineManager _lineManager = new LineManager();
+        public IRoomUsersManager Users { get; init; }
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
-        public RoomManager(string id)
+        private readonly IRoomItemsManager _verticesManager;
+        private readonly IRoomItemsManager _edgeManager;
+        private readonly IRoomItemsManager _lineManager;
+        private readonly IRoomItemsManager _layersManager;
+        public RoomManager(string id, IRoomUsersManager usersManager, IRoomItemsManager verticesManager, IRoomItemsManager edgeManager, IRoomItemsManager lineManager, IRoomItemsManager layersManager)
         {
             Log.Information($"Starting new room. Id: {id}");
             RoomId = id;
-            _layersManager.Add(new Layer() { Id = "Layer 1", Type = KonvaType.Layer });
-            _verticesManager = new();
-            _edgeManager = new(_verticesManager);
-            _verticesManager.Initialize(_edgeManager);
+            Users = usersManager;
+            _verticesManager = verticesManager;
+            _edgeManager = edgeManager;
+            _lineManager = lineManager;
+            _layersManager = layersManager;
         }
         public User CreateOwner(User owner)
         {
@@ -41,17 +43,48 @@ namespace Backend.Core
             return owner;
         }
 
-        public async Task<RoomImage> GetRoomImage()
+        public async IAsyncEnumerable<ActionResult> HandleUserDisconnectAsync(string userId)
         {
-            return new RoomImage()
+            var actionsToExcute = new List<UserAction>();
+            var line = _lineManager.GetAll().FirstOrDefault(x => x.EditorId == userId);
+            if (line != default)
             {
-                Vertices = _verticesManager.GetAll().Cast<Vertex>().ToList(),
-                Edges = _edgeManager.GetAll().Cast<Edge>().ToList(),
-                Layers = _layersManager.GetAll().Cast<Layer>().ToList(),
-            };
+                actionsToExcute.Add(new UserAction()
+                {
+                    ActionType = ActionType.Delete,
+                    Items = new List<IRoomItem>(){ new Line() { Id = line.Id, Type = KonvaType.Line } },
+                    UserId = userId
+                });
+            }
+
+            var edges = _edgeManager.GetAll().Where(x => x.EditorId == userId);
+            var vertices = _verticesManager.GetAll().Where(x => x.EditorId == userId);
+            var items = edges.Concat(vertices).ToList();
+            if (items.Count >= 1)
+            {
+                var releaseAction = new UserAction()
+                {
+                    ActionType = ActionType.ReleaseItem,
+                    Items = items,
+                    UserId = userId
+
+                };
+                actionsToExcute.Add(releaseAction);
+            }
+            foreach (var userAction in actionsToExcute)
+                yield return await ExecuteActionAsync(userAction);
         }
 
-        public async Task<ActionResult> ExecuteAction(UserAction userAction)
+        public IList<IRoomItem> GetRoomImage()
+        {
+            return _layersManager.GetAll()
+                .Concat(_verticesManager.GetAll())
+                .Concat(_edgeManager.GetAll())
+                .Concat(_lineManager.GetAll())
+                .ToList();
+        }
+
+        public async Task<ActionResult> ExecuteActionAsync(UserAction userAction)
         {
             var actionResult = new ActionResult() { IsSucceded = false, Receviers = Receviers.caller };
             try
@@ -85,49 +118,70 @@ namespace Backend.Core
 
         private Func<bool> DispatchAction(UserAction userAction)
         {
-            Log.Information($"Dispatching Action, Room Id: {RoomId}, Action type:{userAction.ActionType}\n{userAction.Item.ToJsonString()}");
-            if(!IsItemFree(userAction))
+            var items = userAction.Items;
+            var userId = userAction.UserId;
+            var actions = new List<Func<bool>>();
+            foreach (var item in items)
             {
-                throw new ItemLockedException();
-            }
+                Log.Information($"Dispatching Action, Room Id: {RoomId}, Action type:{userAction.ActionType}\n{item.ToJsonString()}");
 
-            var item = userAction.Item;
-            var itemManager = DispatchItemManager(item.Type);
+                void throwIfNotFree(IRoomItem item, string userId)
+                {
+                    if (!IsItemFree(item, userId))
+                    {
+                        throw new ItemLockedException();
+                    }
+                }
 
-            switch (userAction.ActionType)
-            {
-                case ActionType.Add:
-                    if(item.Id == null)
-                        item.Id = Guid.NewGuid().ToString();
-                    return () => itemManager.Add(item);
-                case ActionType.RequestToEdit:
-                    item.EditorId = userAction.UserId;
-                    return () => itemManager.Update(item);
-                case ActionType.ReleaseItem:
-                    item.EditorId = null;
-                    return () => itemManager.Update(item);
-                case ActionType.Edit:
-                    return () => itemManager.Update(item);
-                case ActionType.Delete:
-                    return () => itemManager.Delete(item.Id);
-                default:
-                    throw new ArgumentException("Cannot dispatch user action message!");
+                var itemManager = DispatchItemManager(item.Type);
+
+                switch (userAction.ActionType)
+                {
+                    case ActionType.Add:
+                        if (item.Id == null)
+                            item.Id = Guid.NewGuid().ToString();
+                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Add(item,userId); });
+                        break;
+                    case ActionType.RequestToEdit:
+                        item.EditorId = userId;
+                        //var user = Users.Get(userId);
+                        actions.Add(() =>
+                        {
+                            throwIfNotFree(item, userId);
+                            return itemManager.Update(item);
+                        });
+                        break;
+                    case ActionType.ReleaseItem:
+                        item.EditorId = null;
+                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
+                        break;
+                    case ActionType.Edit:
+                        item.EditorId = userId;
+                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Update(item); });
+                        break;
+                    case ActionType.Delete:
+                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Delete(item.Id); });
+                        break;
+                    default:
+                        actions.Add(() => throw new ArgumentException("Cannot dispatch user action message!"));
+                        break;
+                }
             }
+            return () => actions.All(action => action());
         }
 
-        private bool IsItemFree(UserAction userAction)
-        {
-            if (userAction.Item.Type != KonvaType.Vertex) return true;
 
-            var itemId = userAction.Item.Id;
-            if (userAction.ActionType == ActionType.Add)
-                return true;
+        private bool IsItemFree(IRoomItem item, string userId)
+        {
+            if (item.Type != KonvaType.Vertex) return true;
+
+            var itemId = item.Id;
             var vertex = _verticesManager.Get(itemId);
             if (vertex == null)
                 return true;
             if (vertex.EditorId == null)
                 return true;
-            return vertex.EditorId == userAction.UserId;
+            return vertex.EditorId == userId;
         }
         private Receviers DispatchReceivers(bool isSucceded, ActionType actionType)
         {
@@ -148,7 +202,6 @@ namespace Backend.Core
                 _ => throw new NotImplementedException(),
             };
         }
-
 
 
     }

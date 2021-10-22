@@ -1,4 +1,5 @@
 import Konva from "konva";
+import { ItemColors } from "../BoardEventManager/utils";
 import { ClassNames } from "./ClassNames";
 import { Edge } from "./EdgeManager";
 
@@ -43,10 +44,10 @@ export default class VertexManager {
 
   get defaultConfig() {
     return {
-      type: "v-circle",
+      type: "Vertex",
       radius: 12,
       fill: "#A8A8A8",
-      stroke: "black",
+      stroke: ItemColors.defaultStroke,
       ...this.highlightConfigOff,
       draggeble: this.dragEnabled,
     };
@@ -99,8 +100,14 @@ export default class VertexManager {
   }
 
   setHiglight(vertex: Vertex, isHighlithed: boolean) {
-    if (isHighlithed) vertex.setAttrs(this.highlightConfigOn);
-    else vertex.setAttrs(this.highlightConfigOff);
+    if (isHighlithed)
+      vertex.setAttrs({
+        ...this.highlightConfigOn,
+      });
+    else
+      vertex.setAttrs({
+        ...this.highlightConfigOff,
+      });
 
     vertex.redraw();
   }

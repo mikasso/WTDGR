@@ -1,4 +1,5 @@
 import Konva from "konva";
+import { ItemColors } from "../BoardEventManager/utils";
 import { ClassNames } from "./ClassNames";
 import { Cordinates, HighlightConfig, Vertex } from "./VertexManager";
 
@@ -91,7 +92,6 @@ export default class EdgeManager {
   constructor() {}
   private currentLine: TemporaryLine | null = null;
   private draggedEdge: Edge | null = null;
-
   private vertexDistances: number[] = [0, 0, 0, 0];
 
   private readonly highlightConfigOn: HighlightConfig = {
@@ -103,7 +103,7 @@ export default class EdgeManager {
   };
 
   private readonly defaultConfig = {
-    stroke: "black",
+    stroke: ItemColors.defaultStroke,
     lineCap: "round",
     lineJoin: "round",
     ...this.highlightConfigOff,
@@ -177,7 +177,6 @@ export default class EdgeManager {
 
   public stopDraggingEdge() {
     if (!this.draggedEdge) return;
-    //this.draggedEdge.updatePosition();
     this.vertexDistances = [0, 0, 0, 0];
     this.draggedEdge = null;
   }
@@ -216,11 +215,14 @@ export default class EdgeManager {
   }
 
   public setHiglight(edge: Edge, isHighlithed: boolean) {
-    const config: HighlightConfig = isHighlithed
-      ? this.highlightConfigOn
-      : this.highlightConfigOff;
-
-    edge.setAttrs(config);
+    if (isHighlithed)
+      edge.setAttrs({
+        ...this.highlightConfigOn,
+      });
+    else
+      edge.setAttrs({
+        ...this.highlightConfigOff,
+      });
     edge.redraw();
   }
 

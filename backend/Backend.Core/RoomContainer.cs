@@ -3,17 +3,30 @@ using System.Collections.Generic;
 
 namespace Backend.Core
 {
-    public static class RoomsContainer {
+    public interface IRoomsContainer{
+        public IRoomManager CreateRoom();
+        public bool DeleteRoom(string Id);
+        public IRoomManager GetRoom(string roomId);
+    }
+    public class RoomsContainer: IRoomsContainer
+    {
 
-        private static readonly Dictionary<string, RoomManager> _rooms = new();
-        public static RoomManager CreateRoom()
+        private readonly Dictionary<string, IRoomManager> _rooms = new();
+        private IRoomManagerFactory _roomManagerFactory;
+
+        public RoomsContainer(IRoomManagerFactory roomManagerFactory)
         {
-            var room = new RoomManager("1"); //ObjectId.GenerateNewId().ToString() };
+            _roomManagerFactory = roomManagerFactory;
+            CreateRoom(); //TODO remove it when many rooms when become possible
+        }
+        public  IRoomManager CreateRoom()
+        {
+            var room = _roomManagerFactory.CreateRoomManager();
             _rooms.Add(room.RoomId, room);
             return room;
         }
 
-        public static bool DeleteRoom(string Id)
+        public  bool DeleteRoom(string Id)
         {
             if (!_rooms.ContainsKey(Id))
                 return false;
@@ -21,7 +34,7 @@ namespace Backend.Core
             return true;
         }
 
-        public static RoomManager GetRoom(string roomId)
+        public  IRoomManager GetRoom(string roomId)
         {
             if (!_rooms.ContainsKey(roomId))
                 throw new Exception("Room doesnt exists");

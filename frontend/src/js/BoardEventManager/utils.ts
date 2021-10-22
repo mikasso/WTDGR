@@ -1,4 +1,5 @@
 import { KonvaEventObject } from "konva/types/Node";
+import * as Configuration from "../../config.json";
 
 export function isLeftClick(event: KonvaEventObject<any>) {
   return event.evt.which === 1;
@@ -35,4 +36,13 @@ export function poll<T>(params: {
   };
 
   return new Promise(executePoll);
+}
+
+export const getAppConfig = () =>
+  process.env["NODE_ENV"] === "production"
+    ? Configuration.Production
+    : Configuration.Development;
+
+export enum ItemColors {
+  defaultStroke = "black",
 }

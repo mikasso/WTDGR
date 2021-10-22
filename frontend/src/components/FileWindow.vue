@@ -78,12 +78,17 @@ export default defineComponent({
     };
   },
   methods: {
+    download() {
+      const formater = getFormater(this.hub!, this.exportFormat);
+      this.downloadUrl = formater.exportStage();
+    },
     upload() {
       document.getElementById("upload-input")!.click();
     },
     fileUploaded(event: any) {
       const formater = getFormater(this.hub!, this.importFormat);
       formater.importStage(event!.target.files[0]);
+      this.dialogVisible = false;
     },
   },
 });

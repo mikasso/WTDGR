@@ -8,7 +8,7 @@ namespace Backend.Core
     public interface IRoomItemsManager 
     {
         public int Count { get; }
-        public bool Add(IRoomItem obj);
+        public bool Add(IRoomItem obj, string userId);
 
         public bool Delete(string Id);
 
