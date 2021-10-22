@@ -141,7 +141,7 @@ class GdfFormater extends Formater {
         const retries = 0;
         let v1;
         let v2;
-        while (retries < 10) {
+        while (retries < 25) {
           v1 = this.findVertexByCords(v1Cords);
           v2 = this.findVertexByCords(v2Cords);
           if (v1 && v2) {

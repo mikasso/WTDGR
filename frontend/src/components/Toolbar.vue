@@ -66,10 +66,10 @@
         </template>
       </el-dropdown>
     </div>
-    <el-button @click="openFileHandler">
-      FILES
-    </el-button>
     <div style="display: flex; align-items: center;">
+      <el-button @click="openFileHandler" style="margin-right: 15px">
+        Import / Export graph
+      </el-button>
       <el-tag v-if="!isOnline" class="connBadge" type="danger"
         >Disconnected</el-tag
       >
