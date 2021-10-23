@@ -259,11 +259,6 @@ export default class BoardManager {
     this.setHighlightOfSelected(true);
   }
 
-  toolChangedCleanup() {
-    this.multiselectManager.removeSelect();
-    this.setHighlightOfSelected(false);
-  }
-
   setHighlightOfSelected(value: boolean) {
     const selectedVertexes = this.multiselectManager.selectedVertexes;
     if (selectedVertexes != null && selectedVertexes.length > 0) {

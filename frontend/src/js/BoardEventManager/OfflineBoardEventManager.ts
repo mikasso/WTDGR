@@ -50,7 +50,6 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
 
   public toolChanged(toolName: string) {
     this.clearHandlers();
-    this.boardManager.toolChangedCleanup();
     this.handlers.forEach((handler) => handler.setInactive());
     switch (toolName) {
       case "Select":

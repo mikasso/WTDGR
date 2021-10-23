@@ -76,7 +76,6 @@ export default class MultiselectManager {
   }
 
   finishDrawing() {
-    console.log("finishDrawing");
     this.isDrawing = false;
     if (this.currentDrawing == null) return;
     const layerToRedraw = this.currentDrawing?.layer;
@@ -100,7 +99,6 @@ export default class MultiselectManager {
   }
 
   startDrag(mousePos: Cordinates) {
-    console.log("startDrag");
     this.isDragging = true;
     this.vertexDragOfffset = {};
     this.selectDragOffset = undefined;
@@ -130,22 +128,23 @@ export default class MultiselectManager {
       offsetData.vertex.position(newPos);
       this.boardManager.dragEdges(offsetData.vertex);
     }
+    this.moveDrawing(mousePos);
+  }
+
+  moveDrawing(mousePos: Cordinates) {
     this.currentDrawing?.position({
       x: this.selectDragOffset!.x + mousePos.x,
       y: this.selectDragOffset!.y + mousePos.y,
     });
-    this.currentDrawing?.layer.draw();
   }
 
   stopDrag() {
-    console.log("stopDrag");
     this.isDragging = false;
     this.vertexDragOfffset = {};
     this.selectDragOffset = undefined;
   }
 
   numberArrayToPoints(numbers: number[]) {
-    console.log("numberArrayToPoints");
     const result = [];
     for (let i = 0; i < numbers.length; i += 2) {
       result.push([numbers[i], numbers[i + 1]]);
@@ -154,11 +153,24 @@ export default class MultiselectManager {
   }
 
   removeSelect() {
-    console.log("removeSelect");
     if (!this.currentDrawing) return;
     const removedDrawingLayer = this.currentDrawing!.layer;
     this.currentDrawing!.destroy();
     this.currentDrawing = undefined;
     removedDrawingLayer.draw();
+  }
+
+  updatedSelectedPosAsDto(mousePos: Cordinates, color: string) {
+    const vertexDTO = [];
+    for (const i in this.vertexDragOfffset) {
+      const offsetData = this.vertexDragOfffset[i];
+      offsetData.vertex.setAttrs({ stroke: color });
+      vertexDTO.push({
+        ...offsetData.vertex.asDTO(),
+        x: mousePos.x + offsetData.offset.x,
+        y: mousePos.y + offsetData.offset.y,
+      });
+    }
+    return vertexDTO;
   }
 }

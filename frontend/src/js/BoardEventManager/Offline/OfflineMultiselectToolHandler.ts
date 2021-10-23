@@ -7,8 +7,11 @@ import { IHandler } from "../IHandler";
 import { isLeftClick } from "../utils";
 
 export default class OfflineMultiselectToolHandler implements IHandler {
+  private drawInterval: number | undefined;
+  private dragInterval: number | undefined;
+  private readonly drawTime = 25;
+  private readonly dragTime = 25;
   constructor(private boardManager: BoardManager) {}
-  setInactive(): void {}
   setActive(eventManager: BaseBoardEventManager): void {
     eventManager.mouseDown = (event) => this.mouseDown(event);
     eventManager.mouseUp = (event) => this.mouseUp(event);
@@ -16,46 +19,53 @@ export default class OfflineMultiselectToolHandler implements IHandler {
       this.multiselectMouseDown(event);
   }
 
+  setInactive() {
+    this.boardManager.setHighlightOfSelected(false);
+    this.boardManager.multiselectManager.stopDrag();
+    this.boardManager.multiselectManager.isDrawing = false;
+    this.boardManager.multiselectManager.removeSelect();
+  }
+
   private mouseDown(event: KonvaEventObject<any>) {
-    console.log("mouseDown");
     if (this.boardManager.multiselectManager.isDragging) return;
     if (!isLeftClick(event)) return;
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.startMultiselect(mousePos);
-    this.updateDraw();
+    this.drawInterval = window.setInterval(
+      () => this.updateDraw(),
+      this.drawTime
+    );
   }
 
   private mouseUp(event: KonvaEventObject<Vertex>) {
-    console.log("mouseUp", this.boardManager.multiselectManager.isDragging);
-    if (this.boardManager.multiselectManager.isDragging)
+    if (this.boardManager.multiselectManager.isDragging) {
       this.boardManager.multiselectManager.stopDrag();
-    else this.boardManager.finishMultiselect();
+      clearInterval(this.dragInterval);
+      this.dragInterval = undefined;
+    } else {
+      this.boardManager.finishMultiselect();
+      clearInterval(this.drawInterval);
+      this.dragInterval = undefined;
+    }
   }
 
   private multiselectMouseDown(event: KonvaEventObject<Vertex>) {
-    console.log("multiselectMouseDown");
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.multiselectManager.startDrag(mousePos);
-    this.updateDrag();
+    this.dragInterval = window.setInterval(
+      () => this.updateDrag(),
+      this.dragTime
+    );
   }
 
   private async updateDraw() {
-    while (this.boardManager.multiselectManager.isDrawing) {
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.moveMultiselect(mousePos);
-      await new Promise((resolve) => {
-        setTimeout(resolve, 20);
-      });
-    }
+    const mousePos = this.boardManager.getMousePosition();
+    this.boardManager.moveMultiselect(mousePos);
   }
 
   private async updateDrag() {
-    while (this.boardManager.multiselectManager.isDragging) {
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.multiselectManager.updateDrag(mousePos);
-      await new Promise((resolve) => {
-        setTimeout(resolve, 30);
-      });
-    }
+    const mousePos = this.boardManager.getMousePosition();
+    this.boardManager.multiselectManager.updateDrag(mousePos);
+    this.boardManager.multiselectManager.currentDrawing?.layer.draw();
   }
 }
