@@ -1,6 +1,7 @@
 import Konva from "konva";
 import { Cordinates, Vertex } from "./VertexManager";
 import classifyPoint from "robust-point-in-polygon";
+import { ClassNames } from "./ClassNames";
 
 type Point = [number, number];
 
@@ -42,7 +43,7 @@ export default class MultiselectManager {
     position: Cordinates,
     layer: Konva.Layer,
     config: any = this.defualtConfig
-  ) {
+  ): SelectLine {
     this.selectedVertexes = [];
     config.points = [position.x, position.y];
     const newLine = new SelectLine(config, layer);
@@ -74,9 +75,11 @@ export default class MultiselectManager {
     this.selectedVertexes = [];
 
     const points = this.numberArrayToPoints(this.currentDrawing!.points());
+    console.log("halo");
     for (const vertex of layerToRedraw!.getChildren(
-      (node) => node.getClassName() === "Circle"
+      (node) => node.getClassName() === ClassNames.Vertex
     )) {
+      console.log(vertex.position().x, vertex.position().y);
       if (
         classifyPoint(points, [
           vertex.position().x,
@@ -86,6 +89,7 @@ export default class MultiselectManager {
         this.selectedVertexes.push(vertex as Vertex);
       }
     }
+    console.log(this.selectedVertexes);
     if (this.selectedVertexes.length == 0) this.removeSelect();
     // this.currentDrawing!.attrs.stroke = "gray";
     layerToRedraw!.draw();
@@ -108,6 +112,7 @@ export default class MultiselectManager {
   }
 
   removeSelect() {
+    if (!this.currentDrawing) return;
     const removedDrawingLayer = this.currentDrawing!.layer;
     this.currentDrawing!.destroy();
     this.currentDrawing = undefined;

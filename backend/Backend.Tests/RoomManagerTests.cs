@@ -9,12 +9,11 @@ using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
 
-namespace BackendTests
+
+namespace Backend.Tests
 {
-    public class RoomManagerTests
+    public class RoomManagerTests : RoomManagerTestsBase
     {
-        private const string roomId = "Room1";
-        private RoomManager _roomManager = new RoomManager(roomId);
 
         public RoomManagerTests()
         {
@@ -28,17 +27,17 @@ namespace BackendTests
             var userAction = new UserAction()
             {
                 ActionType = ActionType.Add,
-                Item = new Vertex() { Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Type = KonvaType.Vertex } },
                 UserId = "User1"
             };
 
-            var result = await _roomManager.ExecuteAction(userAction);
-            var roomImage = await _roomManager.GetRoomImage();
+            var result = await _roomManager.ExecuteActionAsync(userAction);
+            var roomImage =  _roomManager.GetRoomImage();
 
             result.IsSucceded.Should().BeTrue();
             result.Receviers.Should().Be(Receviers.all);
             result.UserAction.Should().BeEquivalentTo(userAction);
-            roomImage.Vertices.Should().ContainSingle();
+            roomImage.Where(x => x.Type == KonvaType.Vertex).Should().ContainSingle();
         }
 
         [Fact]
@@ -47,88 +46,127 @@ namespace BackendTests
             var addAction = new UserAction()
             {
                 ActionType = ActionType.Add,
-                Item = new Vertex() { Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Type = KonvaType.Vertex } },
                 UserId = "User1"
             };
 
-            var addResult = await _roomManager.ExecuteAction(addAction);
+            var addResult = await _roomManager.ExecuteActionAsync(addAction);
             addResult.IsSucceded.Should().BeTrue();
-            var vertexId = addResult.UserAction.Item.Id;
+            var vertexId = addResult.UserAction.Items.First().Id;
             var deleteAction = new UserAction()
             {
                 ActionType = ActionType.Delete,
-                Item = new Vertex() { Id = vertexId, Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
                 UserId = "User1"
             };
-            var deleteResult = await _roomManager.ExecuteAction(deleteAction);
-            var roomImage = await _roomManager.GetRoomImage();
+            var deleteResult = await _roomManager.ExecuteActionAsync(deleteAction);
+            var roomImage = _roomManager.GetRoomImage();
 
             deleteResult.IsSucceded.Should().BeTrue();
             deleteResult.Receviers.Should().Be(Receviers.all);
             deleteResult.UserAction.Should().BeEquivalentTo(deleteAction);
-            roomImage.Vertices.Should().BeEmpty();
+            roomImage.Where(x=>x.Type!=KonvaType.Layer).Should().BeEmpty();
         }
 
         [Fact]
         public async Task ShouldDisallowEditVertexWhenItIsRequestBySomeoneOther()
         {
-            var vertexId = await AddVertex("User1");
+            var vertexId = await AddVertexToId();
             var requestAction = new UserAction()
             {
                 ActionType = ActionType.RequestToEdit,
-                Item = new Vertex() { Id = vertexId, Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
                 UserId = "User1"
             };
-            var requestResult = await _roomManager.ExecuteAction(requestAction);
+            var requestResult = await _roomManager.ExecuteActionAsync(requestAction);
             requestResult.IsSucceded.Should().Be(true);
 
             var editAction = new UserAction()
             {
                 ActionType = ActionType.Edit,
-                Item = new Vertex() { Id = vertexId, Type = KonvaType.Vertex },
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
                 UserId = "User2"
             };
-            var editResult = await _roomManager.ExecuteAction(editAction);
+            var editResult = await _roomManager.ExecuteActionAsync(editAction);
             editResult.IsSucceded.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task EditShouldNotChangeEditor()
+        {
+            var vertexId = await AddVertexToId();
+            var requestAction = new UserAction()
+            {
+                ActionType = ActionType.RequestToEdit,
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
+                UserId = "User1"
+            };
+            var requestResult = await _roomManager.ExecuteActionAsync(requestAction);
+            requestResult.IsSucceded.Should().Be(true);
+
+            var editAction = new UserAction()
+            {
+                ActionType = ActionType.Edit,
+                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex, EditorId=null } },
+                UserId = "User1"
+            };
+            var editResult = await _roomManager.ExecuteActionAsync(editAction);
+            var vertex = (_roomManager.GetRoomImage()).Where(x => x.Type == KonvaType.Vertex).FirstOrDefault();
+            editResult.IsSucceded.Should().Be(true);
+            vertex.EditorId.Should().Be("User1");
+
         }
 
         [Fact]
         public async Task ShouldConnectVerticesWhenLayOnTheSameLayer()
         {
-            var vertex1Id = await AddVertex("User1");
-            var vertex2Id = await AddVertex("User1");
+            var vertex1Id = await AddVertexToId();
+            var vertex2Id = await AddVertexToId();
             var addEdgeResult = await AddEdge("User1", vertex1Id, vertex2Id);
             addEdgeResult.IsSucceded.Should().Be(true);
-            var roomImage = await _roomManager.GetRoomImage();
-            roomImage.Edges.Count.Should().Be(1);
+            var edges = _roomManager.GetRoomImage().Where(x => x.Type == KonvaType.Edge).ToList();
+            edges.Count.Should().Be(1);
         }
 
         [Fact]
         public async Task ShouldDisallowConnectTheSameVertex()
         {
-            var vertex1Id = await AddVertex("User1");
+            var vertex1Id = await AddVertexToId("User1");
             var addEdgeResult = await AddEdge("User1", vertex1Id, vertex1Id);
-            addEdgeResult.IsSucceded.Should().Be(true);
-            var roomImage = await _roomManager.GetRoomImage();
-            roomImage.Edges.Count.Should().Be(1);
+            addEdgeResult.IsSucceded.Should().Be(false);
+            var edges = _roomManager.GetRoomImage().Where(x => x.Type == KonvaType.Edge).ToList();
+            edges.Should().BeEmpty();
         }
 
         [Fact]
         public async Task ShouldDisallowConnectVerticesThatAreNotOnTheSameLayer()
         {
-            var vertex1Id = await AddVertex("User1");
+            var vertex1Id = await AddVertexToId("User1");
             var addLayerResult = await AddLayer("User1");
             addLayerResult.IsSucceded.Should().Be(true);
-            addLayerResult.UserAction.Item.Id.Should().Be("Layer 2");
-            var vertex2Id = await AddVertex("User1", "Layer 2");
+            addLayerResult.UserAction.Items.First().Id.Should().Be("Layer 2");
+            var vertex2Id = (await AddVertex("User1", "Layer 2")).UserAction.Items.First().Id;
             var addEdgeResult = await AddEdge("User1", vertex1Id, vertex2Id);
             addEdgeResult.IsSucceded.Should().Be(false);
         }
 
         [Fact]
+        public async Task ShouldNotConnectTheSameVerticesTwice()
+        {
+            var vertex1Id = await AddVertexToId("User1");
+            var vertex2Id = await AddVertexToId("User2");
+            var addEdgeResult1 = await AddEdge("User1", vertex1Id, vertex2Id);
+            var addEdgeResult2 = await AddEdge("User1", vertex1Id, vertex2Id);
+            var addEdgeResult3 = await AddEdge("User2",  vertex2Id,vertex1Id);
+            addEdgeResult1.IsSucceded.Should().Be(true);
+            addEdgeResult2.IsSucceded.Should().Be(false);
+            addEdgeResult3.IsSucceded.Should().Be(false);
+        }
+
+        [Fact]
         public async Task ShouldAddLine()
         {
-            var vertex1Id = await AddVertex("User1");
+            var vertex1Id = await AddVertexToId();
             var addLayerResult = await AddLine("User1", vertex1Id);
             addLayerResult.IsSucceded.Should().Be(true);
         }
@@ -136,90 +174,64 @@ namespace BackendTests
         [Fact]
         public async Task ShouldEditLine()
         {
-            var vertex1Id = await AddVertex("User1");
+            var vertex1Id = await AddVertexToId("User1");
             var addLineResult = await AddLine("User1", vertex1Id);
             addLineResult.IsSucceded.Should().Be(true);
             var editAction = new UserAction()
             {
                 ActionType = ActionType.Edit,
-                Item = new Line()
+                Items = new List<IRoomItem>() {  new Line()
                 {
                     Type = KonvaType.Line,
-                    Id = addLineResult.UserAction.Item.Id,
+                    Id = addLineResult.UserAction.Items.First().Id,
                     Layer = "Layer 1",
                     V1 = vertex1Id,
                     Points = new[] { 1, 2, 3, 4 },
-                },
+                } } ,
                 UserId = "User1",
             };
-            var editResult = await _roomManager.ExecuteAction(editAction);
+            var editResult = await _roomManager.ExecuteActionAsync(editAction);
             editResult.IsSucceded.Should().BeTrue();
         }
 
         [Fact]
         public async Task ShouldDeleteLine()
         {
-            var vertex1Id = await AddVertex("User1");
+            var vertex1Id = await AddVertexToId("User1");
             var addLineResult = await AddLine("User1", vertex1Id);
             addLineResult.IsSucceded.Should().Be(true);
             var deleteLineAction = new UserAction()
             {
                 ActionType = ActionType.Delete,
-                Item = new Line()
+                Items = new List<IRoomItem>() { new Line()
                 {
                     Type = KonvaType.Line,
-                    Id = addLineResult.UserAction.Item.Id,
-                },
+                    Id = addLineResult.UserAction.Items.First().Id,
+                } },
                 UserId = "User1",
             };
-            var editResult = await _roomManager.ExecuteAction(deleteLineAction);
+            var editResult = await _roomManager.ExecuteActionAsync(deleteLineAction);
             editResult.IsSucceded.Should().BeTrue();
         }
 
-        private async Task<string> AddVertex(string userId, string layerId = "Layer 1")
+        [Fact]
+        public async Task NoItemShouldRestAfterDeletingLastLayer()
         {
-            var addAction = new UserAction()
+            var vertex1Id = await AddVertexToId("User1");
+            var vertex2Id = await AddVertexToId("User1");
+            await AddEdge("User1", vertex1Id, vertex2Id);
+            
+            var deleteLayer = new UserAction()
             {
-                ActionType = ActionType.Add,
-                Item = new Vertex() { Type = KonvaType.Vertex, Layer = layerId },
-                UserId = userId,
+                ActionType = ActionType.Delete,
+                Items = new List<IRoomItem>() { new Layer() { Type = KonvaType.Layer, Id = "Layer 1"} },
+                UserId = "User1",
             };
-            var addResult = await _roomManager.ExecuteAction(addAction);
-            addResult.IsSucceded.Should().BeTrue();
-            return addResult.UserAction.Item.Id;
-        }
 
-        private async Task<ActionResult> AddLine(string userId, string v1, string layerId = "Layer 1")
-        {
-            var addAction = new UserAction()
-            {
-                ActionType = ActionType.Add,
-                Item = new Line() { Type = KonvaType.Line, Layer = layerId, V1 = v1 },
-                UserId = userId,
-            };
-            return await _roomManager.ExecuteAction(addAction);
-        }
-
-        private async Task<ActionResult> AddEdge(string userId, string v1, string v2)
-        {
-            var addAction = new UserAction()
-            {
-                ActionType = ActionType.Add,
-                Item = new Edge() { Type = KonvaType.Edge, V1 = v1, V2 = v2 },
-                UserId = userId,
-            };
-            return await _roomManager.ExecuteAction(addAction);
-        }
-
-        private async Task<ActionResult> AddLayer(string userId)
-        {
-            var addLayerAction = new UserAction()
-            {
-                ActionType = ActionType.Add,
-                Item = new Layer() { Id = "anything", Type = KonvaType.Layer },
-                UserId = "User1"
-            };
-            return await _roomManager.ExecuteAction(addLayerAction);
+            var deleteResult = await _roomManager.ExecuteActionAsync(deleteLayer);
+            deleteResult.IsSucceded.Should().BeTrue();
+            var image =  _roomManager.GetRoomImage().ToList();
+            image.Should().HaveCount(0);
         }
     }
 }

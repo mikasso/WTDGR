@@ -13,7 +13,11 @@ namespace Backend.Service
             .WriteTo.Console()
             .WriteTo.File("C:\\WTDGR_logs.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
-            CreateHostBuilder(args).Build().Run();
+            var app = CreateHostBuilder(args).Build();
+            Log.Information("Service starting..");
+            Log.Information("Waiting for connections");
+            app.Run();
+            Log.Information("Service has turned down.");
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -29,5 +33,6 @@ namespace Backend.Service
             {
                 webBuilder.UseStartup<Startup>();
             });
+        
     }
 }

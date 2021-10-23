@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Converters;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Backend.Models
@@ -7,7 +8,7 @@ namespace Backend.Models
     {
         public ActionType ActionType { get; set; }
         [JsonConverter(typeof(RoomItemConverter))]
-        public IRoomItem Item { get; set; }
+        public IList<IRoomItem> Items { get; set; }
         public string UserId { get; set; }
     }
 }

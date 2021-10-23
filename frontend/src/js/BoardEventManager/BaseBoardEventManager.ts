@@ -1,33 +1,44 @@
 import { State } from "@/store";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/types/Node";
+import { Shape } from "konva/types/Shape";
+import { CircleConfig } from "konva/types/shapes/Circle";
 import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
+import { ClassNames } from "../KonvaManager/ClassNames";
 import { Edge } from "../KonvaManager/EdgeManager";
+import { SelectLine } from "../KonvaManager/MultiselectManager";
+import { PencilLine } from "../KonvaManager/PencilManager";
 import { Vertex } from "../KonvaManager/VertexManager";
+import { IHandler } from "./IHandler";
 
-export default abstract class BaseBoardEventManager {
-  click!: (...params: any[]) => void;
-  mouseMove!: (...params: any[]) => void;
-  mouseDown!: (...params: any[]) => void;
-  mouseUp!: (...params: any[]) => void;
-  vertexMouseUp!: (...params: any[]) => void;
-  vertexMouseDown!: (...params: any[]) => void;
-  vertexMouseEnter!: (...params: any[]) => void;
-  vertexMouseLeave!: (...params: any[]) => void;
-  vertexDrag!: (...params: any[]) => void;
-  vertexDragend!: (...params: any[]) => void;
-  vertexDragstart!: (...params: any[]) => void;
-  edgeClick!: (...params: any[]) => void;
-  edgeMouseEnter!: (...params: any[]) => void;
-  edgeMouseLeave!: (...params: any[]) => void;
-  edgeMouseDown!: (...params: any[]) => void;
-  edgeMouseUp!: (...params: any[]) => void;
-  pencilClick!: (...params: any[]) => void;
-  multiselectMouseDown!: (...params: any[]) => void;
-  multiselectMouseUp!: (...params: any[]) => void;
+interface IEventBinder {
+  bindItem(item: Shape<CircleConfig>): void;
+}
+export default abstract class BaseBoardEventManager implements IEventBinder {
+  click!: (event: KonvaEventObject<any>) => void;
+  mouseMove!: (event: KonvaEventObject<any>) => void;
+  mouseDown!: (event: KonvaEventObject<any>) => void;
+  mouseUp!: (event: KonvaEventObject<any>) => void;
+  vertexMouseUp!: (event: KonvaEventObject<any>) => void;
+  vertexMouseDown!: (event: KonvaEventObject<any>) => void;
+  vertexMouseEnter!: (event: KonvaEventObject<any>) => void;
+  vertexMouseLeave!: (event: KonvaEventObject<any>) => void;
+  vertexDrag!: (event: KonvaEventObject<any>) => void;
+  vertexDragend!: (event: KonvaEventObject<any>) => void;
+  vertexDragstart!: (event: KonvaEventObject<any>) => void;
+  edgeClick!: (event: KonvaEventObject<any>) => void;
+  edgeMouseEnter!: (event: KonvaEventObject<any>) => void;
+  edgeMouseLeave!: (event: KonvaEventObject<any>) => void;
+  edgeMouseDown!: (event: KonvaEventObject<any>) => void;
+  edgeMouseUp!: (event: KonvaEventObject<any>) => void;
+  multiselectMouseDown!: (event: KonvaEventObject<any>) => void;
+  multiselectMouseUp!: (event: KonvaEventObject<any>) => void;
+  pencilClick!: (event: KonvaEventObject<any>) => void;
 
   boardManager: BoardManager;
   store: Store<State>;
+  handlers: IHandler[];
 
   constructor(boardManager: BoardManager, store: Store<State>) {
     this.boardManager = boardManager;
@@ -35,19 +46,52 @@ export default abstract class BaseBoardEventManager {
     this.store = store;
     this.clearHandlers();
     this.bindStageEvents(boardManager.stage);
+    this.handlers = [];
   }
 
-  abstract setSelectToolHandlers(): void;
-  abstract setVertexToolHandlers(): void;
-  abstract setEdgeToolHandlers(): void;
-  abstract setEraseToolHandlers(): void;
-  abstract setPencilToolHandlers(): void;
-  abstract setMultiselectToolHandlers(): void;
-  abstract addLayer(): void;
-  abstract removeLayer(layerId: string): void;
-  abstract reorderLayers(index1: number, index2: number): void;
+  public bindItem(item: Shape<CircleConfig>): void {
+    switch (item.getClassName()) {
+      case ClassNames.Vertex:
+        this.bindVertexEvents(item as Vertex);
+        break;
+      case ClassNames.Edge:
+        this.bindEdgeEvents(item as Edge);
+        break;
+      case ClassNames.PencilLine:
+        this.bindPencilEvents(item as PencilLine);
+        break;
+      case "Line":
+        this.bindMultiselectEvents(item as SelectLine);
+        break;
+      default:
+        throw new Error(
+          `Cannot bind this item. Konva ClassName: ${item.getClassName()}`
+        );
+    }
+  }
 
-  clearHandlers() {
+  public abstract toolChanged(toolName: string): void;
+  /**
+   * @deprecated Move to layer handler
+   */
+  abstract addLayer(): void;
+  /**
+   * @deprecated Move to layer handler
+   */
+  abstract removeLayer(layerId: string): void;
+
+  /**
+   * @deprecated Move to layer handler
+   */
+  abstract reorderLayers(index1: number, index2: number): void;
+  /**
+   * @deprecated Move to layer handler
+   */
+  highlightLayer(layerId: string, on: boolean) {
+    this.boardManager.highlightLayer(layerId, on);
+  }
+
+  protected clearHandlers() {
     this.click = () => {};
     this.mouseMove = () => {};
     this.mouseDown = () => {};
@@ -67,14 +111,14 @@ export default abstract class BaseBoardEventManager {
     this.pencilClick = () => {};
   }
 
-  bindStageEvents(stage: Konva.Stage) {
+  private bindStageEvents(stage: Konva.Stage) {
     stage.on("click", (event) => this.click(event));
     stage.on("mousedown", (event) => this.mouseDown(event));
     stage.on("mouseup", (event) => this.mouseUp(event));
     stage.on("mousemove", (event) => this.mouseMove(event));
   }
 
-  bindVertexEvents(vertex: Vertex) {
+  private bindVertexEvents(vertex: Vertex) {
     vertex.on("mousedown", (event) => {
       this.vertexMouseDown(event);
     });
@@ -98,7 +142,7 @@ export default abstract class BaseBoardEventManager {
     });
   }
 
-  bindEdgeEvents(edge: Edge) {
+  private bindEdgeEvents(edge: Edge) {
     edge.on("click", (event) => {
       this.edgeClick(event);
     });
@@ -117,64 +161,18 @@ export default abstract class BaseBoardEventManager {
     });
   }
 
-  bindPencilEvents(pencil: any) {
+  private bindPencilEvents(pencil: PencilLine) {
     pencil.on("click", (event: any) => {
       this.pencilClick(event);
     });
   }
 
-  bindMultiselectEvents(select: any) {
-    select.on("mousedown", (event: any) => {
+  private bindMultiselectEvents(line: SelectLine) {
+    line.on("mousedown", (event) => {
       this.multiselectMouseDown(event);
     });
-
-    select.on("mouseup", (event: any) => {
+    line.on("mouseup", (event) => {
       this.multiselectMouseUp(event);
     });
-  }
-
-  toolChanged(toolName: string) {
-    this.boardManager.vertexManager.disableDrag(this.store.state.layers);
-    this.boardManager.setHighlightOfSelected(false);
-    this.clearHandlers();
-    switch (toolName) {
-      case "Select":
-        this.setSelectToolHandlers();
-        break;
-      case "Vertex":
-        this.setVertexToolHandlers();
-        break;
-      case "Edge":
-        this.setEdgeToolHandlers();
-        break;
-      case "Erase":
-        this.setEraseToolHandlers();
-        break;
-      case "Pencil":
-        this.setPencilToolHandlers();
-        break;
-      case "Multiselect":
-        this.setMultiselectToolHandlers();
-        break;
-    }
-  }
-
-  isLeftClick(event: { evt: { which: number } }) {
-    return event.evt.which === 1;
-  }
-
-  isRightClick(event: { evt: { which: number } }) {
-    return event.evt.which === 3;
-  }
-
-  getPointFromEvent(event: any) {
-    return {
-      x: event.evt.layerX,
-      y: event.evt.layerY,
-    };
-  }
-
-  highlightLayer(layerId: string, on: boolean) {
-    this.boardManager.highlightLayer(layerId, on);
   }
 }
