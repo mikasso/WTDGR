@@ -27,9 +27,11 @@ export default class OnlineSelectToolHandler implements IHandler {
 
   public setActive(eventManager: BaseBoardEventManager): void {
     this.offlineHighlighter.setActive(eventManager);
-    eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
-    eventManager.mouseUp = () => this.mouseUp();
-    eventManager.edgeMouseDown = (event) => this.edgeMouseDown(event);
+    eventManager.vertexMouseDown = async (event) =>
+      await this.vertexMouseDown(event);
+    eventManager.mouseUp = async () => await this.mouseUp();
+    eventManager.edgeMouseDown = async (event) =>
+      await this.edgeMouseDown(event);
   }
 
   public setInactive(): void {
@@ -65,7 +67,7 @@ export default class OnlineSelectToolHandler implements IHandler {
     this.currentEdge = null;
   }
 
-  private sendVertexEdit(vertex: Vertex) {
+  private async sendVertexEdit(vertex: Vertex) {
     const mousePos = this.boardManager.getMousePosition();
 
     const action = this.actionFactory.create(ActionTypes.Edit, {
@@ -73,10 +75,10 @@ export default class OnlineSelectToolHandler implements IHandler {
       x: mousePos.x,
       y: mousePos.y,
     });
-    return this.hub.sendAction(action);
+    await this.hub.sendAction(action);
   }
 
-  private sendVertexEditsFromEdge(edge: Edge) {
+  private async sendVertexEditsFromEdge(edge: Edge) {
     const mousePos = this.boardManager.getMousePosition();
     const {
       v1Pos,
@@ -94,7 +96,7 @@ export default class OnlineSelectToolHandler implements IHandler {
       },
     ]);
 
-    return this.hub.sendAction(action);
+    await this.hub.sendAction(action);
   }
 
   private async vertexMouseDown(event: KonvaEventObject<any>) {
@@ -104,7 +106,7 @@ export default class OnlineSelectToolHandler implements IHandler {
       ActionTypes.RequestToEdit,
       vertex.asDTO()
     );
-    this.hub.sendAction(action);
+    await this.hub.sendAction(action);
 
     const result = await poll({
       fn: () => {
@@ -117,7 +119,7 @@ export default class OnlineSelectToolHandler implements IHandler {
           }
           this.currentVertex.setAttrs({ stroke: this.hub.userColor() });
           this.intervalId = window.setInterval(
-            (x: Vertex) => this.sendVertexEdit(x),
+            async (x: Vertex) => await this.sendVertexEdit(x),
             SentRequestInterval,
             this.currentVertex
           );
@@ -149,7 +151,7 @@ export default class OnlineSelectToolHandler implements IHandler {
       edge.v1.asDTO(),
       edge.v2.asDTO(),
     ]);
-    this.hub.sendAction(action);
+    await this.hub.sendAction(action);
 
     const result = await poll({
       fn: () => {
@@ -169,7 +171,7 @@ export default class OnlineSelectToolHandler implements IHandler {
             )
           );
           this.intervalId = window.setInterval(
-            (x: Edge) => this.sendVertexEditsFromEdge(x),
+            async (x: Edge) => await this.sendVertexEditsFromEdge(x),
             SentRequestInterval * 1.3,
             this.currentEdge
           );
