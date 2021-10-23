@@ -33,7 +33,6 @@ export default abstract class BaseBoardEventManager implements IEventBinder {
   edgeMouseDown!: (event: KonvaEventObject<any>) => void;
   edgeMouseUp!: (event: KonvaEventObject<any>) => void;
   multiselectMouseDown!: (event: KonvaEventObject<any>) => void;
-  multiselectMouseUp!: (event: KonvaEventObject<any>) => void;
   pencilClick!: (event: KonvaEventObject<any>) => void;
 
   boardManager: BoardManager;
@@ -170,9 +169,6 @@ export default abstract class BaseBoardEventManager implements IEventBinder {
   private bindMultiselectEvents(line: SelectLine) {
     line.on("mousedown", (event) => {
       this.multiselectMouseDown(event);
-    });
-    line.on("mouseup", (event) => {
-      this.multiselectMouseUp(event);
     });
   }
 }

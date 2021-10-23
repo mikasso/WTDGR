@@ -2,6 +2,9 @@ import Konva from "konva";
 import { Cordinates, Vertex } from "./VertexManager";
 import classifyPoint from "robust-point-in-polygon";
 import { ClassNames } from "./ClassNames";
+import BoardManager from "./BoardManager";
+import { toHandlers } from "@vue/runtime-core";
+import { formatArrayBuffer } from "@microsoft/signalr/dist/esm/Utils";
 
 type Point = [number, number];
 
@@ -22,12 +25,15 @@ export default class MultiselectManager {
   isDrawing: boolean;
   selectedVertexes: Vertex[];
   isDragging: boolean;
+  vertexDragOfffset: { [id: string]: { offset: Cordinates; vertex: Vertex } };
+  selectDragOffset: Cordinates | undefined;
 
-  constructor() {
+  constructor(private boardManager: BoardManager) {
     this.currentDrawing = undefined;
     this.isDrawing = false;
     this.selectedVertexes = [];
     this.isDragging = false;
+    this.vertexDragOfffset = {};
   }
 
   defualtConfig = {
@@ -44,6 +50,7 @@ export default class MultiselectManager {
     layer: Konva.Layer,
     config: any = this.defualtConfig
   ): SelectLine {
+    console.log("create");
     this.selectedVertexes = [];
     config.points = [position.x, position.y];
     const newLine = new SelectLine(config, layer);
@@ -69,17 +76,16 @@ export default class MultiselectManager {
   }
 
   finishDrawing() {
+    console.log("finishDrawing");
     this.isDrawing = false;
     if (this.currentDrawing == null) return;
     const layerToRedraw = this.currentDrawing?.layer;
     this.selectedVertexes = [];
 
     const points = this.numberArrayToPoints(this.currentDrawing!.points());
-    console.log("halo");
     for (const vertex of layerToRedraw!.getChildren(
       (node) => node.getClassName() === ClassNames.Vertex
     )) {
-      console.log(vertex.position().x, vertex.position().y);
       if (
         classifyPoint(points, [
           vertex.position().x,
@@ -89,21 +95,57 @@ export default class MultiselectManager {
         this.selectedVertexes.push(vertex as Vertex);
       }
     }
-    console.log(this.selectedVertexes);
     if (this.selectedVertexes.length == 0) this.removeSelect();
-    // this.currentDrawing!.attrs.stroke = "gray";
     layerToRedraw!.draw();
   }
 
-  startDrag() {
+  startDrag(mousePos: Cordinates) {
+    console.log("startDrag");
     this.isDragging = true;
+    this.vertexDragOfffset = {};
+    this.selectDragOffset = undefined;
+    for (const vertex of this.selectedVertexes) {
+      this.vertexDragOfffset[vertex._id] = {
+        vertex: vertex,
+        offset: {
+          x: vertex.x() - mousePos.x,
+          y: vertex.y() - mousePos.y,
+        },
+      };
+    }
+    this.selectDragOffset = {
+      x: this.currentDrawing!.x() - mousePos.x,
+      y: this.currentDrawing!.y() - mousePos.y,
+    };
+  }
+
+  updateDrag(mousePos: Cordinates) {
+    if (!this.isDragging) return;
+    for (const i in this.vertexDragOfffset) {
+      const offsetData = this.vertexDragOfffset[i];
+      const newPos = {
+        x: mousePos.x + offsetData.offset.x,
+        y: mousePos.y + offsetData.offset.y,
+      };
+      offsetData.vertex.position(newPos);
+      this.boardManager.dragEdges(offsetData.vertex);
+    }
+    this.currentDrawing?.position({
+      x: this.selectDragOffset!.x + mousePos.x,
+      y: this.selectDragOffset!.y + mousePos.y,
+    });
+    this.currentDrawing?.layer.draw();
   }
 
   stopDrag() {
+    console.log("stopDrag");
     this.isDragging = false;
+    this.vertexDragOfffset = {};
+    this.selectDragOffset = undefined;
   }
 
   numberArrayToPoints(numbers: number[]) {
+    console.log("numberArrayToPoints");
     const result = [];
     for (let i = 0; i < numbers.length; i += 2) {
       result.push([numbers[i], numbers[i + 1]]);
@@ -112,6 +154,7 @@ export default class MultiselectManager {
   }
 
   removeSelect() {
+    console.log("removeSelect");
     if (!this.currentDrawing) return;
     const removedDrawingLayer = this.currentDrawing!.layer;
     this.currentDrawing!.destroy();

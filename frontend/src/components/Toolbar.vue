@@ -104,7 +104,6 @@ export default defineComponent({
     draggable,
   },
   setup(props, { emit }) {
-    console.log("Toolbar setup");
     const store = useStore<State>(key);
 
     const layers = computed({

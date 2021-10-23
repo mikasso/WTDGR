@@ -11,33 +11,51 @@ export default class OfflineMultiselectToolHandler implements IHandler {
   setInactive(): void {}
   setActive(eventManager: BaseBoardEventManager): void {
     eventManager.mouseDown = (event) => this.mouseDown(event);
-    eventManager.mouseMove = (event) => this.mouseMove(event);
     eventManager.mouseUp = (event) => this.mouseUp(event);
     eventManager.multiselectMouseDown = (event) =>
       this.multiselectMouseDown(event);
-    eventManager.multiselectMouseUp = (event) => this.multiselectMouseUp(event);
   }
 
   private mouseDown(event: KonvaEventObject<any>) {
+    console.log("mouseDown");
     if (this.boardManager.multiselectManager.isDragging) return;
     if (!isLeftClick(event)) return;
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.startMultiselect(mousePos);
+    this.updateDraw();
   }
-  private mouseMove(event: KonvaEventObject<any>) {
-    if (this.boardManager.multiselectManager.isDragging) return;
-    if (!isLeftClick(event)) return;
-    const mousePos = this.boardManager.getMousePosition();
-    this.boardManager.moveMultiselect(mousePos);
-  }
+
   private mouseUp(event: KonvaEventObject<Vertex>) {
-    this.boardManager.multiselectManager.stopDrag();
-    this.boardManager.finishMultiselect();
+    console.log("mouseUp", this.boardManager.multiselectManager.isDragging);
+    if (this.boardManager.multiselectManager.isDragging)
+      this.boardManager.multiselectManager.stopDrag();
+    else this.boardManager.finishMultiselect();
   }
+
   private multiselectMouseDown(event: KonvaEventObject<Vertex>) {
-    this.boardManager.multiselectManager.startDrag();
+    console.log("multiselectMouseDown");
+    const mousePos = this.boardManager.getMousePosition();
+    this.boardManager.multiselectManager.startDrag(mousePos);
+    this.updateDrag();
   }
-  private multiselectMouseUp(event: KonvaEventObject<Vertex>) {
-    this.boardManager.multiselectManager.stopDrag();
+
+  private async updateDraw() {
+    while (this.boardManager.multiselectManager.isDrawing) {
+      const mousePos = this.boardManager.getMousePosition();
+      this.boardManager.moveMultiselect(mousePos);
+      await new Promise((resolve) => {
+        setTimeout(resolve, 20);
+      });
+    }
+  }
+
+  private async updateDrag() {
+    while (this.boardManager.multiselectManager.isDragging) {
+      const mousePos = this.boardManager.getMousePosition();
+      this.boardManager.multiselectManager.updateDrag(mousePos);
+      await new Promise((resolve) => {
+        setTimeout(resolve, 30);
+      });
+    }
   }
 }

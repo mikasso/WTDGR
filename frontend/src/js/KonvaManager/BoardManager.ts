@@ -33,7 +33,7 @@ export default class BoardManager {
     this.edgeManager = new EdgeManager();
     this.vertexManager = new VertexManager();
     this.pencilManager = new PencilManager();
-    this.multiselectManager = new MultiselectManager();
+    this.multiselectManager = new MultiselectManager(this);
   }
 
   get currentLayer(): Konva.Layer {
@@ -269,7 +269,6 @@ export default class BoardManager {
     if (selectedVertexes != null && selectedVertexes.length > 0) {
       for (const vertex of selectedVertexes) {
         this.vertexManager.setHiglight(vertex, value);
-        console.log(vertex);
       }
     }
   }
