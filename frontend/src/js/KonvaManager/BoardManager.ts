@@ -34,10 +34,13 @@ export default class BoardManager {
     this.pencilManager = new PencilManager();
   }
 
-  public static getBoardManager(store = BoardManager.boardManager.store): BoardManager{
-    if(!BoardManager.boardManager){
+  public static createBoardManagerSingleton(store: Store<State>) {
+    if (!BoardManager.boardManager) {
       BoardManager.boardManager = new BoardManager(store);
     }
+  }
+
+  public static getBoardManager(): BoardManager {
     return BoardManager.boardManager;
   }
 

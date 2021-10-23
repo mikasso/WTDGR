@@ -118,7 +118,8 @@ export default defineComponent({
       if (this.eventManager !== undefined) {
         this.eventManager.toolChanged("None");
       }
-      let boardManager = BoardManager.getBoardManager(this.store);
+      BoardManager.createBoardManagerSingleton(this.store);
+      let boardManager = BoardManager.getBoardManager();
       if (isOnline) {
         const apiManager = new ApiManager(boardManager, this.store);
         const hub = new BoardHub(apiManager, this.store);
