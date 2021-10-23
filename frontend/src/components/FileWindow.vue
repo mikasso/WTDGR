@@ -39,8 +39,17 @@
             style="text-align: center"
           />
         </el-select>
-        <input id="upload-input" type="file" @change="fileUploaded" hidden />
+        <input
+          id="upload-input"
+          type="file"
+          @change="fileUploaded"
+          :accept="'.' + importFormat"
+          hidden
+        />
         <el-button @click="upload">Upload file</el-button>
+        <span style="color: red" v-if="showError">
+          Uploaded file was incorrect
+        </span>
       </el-col>
     </el-row>
   </el-dialog>
@@ -70,6 +79,7 @@ export default defineComponent({
     return {
       dialogVisible: false,
       downloadUrl: "",
+      showError: false,
 
       exportFormat: "gdf",
       importFormat: "gdf",
@@ -85,10 +95,12 @@ export default defineComponent({
     upload() {
       document.getElementById("upload-input")!.click();
     },
-    fileUploaded(event: any) {
+    async fileUploaded(event: any) {
+      this.showError = false;
       const formater = getFormater(this.hub!, this.importFormat);
-      formater.importStage(event!.target.files[0]);
-      this.dialogVisible = false;
+      const result = await formater.importStage(event!.target.files[0]);
+      if (result) this.dialogVisible = false;
+      else this.showError = true;
     },
   },
 });
