@@ -7,7 +7,10 @@ import { IHandler } from "../IHandler";
 import { getPointFromEvent, isLeftClick } from "../utils";
 
 export default class OfflineEdgeToolHandler implements IHandler {
-  constructor(private boardManager: BoardManager) {}
+  private boardManager: BoardManager;
+  constructor() {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setInactive(): void {
     this.mouseUp();
   }

@@ -19,20 +19,18 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
   pencilHandler: IHandler;
   highlightHandler: IHandler;
   handlers: IHandler[];
-  constructor(boardManager: BoardManager, store: Store<State>) {
-    super(boardManager, store);
-    this.highlightHandler = new OfflineHighlightToolHandler(boardManager);
+  constructor(store: Store<State>) {
+    super(store);
+    this.highlightHandler = new OfflineHighlightToolHandler();
     this.selectHandler = new OffLineSelectHandler(
-      boardManager,
       this.highlightHandler
     );
-    this.edgeHandler = new OfflineEdgeToolHandler(boardManager);
-    this.vertexHandler = new OfflineVertexToolHandler(boardManager);
+    this.edgeHandler = new OfflineEdgeToolHandler();
+    this.vertexHandler = new OfflineVertexToolHandler();
     this.eraseHandler = new OfflineEraseToolHandler(
-      boardManager,
       this.highlightHandler
     );
-    this.pencilHandler = new OfflinePencilToolHandler(boardManager);
+    this.pencilHandler = new OfflinePencilToolHandler();
 
     this.handlers = [
       this.highlightHandler,

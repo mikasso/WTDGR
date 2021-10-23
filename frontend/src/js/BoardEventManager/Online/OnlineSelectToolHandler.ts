@@ -16,12 +16,14 @@ export default class OnlineSelectToolHandler implements IHandler {
   currentEdge: Edge | null = null;
   private readonly MaxAttempts = 3;
   private readonly PollingTime = 100;
+  private boardManager: BoardManager;
   constructor(
-    private boardManager: BoardManager,
     private actionFactory: ActionFactory,
     private hub: BoardHub,
     private offlineHighlighter: IHandler
-  ) {}
+  ) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
 
   public setActive(eventManager: BaseBoardEventManager): void {
     this.offlineHighlighter.setActive(eventManager);

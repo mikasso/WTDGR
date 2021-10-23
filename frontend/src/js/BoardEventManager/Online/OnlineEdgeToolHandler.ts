@@ -13,11 +13,13 @@ import { isLeftClick } from "../utils";
 export default class OnlineEdgeToolHandler implements IHandler {
   intervalId: number | null = null;
   currentLine: TemporaryLine | null = null;
+  private boardManager: BoardManager;
   constructor(
-    private boardManager: BoardManager,
     private actionFactory: ActionFactory,
     private hub: BoardHub
-  ) {}
+  ) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
 
   public setActive(eventManager: BaseBoardEventManager): void {
     eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
