@@ -42,6 +42,7 @@ export default class BoardHub {
 
     this.connection.onclose(() => this.store.commit("setOffline"));
     this.connection.onreconnected(() => this.store.commit("setOnline"));
+    this.connection.onreconnecting(() => this.store.commit("setOffline"));
   }
 
   public userColor() {
