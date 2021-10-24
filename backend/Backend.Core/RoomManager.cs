@@ -99,8 +99,11 @@ namespace Backend.Core
             switch (userAction.ActionType)
             {
                 case ActionType.Add:
-                    if(item.Id == null)
-                        item.Id = Guid.NewGuid().ToString();
+                    if(item.Id == null){
+item.Id = Guid.NewGuid().ToString();
+            Log.Information($"Item given id {item.Id}, Action type:{userAction.ActionType}\n{userAction.Item.ToJsonString()}");
+                        
+                    }
                     return () => itemManager.Add(item);
                 case ActionType.RequestToEdit:
                     item.EditorId = userAction.UserId;

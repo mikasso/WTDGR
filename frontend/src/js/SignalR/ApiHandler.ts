@@ -116,6 +116,10 @@ export default class ApiManager {
         case ClassNames.Layer:
           this.boardManager.deleteLayer(action.item.id);
           break;
+        case ClassNames.PencilLine:
+          console.log("delete pencil", action.item.id);
+          this.boardManager.deletePencilLine(action.item.id);
+          break;
         default:
           throw Error(`Not implement delete for ${action.item.type}`);
       }

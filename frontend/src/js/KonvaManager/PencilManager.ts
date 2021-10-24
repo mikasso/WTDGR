@@ -19,7 +19,6 @@ export class PencilLine extends Konva.Line {
       ...this.attrs,
       type: this.getClassName(),
     };
-    dto.Id = this._id;
     return dto;
   }
 }
