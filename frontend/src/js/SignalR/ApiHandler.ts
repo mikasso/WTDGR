@@ -6,6 +6,7 @@ import { ClassNames } from "../KonvaManager/ClassNames";
 import { Edge, EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 import UserAction from "./Action";
+import { LineConfig } from "konva/types/shapes/Line";
 
 export enum ActionTypes {
   Add = "Add",
@@ -83,6 +84,18 @@ export default class ApiManager {
           if (action.userId === this.user.userId)
             this.boardManager.setCurrentLayer(action.item.id);
           break;
+        case ClassNames.PencilLine: {
+          const pencilLine = this.boardManager.addPencil(
+            {
+              x: action.item.x as number,
+              y: action.item.y as number,
+            },
+            action.item as LineConfig,
+            action.item.layer as string
+          );
+          this.boardManager.draw(pencilLine);
+          break;
+        }
         default:
           throw Error(`Not implement add for ${action.item.type}`);
       }
@@ -122,6 +135,10 @@ export default class ApiManager {
           action.item.replaceWithId! as string
         );
         break;
+      case ClassNames.PencilLine: {
+        this.boardManager.editPencilLine(action.item as LineDTO);
+        break;
+      }
       default:
         throw Error(`Not implement edit for ${action.item.type}`);
     }

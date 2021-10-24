@@ -20,6 +20,7 @@ namespace Backend.Core
         private readonly VerticesManager _verticesManager;
         private readonly LayersManager _layersManager = new LayersManager();
         private readonly LineManager _lineManager = new LineManager();
+        private readonly PencilManager _pencilManager = new PencilManager();
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         public RoomManager(string id)
@@ -48,6 +49,7 @@ namespace Backend.Core
                 Vertices = _verticesManager.GetAll().Cast<Vertex>().ToList(),
                 Edges = _edgeManager.GetAll().Cast<Edge>().ToList(),
                 Layers = _layersManager.GetAll().Cast<Layer>().ToList(),
+                PencilLines = _pencilManager.GetAll().Cast<PencilLine>().ToList(),
             };
         }
 
@@ -145,6 +147,7 @@ namespace Backend.Core
                 KonvaType.Layer => _layersManager,
                 KonvaType.Edge => _edgeManager,
                 KonvaType.Line => _lineManager,
+                KonvaType.PencilLine => _pencilManager,
                 _ => throw new NotImplementedException(),
             };
         }

@@ -50,6 +50,7 @@ export default class BoardManager {
   }
 
   findById(id: string | undefined) {
+    console.log(id, this.stage.findOne(`#${id}`));
     return this.stage.findOne(`#${id}`); //konva uses id as selector so # is required
   }
 
@@ -227,19 +228,51 @@ export default class BoardManager {
       position,
       this.currentLayer
     );
+    this.pencilManager.draw(pencilDrawing);
+    pencilDrawing.redraw();
     this.eventManager.bindItem(pencilDrawing);
+  }
+
+  addPencil(
+    position: Cordinates,
+    attrs?: Konva.LineConfig,
+    layerId: string = this.currentLayer.id()
+  ): PencilLine {
+    const layer: Konva.Layer = this.getLayerById(layerId)!;
+    const pencilLine = this.pencilManager.newLine(position, layer, attrs);
+    this.eventManager.bindItem(pencilLine);
+    return pencilLine;
+  }
+
+  createPencil(position: Cordinates) {
+    const pencilDrawing = this.pencilManager.create(
+      position,
+      this.currentLayer
+    );
+    return pencilDrawing;
+    // this.pencilManager.draw(pencilDrawing);
+    // pencilDrawing.redraw();
+    // this.eventManager.bindItem(pencilDrawing);
   }
 
   movePencil(position: Cordinates) {
     this.pencilManager.appendPoint(position);
+    this.pencilManager.currentDrawing?.redraw();
   }
 
   finishPencilDrawing() {
     this.pencilManager.finishDrawing();
+    this.pencilManager.currentDrawing?.redraw();
   }
 
   eraseDrawing(drawing: any) {
     this.pencilManager.removeDrawing(drawing);
+  }
+
+  editPencilLine(lineDTO: LineDTO) {
+    const line = this.findById(lineDTO.id) as PencilLine;
+    line.setAttrs(lineDTO);
+    line.redraw();
   }
 
   selectLayer(layerId: string) {

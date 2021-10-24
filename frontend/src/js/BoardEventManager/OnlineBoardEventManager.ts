@@ -7,11 +7,11 @@ import BoardHub from "../SignalR/Hub";
 import BaseBoardEventManager from "./BaseBoardEventManager";
 import { IHandler } from "./IHandler";
 import OfflineHighlightToolHandler from "./Offline/OfflineHighlightToolHandler";
-import OfflinePencilToolHandler from "./Offline/OfflinePencilToolHandler";
 import OnlineEdgeToolHandler from "./Online/OnlineEdgeToolHandler";
 import OnlineEraseToolHandler from "./Online/OnlineEraseToolHandler";
 import OnlineSelectToolHandler from "./Online/OnlineSelectToolHandler";
 import OnlineVertextoolHandler from "./Online/OnlineVertexToolHandler";
+import OnlinePencilToolHandler from "./Online/OnlinePencilToolHandler";
 
 export const SentRequestInterval = 20;
 
@@ -50,7 +50,11 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.hub
     );
     this.highlightHandler = new OfflineHighlightToolHandler(this.boardManager);
-    this.pencilHandler = new OfflinePencilToolHandler(this.boardManager);
+    this.pencilHandler = new OnlinePencilToolHandler(
+      this.boardManager,
+      this.actionFactory,
+      this.hub
+    );
 
     this.eraseHandler = new OnlineEraseToolHandler(
       this.boardManager,

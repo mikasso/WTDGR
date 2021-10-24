@@ -13,6 +13,15 @@ export class PencilLine extends Konva.Line {
   redraw(): void {
     this.layer.draw();
   }
+
+  asDTO() {
+    const dto = {
+      ...this.attrs,
+      type: this.getClassName(),
+    };
+    dto.Id = this._id;
+    return dto;
+  }
 }
 
 export default class PencilManager {
@@ -31,22 +40,29 @@ export default class PencilManager {
     lineJoin: "round",
   };
 
-  create(
+  newLine(
     position: Cordinates,
     layer: Konva.Layer,
     config: any = this.defualtConfig
   ) {
     config.points = [position.x, position.y];
     const newLine = new PencilLine(config, layer);
+    return newLine;
+  }
+
+  create(
+    position: Cordinates,
+    layer: Konva.Layer,
+    config: any = this.defualtConfig
+  ) {
+    const newLine = this.newLine(position, layer, config);
     this.isDrawing = true;
     this.currentDrawing = newLine;
-    this.draw(this.currentDrawing);
     return newLine;
   }
 
   draw(drawing: PencilLine) {
     drawing.layer.add(drawing);
-    drawing.redraw();
   }
 
   appendPoint(position: Cordinates) {
@@ -55,7 +71,6 @@ export default class PencilManager {
     points.push(position.x);
     points.push(position.y);
     this.currentDrawing?.points(points);
-    this.currentDrawing?.redraw();
   }
 
   finishDrawing() {
