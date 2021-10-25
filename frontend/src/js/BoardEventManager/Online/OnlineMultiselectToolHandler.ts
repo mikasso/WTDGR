@@ -9,10 +9,11 @@ import { ActionFactory } from "@/js/SignalR/Action";
 import BoardHub from "@/js/SignalR/Hub";
 import { ActionTypes } from "@/js/SignalR/ApiHandler";
 import { SentRequestInterval } from "../OnlineBoardEventManager";
+import { ItemColors } from "../utils";
 
 export default class OnlineMultiselectToolHandler implements IHandler {
   intervalId: number | null = null;
-  vertexesDTO: Vertex[] = [];
+  vertexesDTO: any[] = [];
   private readonly MaxAttempts = 3;
   private readonly PollingTime = 100;
   constructor(
@@ -34,11 +35,7 @@ export default class OnlineMultiselectToolHandler implements IHandler {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
     }
-    if (this.vertexesDTO.length > 0) {
-      this.hub.sendAction(
-        this.actionFactory.create(ActionTypes.ReleaseItem, this.vertexesDTO)
-      );
-    }
+    this.releaseVertexes();
     this.intervalId = null;
     this.boardManager.setHighlightOfSelected(false);
     this.boardManager.multiselectManager.stopDrag();
@@ -49,14 +46,22 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   private mouseDown(event: KonvaEventObject<any>) {
     if (this.boardManager.multiselectManager.isDragging) return;
     if (!isLeftClick(event)) return;
-    if (this.vertexesDTO.length > 0) {
-      this.hub.sendAction(
-        this.actionFactory.create(ActionTypes.ReleaseItem, this.vertexesDTO)
-      );
-    }
+    this.releaseVertexes();
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.startMultiselect(mousePos);
     this.updateDraw();
+  }
+
+  private releaseVertexes() {
+    if (this.vertexesDTO.length > 0) {
+      for (const vertex of this.vertexesDTO) {
+        vertex.stroke = ItemColors.defaultStroke;
+      }
+      this.hub.sendAction(
+        this.actionFactory.create(ActionTypes.ReleaseItem, this.vertexesDTO)
+      );
+      this.vertexesDTO = [];
+    }
   }
 
   private async updateDraw() {
@@ -78,10 +83,16 @@ export default class OnlineMultiselectToolHandler implements IHandler {
       this.intervalId = null;
     } else {
       this.boardManager.finishMultiselect();
+      const selectedVertexes = this.boardManager.multiselectManager
+        .selectedVertexes;
+      if (selectedVertexes.length == 0) return;
       this.vertexesDTO = [];
-      for (const vertex of this.boardManager.multiselectManager
-        .selectedVertexes)
+      for (const vertex of selectedVertexes) {
+        vertex.setAttrs({
+          stroke: this.hub.userColor(),
+        });
         this.vertexesDTO.push(vertex.asDTO());
+      }
       const action = this.actionFactory.create(
         ActionTypes.RequestToEdit,
         this.vertexesDTO
@@ -92,13 +103,16 @@ export default class OnlineMultiselectToolHandler implements IHandler {
 
   private sendVertexesEdit() {
     const mousePos = this.boardManager.getMousePosition();
-    const vertexDTO = this.boardManager.multiselectManager.updatedSelectedPosAsDto(
+    this.vertexesDTO = this.boardManager.multiselectManager.updatedSelectedPosAsDto(
       mousePos,
       this.hub.userColor()
     );
     this.boardManager.multiselectManager.moveDrawing(mousePos);
 
-    const action = this.actionFactory.create(ActionTypes.Edit, vertexDTO);
+    const action = this.actionFactory.create(
+      ActionTypes.Edit,
+      this.vertexesDTO
+    );
     return this.hub.sendAction(action);
   }
 

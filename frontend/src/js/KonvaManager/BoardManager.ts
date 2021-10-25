@@ -144,8 +144,6 @@ export default class BoardManager {
 
   editLine(lineDTO: LineDTO) {
     const line = this.findById(lineDTO.id) as TemporaryLine;
-    console.log("requested line" + JSON.stringify(lineDTO));
-    console.log("founded line" + line);
     line.setAttrs(lineDTO);
     line.redraw();
   }

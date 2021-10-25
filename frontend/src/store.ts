@@ -51,11 +51,9 @@ export const store = createStore<State>({
   },
   mutations: {
     setOnline(state) {
-      console.log("set online");
       state.isOnline = true;
     },
     setOffline(state) {
-      console.log("set offline");
       state.isOnline = false;
     },
     setUserColor(state, color) {

@@ -50,7 +50,6 @@ export default class MultiselectManager {
     layer: Konva.Layer,
     config: any = this.defualtConfig
   ): SelectLine {
-    console.log("create");
     this.selectedVertexes = [];
     config.points = [position.x, position.y];
     const newLine = new SelectLine(config, layer);

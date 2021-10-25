@@ -77,13 +77,11 @@ export default class ApiManager {
           break;
         }
         case ClassNames.Edge: {
-          console.log(item);
           const edge = this.boardManager.createEdge(item as EdgeDTO);
           if (edge !== undefined) this.boardManager.draw(edge);
           break;
         }
         case ClassNames.TemporaryLine: {
-          console.log(item);
           const line = this.boardManager.createLine(item as LineDTO);
           if (line !== undefined) this.boardManager.draw(line);
           break;
@@ -159,6 +157,9 @@ export default class ApiManager {
             if (this.store.state.user.userId === action.userId) {
               this.boardManager.setFollowMousePointerById(item.id, true);
             }
+            const vertex = this.boardManager.findById(item.id) as Vertex;
+            vertex.setAttrs(item);
+            vertex.layer.draw();
           } else console.error("cannot edit vertex" + item.id);
           break;
         case ClassNames.Edge:
