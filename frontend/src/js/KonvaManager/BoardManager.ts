@@ -239,8 +239,14 @@ export default class BoardManager {
     attrs?: Konva.LineConfig,
     layerId: string = this.currentLayer.id()
   ): PencilLine {
+    console.log(attrs);
     const layer: Konva.Layer = this.getLayerById(layerId)!;
     const pencilLine = this.pencilManager.newLine(position, layer, attrs);
+    if (
+      position.x == this.pencilManager.currentDrawing?.attrs.points[0] &&
+      position.y == this.pencilManager.currentDrawing?.attrs.points[1]
+    )
+      this.pencilManager.currentDrawing = pencilLine;
     this.eventManager.bindItem(pencilLine);
     return pencilLine;
   }
@@ -278,6 +284,10 @@ export default class BoardManager {
 
   editPencilLine(lineDTO: LineDTO) {
     const line = this.findById(lineDTO.id) as PencilLine;
+    const linePoints = line.attrs.points;
+    linePoints.push(lineDTO.points[0]);
+    linePoints.push(lineDTO.points[1]);
+    lineDTO.points = linePoints;
     line.setAttrs(lineDTO);
     line.redraw();
   }

@@ -44,10 +44,13 @@ export default class OnlinePencilToolHandler implements IHandler {
     if (currentDrawing != null) {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.pencilManager.appendPoint(mousePos);
+      const pointsTemp = [...currentDrawing.attrs.points];
+      currentDrawing.attrs.points = [mousePos.x, mousePos.y];
       const action = this.actionFactory.create(
         ActionTypes.Edit,
         currentDrawing.asDTO()
       );
+      currentDrawing.attrs.points = pointsTemp;
       return this.hub.sendAction(action);
     }
   }

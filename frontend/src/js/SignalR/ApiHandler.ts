@@ -85,10 +85,11 @@ export default class ApiManager {
             this.boardManager.setCurrentLayer(action.item.id);
           break;
         case ClassNames.PencilLine: {
+          console.log("add in api", action.item);
           const pencilLine = this.boardManager.addPencil(
             {
-              x: action.item.x as number,
-              y: action.item.y as number,
+              x: action.item.points[0] as number,
+              y: action.item.points[1] as number,
             },
             action.item as LineConfig,
             action.item.layer as string
