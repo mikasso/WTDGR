@@ -15,8 +15,9 @@
         </div>
       </el-main>
 
-      <el-aside class="aside" width="250px">userzy </el-aside>
+      <el-aside class="aside" width="250px">userzy</el-aside>
     </el-container>
+    <FileWindow ref="fileWindow" />
   </el-container>
 </template>
 
@@ -34,6 +35,7 @@ import { useStore } from "vuex";
 import { key, State } from "../store";
 import { useWindowSize } from "vue-window-size";
 import Toolbar from "./Toolbar.vue";
+import FileWindow from "./FileWindow.vue";
 
 interface BoardData {
   eventManager?: BaseBoardEventManager;
@@ -52,6 +54,7 @@ export default defineComponent({
   },
   components: {
     Toolbar,
+    FileWindow,
   },
   watch: {
     isOnline: {
@@ -115,12 +118,13 @@ export default defineComponent({
       if (this.eventManager !== undefined) {
         this.eventManager.toolChanged("None");
       }
-      const boardManager = new BoardManager(this.store);
+      BoardManager.createBoardManagerSingleton(this.store);
+      let boardManager = BoardManager.getBoardManager();
       if (isOnline) {
         const apiManager = new ApiManager(boardManager, this.store);
         const hub = new BoardHub(apiManager, this.store);
+        (this.$refs["fileWindow"] as typeof FileWindow).hub = hub;
         this.eventManager = new OnlineBoardEventManager(
-          boardManager,
           this.store,
           hub,
           new ActionFactory(this.store.state.user.userId, boardManager)
@@ -134,10 +138,8 @@ export default defineComponent({
           await this.hub.disconnect();
           this.hub = undefined;
         }
-        this.eventManager = new OfflineBoardEventManager(
-          boardManager,
-          this.store
-        );
+        this.hub = undefined;
+        this.eventManager = new OfflineBoardEventManager(this.store);
       }
 
       this.eventManager?.toolChanged(this.currentTool);
@@ -181,6 +183,9 @@ export default defineComponent({
         this.highlightLayer(action.value as string, false);
       if (action.type == "removeLayer")
         this.removeLayer(action.value as string);
+      if (action.type == "openFileHandler") {
+        (this.$refs["fileWindow"] as typeof FileWindow).dialogVisible = true;
+      }
     },
     addLayer() {
       this.eventManager?.addLayer();

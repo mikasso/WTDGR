@@ -11,7 +11,10 @@ export default class OfflineMultiselectToolHandler implements IHandler {
   private dragInterval: number | undefined;
   private readonly drawTime = 25;
   private readonly dragTime = 25;
-  constructor(private boardManager: BoardManager) {}
+  private boardManager: BoardManager;
+  constructor() {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setActive(eventManager: BaseBoardEventManager): void {
     eventManager.mouseDown = (event) => this.mouseDown(event);
     eventManager.mouseUp = (event) => this.mouseUp(event);

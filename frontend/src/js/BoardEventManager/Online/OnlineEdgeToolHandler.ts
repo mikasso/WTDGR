@@ -13,16 +13,17 @@ import { isLeftClick } from "../utils";
 export default class OnlineEdgeToolHandler implements IHandler {
   intervalId: number | null = null;
   currentLine: TemporaryLine | null = null;
-  constructor(
-    private boardManager: BoardManager,
-    private actionFactory: ActionFactory,
-    private hub: BoardHub
-  ) {}
+  private boardManager: BoardManager;
+  constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
 
   public setActive(eventManager: BaseBoardEventManager): void {
-    eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
-    eventManager.vertexMouseUp = (event) => this.vertexMouseUp(event);
-    eventManager.mouseUp = (event) => this.mouseUp();
+    eventManager.vertexMouseDown = async (event) =>
+      await this.vertexMouseDown(event);
+    eventManager.vertexMouseUp = async (event) =>
+      await this.vertexMouseUp(event);
+    eventManager.mouseUp = async (event) => await this.mouseUp();
   }
 
   public async setInactive() {
@@ -38,7 +39,7 @@ export default class OnlineEdgeToolHandler implements IHandler {
     }
   }
 
-  private sendLineEdit() {
+  private async sendLineEdit() {
     if (this.currentLine !== null) {
       const mousePos = this.boardManager.getMousePosition();
       this.currentLine.updatePosition(mousePos);
@@ -46,12 +47,13 @@ export default class OnlineEdgeToolHandler implements IHandler {
         ActionTypes.Edit,
         this.currentLine.asDTO()
       );
-      return this.hub.sendAction(action);
+      await this.hub.sendAction(action);
     }
   }
 
-  private vertexMouseDown(event: KonvaEventObject<any>) {
+  private async vertexMouseDown(event: KonvaEventObject<any>) {
     if (!isLeftClick(event)) return;
+    await this.setInactive();
     const vertex = event.target as Vertex;
     const line = this.boardManager.startDrawingLine(vertex);
     if (line !== null) {
@@ -60,9 +62,9 @@ export default class OnlineEdgeToolHandler implements IHandler {
         ActionTypes.Add,
         this.currentLine.asDTO()
       );
-      this.hub.sendAction(action);
+      await this.hub.sendAction(action);
       this.intervalId = window.setInterval(
-        () => this.sendLineEdit(),
+        async () => await this.sendLineEdit(),
         SentRequestInterval,
         this.currentLine
       );
@@ -74,7 +76,7 @@ export default class OnlineEdgeToolHandler implements IHandler {
     const edge = this.boardManager.connectVertexes(vertex);
     if (edge !== undefined) {
       const action = this.actionFactory.create(ActionTypes.Add, edge.asDTO());
-      this.hub.sendAction(action);
+      await this.hub.sendAction(action);
     }
   }
 

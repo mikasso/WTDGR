@@ -6,7 +6,10 @@ import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
 
 export default class OfflineHighlightToolHandler implements IHandler {
-  constructor(private boardManager: BoardManager) {}
+  private boardManager: BoardManager;
+  constructor() {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setInactive(): void {}
   setActive(eventManager: BaseBoardEventManager): void {
     eventManager.vertexMouseEnter = (event) => this.vertexMouseEnter(event);

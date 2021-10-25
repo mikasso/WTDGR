@@ -39,12 +39,12 @@ export default abstract class BaseBoardEventManager implements IEventBinder {
   store: Store<State>;
   handlers: IHandler[];
 
-  constructor(boardManager: BoardManager, store: Store<State>) {
-    this.boardManager = boardManager;
+  constructor(store: Store<State>) {
+    this.boardManager = BoardManager.getBoardManager();
     this.boardManager.eventManager = this;
     this.store = store;
     this.clearHandlers();
-    this.bindStageEvents(boardManager.stage);
+    this.bindStageEvents(this.boardManager.stage);
     this.handlers = [];
   }
 

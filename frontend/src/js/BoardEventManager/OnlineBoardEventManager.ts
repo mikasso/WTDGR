@@ -28,40 +28,31 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   multiselectHandler: IHandler;
   handlers: IHandler[];
   constructor(
-    boardManager: BoardManager,
     store: Store<State>,
     hub: BoardHub,
     actionFactory: ActionFactory
   ) {
-    super(boardManager, store);
+    super(store);
     this.actionFactory = actionFactory;
     this.hub = hub;
-    this.highlightHandler = new OfflineHighlightToolHandler(this.boardManager);
-    this.pencilHandler = new OfflinePencilToolHandler(this.boardManager);
+    this.highlightHandler = new OfflineHighlightToolHandler();
+    this.pencilHandler = new OfflinePencilToolHandler();
     this.selectHandler = new OnlineSelectToolHandler(
-      this.boardManager,
       this.actionFactory,
       this.hub,
       this.highlightHandler
     );
-    this.edgeHandler = new OnlineEdgeToolHandler(
-      this.boardManager,
-      this.actionFactory,
-      this.hub
-    );
+    this.edgeHandler = new OnlineEdgeToolHandler(this.actionFactory, this.hub);
     this.vertexHandler = new OnlineVertextoolHandler(
-      this.boardManager,
       this.actionFactory,
       this.hub
     );
     this.eraseHandler = new OnlineEraseToolHandler(
-      this.boardManager,
       this.actionFactory,
       this.hub,
       this.highlightHandler
     );
     this.multiselectHandler = new OnlineMultiselectToolHandler(
-      this.boardManager,
       this.actionFactory,
       this.hub,
       this.highlightHandler

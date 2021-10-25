@@ -16,12 +16,14 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   vertexesDTO: any[] = [];
   private readonly MaxAttempts = 3;
   private readonly PollingTime = 100;
+  private boardManager: BoardManager;
   constructor(
-    private boardManager: BoardManager,
     private actionFactory: ActionFactory,
     private hub: BoardHub,
     private offlineHighlighter: IHandler
-  ) {}
+  ) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
 
   public setActive(eventManager: BaseBoardEventManager): void {
     eventManager.mouseDown = (event) => this.mouseDown(event);

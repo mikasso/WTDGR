@@ -8,22 +8,21 @@ import { IHandler } from "../IHandler";
 import { isLeftClick } from "../utils";
 
 export default class OnlineVertextoolHandler implements IHandler {
-  constructor(
-    private boardManager: BoardManager,
-    private actionFactory: ActionFactory,
-    private hub: BoardHub
-  ) {}
+  private boardManager: BoardManager;
+  constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setInactive(): void {}
   setActive(eventManager: BaseBoardEventManager): void {
-    eventManager.click = (event) => this.click(event);
+    eventManager.click = async (event) => await this.click(event);
   }
 
-  click(event: KonvaEventObject<any>) {
+  async click(event: KonvaEventObject<any>) {
     if (!isLeftClick(event)) return;
     const mousePos = this.boardManager.getMousePosition();
     const vertex = this.boardManager.createVertex(mousePos);
 
     const action = this.actionFactory.create(ActionTypes.Add, vertex.asDTO());
-    this.hub.sendAction(action);
+    await this.hub.sendAction(action);
   }
 }
