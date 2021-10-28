@@ -84,12 +84,7 @@ export default class MultiselectManager {
     for (const vertex of layerToRedraw!.getChildren(
       (node) => node.getClassName() === ClassNames.Vertex
     )) {
-      if (
-        classifyPoint(points, [
-          vertex.position().x,
-          vertex.position().y,
-        ] as Point) == -1
-      ) {
+      if (classifyPoint(points, [vertex.x(), vertex.y()] as Point) == -1) {
         this.selectedVertexes.push(vertex as Vertex);
       }
     }

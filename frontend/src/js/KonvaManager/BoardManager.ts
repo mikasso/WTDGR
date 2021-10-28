@@ -259,10 +259,6 @@ export default class BoardManager {
     this.eventManager.bindItem(multiselect as SelectLine);
   }
 
-  moveMultiselect(position: Cordinates) {
-    this.multiselectManager.appendPoint(position);
-  }
-
   finishMultiselect() {
     this.multiselectManager.finishDrawing();
     this.setHighlightOfSelected(true);

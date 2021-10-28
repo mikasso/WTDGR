@@ -27,6 +27,8 @@ export default class OfflineMultiselectToolHandler implements IHandler {
     this.boardManager.multiselectManager.stopDrag();
     this.boardManager.multiselectManager.isDrawing = false;
     this.boardManager.multiselectManager.removeSelect();
+    if (this.drawInterval) clearInterval(this.drawInterval);
+    if (this.dragInterval) clearInterval(this.dragInterval);
   }
 
   private mouseDown(event: KonvaEventObject<any>) {
@@ -63,7 +65,7 @@ export default class OfflineMultiselectToolHandler implements IHandler {
 
   private async updateDraw() {
     const mousePos = this.boardManager.getMousePosition();
-    this.boardManager.moveMultiselect(mousePos);
+    this.boardManager.multiselectManager.appendPoint(mousePos);
   }
 
   private async updateDrag() {

@@ -12,10 +12,12 @@ import { SentRequestInterval } from "../OnlineBoardEventManager";
 import { ItemColors } from "../utils";
 
 export default class OnlineMultiselectToolHandler implements IHandler {
-  intervalId: number | null = null;
+  dragInterval: number | null = null;
+  drawInterval: number | undefined;
   vertexesDTO: any[] = [];
   private readonly MaxAttempts = 3;
   private readonly PollingTime = 100;
+  private readonly DrawTime = 25;
   private boardManager: BoardManager;
   constructor(
     private actionFactory: ActionFactory,
@@ -34,11 +36,10 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   }
   public setInactive(): void {
     this.offlineHighlighter.setInactive();
-    if (this.intervalId !== null) {
-      clearInterval(this.intervalId);
-    }
+    if (this.dragInterval !== null) clearInterval(this.dragInterval);
+    if (this.drawInterval !== null) clearInterval(this.drawInterval);
     this.releaseVertexes();
-    this.intervalId = null;
+    this.dragInterval = null;
     this.boardManager.setHighlightOfSelected(false);
     this.boardManager.multiselectManager.stopDrag();
     this.boardManager.multiselectManager.isDrawing = false;
@@ -51,7 +52,15 @@ export default class OnlineMultiselectToolHandler implements IHandler {
     this.releaseVertexes();
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.startMultiselect(mousePos);
-    this.updateDraw();
+    this.drawInterval = window.setInterval(
+      () => this.updateDraw(),
+      this.DrawTime
+    );
+  }
+
+  private async updateDraw() {
+    const mousePos = this.boardManager.getMousePosition();
+    this.boardManager.multiselectManager.appendPoint(mousePos);
   }
 
   private releaseVertexes() {
@@ -66,23 +75,13 @@ export default class OnlineMultiselectToolHandler implements IHandler {
     }
   }
 
-  private async updateDraw() {
-    while (this.boardManager.multiselectManager.isDrawing) {
-      const mousePos = this.boardManager.getMousePosition();
-      this.boardManager.moveMultiselect(mousePos);
-      await new Promise((resolve) => {
-        setTimeout(resolve, 20);
-      });
-    }
-  }
-
   private mouseUp(event: KonvaEventObject<Vertex>) {
     if (this.boardManager.multiselectManager.isDragging) {
       this.boardManager.multiselectManager.stopDrag();
-      if (this.intervalId !== null) {
-        clearInterval(this.intervalId);
+      if (this.dragInterval !== null) {
+        clearInterval(this.dragInterval);
       }
-      this.intervalId = null;
+      this.dragInterval = null;
     } else {
       this.boardManager.finishMultiselect();
       const selectedVertexes = this.boardManager.multiselectManager
@@ -124,10 +123,10 @@ export default class OnlineMultiselectToolHandler implements IHandler {
 
     await poll({
       fn: () => {
-        if (this.intervalId !== null) {
-          clearInterval(this.intervalId);
+        if (this.dragInterval !== null) {
+          clearInterval(this.dragInterval);
         }
-        this.intervalId = window.setInterval(
+        this.dragInterval = window.setInterval(
           () => this.sendVertexesEdit(),
           SentRequestInterval
         );
