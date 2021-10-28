@@ -240,15 +240,12 @@ export default class EdgeManager {
   }
 
   public draw(edge: Edge) {
-    console.log(edge);
     edge.layer.add(edge);
     edge.redraw();
   }
 
   public drawLine(line: TemporaryLine) {
-    console.log(line);
     line.layer.add(line);
     line.redraw();
-    console.log(line.layer);
   }
 }

@@ -10,6 +10,7 @@ import OfflineEdgeToolHandler from "./Offline/OfflineEdgeToolHandlert";
 import OfflineVertexToolHandler from "./Offline/OfflineVertexToolHandler";
 import OfflinePencilToolHandler from "./Offline/OfflinePencilToolHandler";
 import OfflineEraseToolHandler from "./Offline/OfflineEraseToolHandler";
+import OfflineMultiselectToolHandler from "./Offline/OfflineMultiselectToolHandler";
 
 export default class OffLineBoardEventManager extends BaseBoardEventManager {
   selectHandler: IHandler;
@@ -18,18 +19,17 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
   eraseHandler: IHandler;
   pencilHandler: IHandler;
   highlightHandler: IHandler;
+  multiselectHandler: IHandler;
   handlers: IHandler[];
   constructor(store: Store<State>) {
     super(store);
     this.highlightHandler = new OfflineHighlightToolHandler();
-    this.selectHandler = new OffLineSelectHandler(
-      this.highlightHandler
-    );
+    this.selectHandler = new OffLineSelectHandler(this.highlightHandler);
     this.edgeHandler = new OfflineEdgeToolHandler();
     this.vertexHandler = new OfflineVertexToolHandler();
-    this.eraseHandler = new OfflineEraseToolHandler(
-      this.highlightHandler
-    );
+    this.eraseHandler = new OfflineEraseToolHandler(this.highlightHandler);
+    this.pencilHandler = new OfflinePencilToolHandler();
+    this.multiselectHandler = new OfflineMultiselectToolHandler();
     this.pencilHandler = new OfflinePencilToolHandler();
 
     this.handlers = [
@@ -39,6 +39,7 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
       this.vertexHandler,
       this.eraseHandler,
       this.pencilHandler,
+      this.multiselectHandler,
     ];
   }
 
@@ -60,6 +61,9 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
         break;
       case "Pencil":
         this.pencilHandler.setActive(this);
+        break;
+      case "Multiselect":
+        this.multiselectHandler.setActive(this);
         break;
     }
   }

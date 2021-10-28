@@ -110,7 +110,6 @@ export default defineComponent({
     draggable,
   },
   setup(props, { emit }) {
-    console.log("Toolbar setup");
     const store = useStore<State>(key);
 
     const layers = computed({
@@ -193,6 +192,7 @@ export default defineComponent({
         { name: "Edge", file: "Edge.png" },
         { name: "Pencil", file: "Pencil.png" },
         { name: "Erase", file: "Erase.png" },
+        { name: "Multiselect", file: "Multiselect.png" },
       ],
 
       vertex_styles: ["circle"],

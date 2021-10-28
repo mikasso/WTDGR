@@ -12,6 +12,7 @@ import OnlineEdgeToolHandler from "./Online/OnlineEdgeToolHandler";
 import OnlineEraseToolHandler from "./Online/OnlineEraseToolHandler";
 import OnlineSelectToolHandler from "./Online/OnlineSelectToolHandler";
 import OnlineVertextoolHandler from "./Online/OnlineVertexToolHandler";
+import OnlineMultiselectToolHandler from "./Online/OnlineMultiselectToolHandler";
 
 export const SentRequestInterval = 20;
 
@@ -24,6 +25,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   eraseHandler: IHandler;
   pencilHandler: IHandler;
   highlightHandler: IHandler;
+  multiselectHandler: IHandler;
   handlers: IHandler[];
   constructor(
     store: Store<State>,
@@ -50,12 +52,18 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.hub,
       this.highlightHandler
     );
+    this.multiselectHandler = new OnlineMultiselectToolHandler(
+      this.actionFactory,
+      this.hub,
+      this.highlightHandler
+    );
     this.handlers = [
       this.edgeHandler,
       this.selectHandler,
       this.vertexHandler,
       this.eraseHandler,
       this.eraseHandler,
+      this.multiselectHandler,
     ];
   }
 
@@ -77,6 +85,9 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
         break;
       case "Pencil":
         this.pencilHandler.setActive(this);
+        break;
+      case "Multiselect":
+        this.multiselectHandler.setActive(this);
         break;
     }
   }

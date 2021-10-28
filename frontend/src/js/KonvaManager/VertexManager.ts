@@ -114,7 +114,7 @@ export default class VertexManager {
 
   remove(vertex: Vertex) {
     const vertexLayer = vertex.layer;
-    vertex.remove();
+    vertex.destroy();
     vertexLayer.draw();
   }
 }

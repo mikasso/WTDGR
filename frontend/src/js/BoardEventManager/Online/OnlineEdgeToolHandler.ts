@@ -58,7 +58,6 @@ export default class OnlineEdgeToolHandler implements IHandler {
     const line = this.boardManager.startDrawingLine(vertex);
     if (line !== null) {
       this.currentLine = line;
-      console.log(this.currentLine.asDTO());
       const action = this.actionFactory.create(
         ActionTypes.Add,
         this.currentLine.asDTO()

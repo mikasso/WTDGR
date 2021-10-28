@@ -19,26 +19,20 @@ export default class BoardHub {
       .configureLogging(LogLevel.Information)
       .build();
 
-    this.connection.on("ReceiveJoinResponse", (user) => {
-      console.log(user);
-    });
+    this.connection.on("ReceiveJoinResponse", (user) => {});
     this.connection.on(
       "ReceiveAction",
       (action: UserAction, isSucceded: boolean) => {
-        console.log(action);
         this.apiManager.receiveAction(action, isSucceded);
       }
     );
     this.connection.on("GetGraph", (items: NodeConfig[]) => {
-      console.log(items);
       this.apiManager.loadItems(items);
     });
     this.connection.on("ReceiveActionResponse", (actionResponse: string) => {
       this.apiManager.receiveActionResponse(actionResponse);
     });
-    this.connection.on("ReceiveText", (text: string) => {
-      console.log(text);
-    });
+    this.connection.on("ReceiveText", (text: string) => {});
 
     this.connection.onclose(() => this.store.commit("setOffline"));
     this.connection.onreconnected(() => this.store.commit("setOnline"));
