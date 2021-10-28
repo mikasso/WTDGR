@@ -25,12 +25,9 @@ export default class ApiManager {
     return this.store.state.user;
   }
 
-  public receiveActionResponse(response: string) {
-    console.log(response);
-  }
+  public receiveActionResponse(response: string) {}
 
   public receiveAction(action: UserAction, isSucceded: boolean) {
-    console.log("Recieved action", action);
     switch (action.actionType) {
       case ActionTypes.Add:
         this.receiveAdd(action);
@@ -68,13 +65,11 @@ export default class ApiManager {
           break;
         }
         case ClassNames.Edge: {
-          console.log(action.item);
           const edge = this.boardManager.createEdge(action.item as EdgeDTO);
           if (edge !== undefined) this.boardManager.draw(edge);
           break;
         }
         case ClassNames.TemporaryLine: {
-          console.log(action.item);
           const line = this.boardManager.createLine(action.item as LineDTO);
           if (line !== undefined) this.boardManager.draw(line);
           break;
@@ -85,7 +80,6 @@ export default class ApiManager {
             this.boardManager.setCurrentLayer(action.item.id);
           break;
         case ClassNames.PencilLine: {
-          console.log("add in api", action.item);
           const pencilLine = this.boardManager.addPencil(
             {
               x: action.item.points[0] as number,
@@ -118,7 +112,6 @@ export default class ApiManager {
           this.boardManager.deleteLayer(action.item.id);
           break;
         case ClassNames.PencilLine:
-          console.log("delete pencil", action.item.id);
           this.boardManager.deletePencilLine(action.item.id);
           break;
         default:

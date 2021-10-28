@@ -29,6 +29,10 @@ export default class OnlinePencilToolHandler implements IHandler {
 
   private mouseDown(event: KonvaEventObject<any>) {
     if (!isLeftClick(event)) return;
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
     const mousePos = this.boardManager.getMousePosition();
     const drawing = this.boardManager.createPencil(mousePos);
     const action = this.actionFactory.create(ActionTypes.Add, drawing.asDTO());

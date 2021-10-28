@@ -50,8 +50,6 @@ export default class BoardManager {
   }
 
   findById(id: string | undefined) {
-    console.log(this.stage.getChildren());
-    console.log(id, this.stage.findOne(`#${id}`));
     return this.stage.findOne(`#${id}`); //konva uses id as selector so # is required
   }
 
@@ -143,8 +141,6 @@ export default class BoardManager {
 
   editLine(lineDTO: LineDTO) {
     const line = this.findById(lineDTO.id) as TemporaryLine;
-    console.log("requested line" + JSON.stringify(lineDTO));
-    console.log("founded line" + line);
     line.setAttrs(lineDTO);
     line.redraw();
   }
@@ -239,7 +235,6 @@ export default class BoardManager {
     attrs?: Konva.LineConfig,
     layerId: string = this.currentLayer.id()
   ): PencilLine {
-    console.log(attrs);
     const layer: Konva.Layer = this.getLayerById(layerId)!;
     const pencilLine = this.pencilManager.newLine(position, layer, attrs);
     if (
@@ -278,7 +273,6 @@ export default class BoardManager {
 
   deletePencilLine(lineId: string) {
     const line = this.findById(lineId) as PencilLine;
-    console.log("board manager", line);
     this.pencilManager.removeDrawing(line);
   }
 

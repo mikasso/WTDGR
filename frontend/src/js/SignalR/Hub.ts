@@ -27,7 +27,6 @@ export default class BoardHub {
     this.connection.on(
       "ReceiveAction",
       (action: UserAction, isSucceded: boolean) => {
-        console.log(action);
         this.apiManager.receiveAction(action, isSucceded);
       }
     );

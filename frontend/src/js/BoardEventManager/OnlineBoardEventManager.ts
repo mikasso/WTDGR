@@ -68,6 +68,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.vertexHandler,
       this.eraseHandler,
       this.eraseHandler,
+      this.pencilHandler,
     ];
   }
 
