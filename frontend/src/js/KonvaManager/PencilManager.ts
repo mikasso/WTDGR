@@ -49,6 +49,16 @@ export default class PencilManager {
     return newLine;
   }
 
+  newLineWithPoints(
+    points: number[],
+    layer: Konva.Layer,
+    config: any = this.defualtConfig
+  ) {
+    config.points = points;
+    const newLine = new PencilLine(config, layer);
+    return newLine;
+  }
+
   create(
     position: Cordinates,
     layer: Konva.Layer,

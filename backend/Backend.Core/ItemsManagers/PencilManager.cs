@@ -12,7 +12,7 @@ namespace Backend.Core
         public int Count => _pencilLines.Count;
         private List<PencilLine> LinesList { get => _pencilLines.Values.ToList(); }
 
-        public bool Add(IRoomItem pencilLine) => _pencilLines.TryAdd(pencilLine.Id, (PencilLine)pencilLine);
+        public bool Add(IRoomItem pencilLine, string userId) => _pencilLines.TryAdd(pencilLine.Id, (PencilLine)pencilLine);
 
         public bool Delete(string Id) {
             return _pencilLines.Remove(Id);

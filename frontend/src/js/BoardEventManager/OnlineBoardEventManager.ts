@@ -14,7 +14,7 @@ import OnlineVertextoolHandler from "./Online/OnlineVertexToolHandler";
 import OnlinePencilToolHandler from "./Online/OnlinePencilToolHandler";
 import OnlineMultiselectToolHandler from "./Online/OnlineMultiselectToolHandler";
 
-export const SentRequestInterval = 20;
+export const SentRequestInterval = 25;
 
 export default class OnlineBoardEventManager extends BaseBoardEventManager {
   actionFactory: ActionFactory;
@@ -46,7 +46,6 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.actionFactory,
       this.hub
     );
-    this.highlightHandler = new OfflineHighlightToolHandler();
     this.pencilHandler = new OnlinePencilToolHandler(
       this.actionFactory,
       this.hub

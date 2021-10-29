@@ -23,10 +23,11 @@ namespace Backend.Core
             VerticesManager verticesManager = new();
             LayersManager layersManager = new();
             LineManager lineManager = new();
+            PencilManager pencilManager = new();
             layersManager.Initialize(verticesManager);
             edgeManager.Initialize(verticesManager);
             verticesManager.Initialize(edgeManager);
-            return new RoomManager(id, usersManager, verticesManager, edgeManager, lineManager, layersManager);
+            return new RoomManager(id, usersManager, verticesManager, edgeManager, lineManager, layersManager, pencilManager);
         }
     }
 }

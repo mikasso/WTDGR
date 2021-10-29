@@ -10,12 +10,11 @@ import { PencilLine } from "@/js/KonvaManager/PencilManager";
 import { SentRequestInterval } from "../OnlineBoardEventManager";
 
 export default class OnlinePencilToolHandler implements IHandler {
+  private boardManager: BoardManager;
   intervalId: number | null = null;
-  constructor(
-    private boardManager: BoardManager,
-    private actionFactory: ActionFactory,
-    private hub: BoardHub
-  ) {}
+  constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setInactive(): void {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
@@ -45,6 +44,7 @@ export default class OnlinePencilToolHandler implements IHandler {
 
   private sendDrawingEdit() {
     const currentDrawing = this.boardManager.pencilManager.currentDrawing;
+    console.log(currentDrawing);
     if (currentDrawing != null) {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.pencilManager.appendPoint(mousePos);
@@ -55,6 +55,7 @@ export default class OnlinePencilToolHandler implements IHandler {
         currentDrawing.asDTO()
       );
       currentDrawing.attrs.points = pointsTemp;
+      currentDrawing.layer.draw();
       return this.hub.sendAction(action);
     }
   }

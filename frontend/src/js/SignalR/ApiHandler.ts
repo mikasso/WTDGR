@@ -95,6 +95,7 @@ export default class ApiManager {
             this.boardManager.setCurrentLayer(item.id);
           break;
         case ClassNames.PencilLine: {
+          console.log(item.points.length);
           const pencilLine = this.boardManager.addPencil(
             {
               x: item.points[0] as number,
@@ -155,7 +156,8 @@ export default class ApiManager {
         );
         break;
       case ClassNames.PencilLine: {
-        this.boardManager.editPencilLine(item as LineDTO);
+        if (item.id != this.boardManager.pencilManager.currentDrawing?.attrs.id)
+          this.boardManager.editPencilLine(item as LineDTO);
         break;
       }
       default:
