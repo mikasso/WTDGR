@@ -1,5 +1,6 @@
 <template>
   <el-container class="wrapper">
+    <WelcomeWindow @connectionResult="handleConnection($event)"></WelcomeWindow>
     <el-header class="header" height="55px">
       <Toolbar @toolbarAction="handleToolbarAction($event)" />
     </el-header>
@@ -93,6 +94,7 @@ export default defineComponent({
     },
   },
   setup() {
+    let connectionStarted = false;
     const store = useStore<State>(key);
     const { width, height } = useWindowSize();
     const isOnline = computed(() => {
@@ -102,6 +104,7 @@ export default defineComponent({
       return store.state.currentTool;
     });
     return {
+      connectionStarted,
       store,
       isOnline,
       currentTool,
@@ -127,7 +130,7 @@ export default defineComponent({
         this.eventManager = new OnlineBoardEventManager(
           this.store,
           hub,
-          new ActionFactory(this.store.state.user.userId, boardManager)
+          new ActionFactory(this.store.state.user.id, boardManager)
         );
         this.hub = hub;
         this.hub.joinRoom().catch(async () => {

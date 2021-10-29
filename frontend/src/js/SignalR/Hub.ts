@@ -61,12 +61,12 @@ export default class BoardHub {
     });
   }
 
-  public joinRoom() {
+  public joinRoom(roomId: string) {
     return this.connection.start().then(() => {
       const request = {
-        Id: this.user.userId,
+        Id: this.store.state.user.userId,
         Role: "Owner",
-        RoomId: this.user.roomId,
+        RoomId:  roomId,
       };
       this.connection.invoke("JoinRoom", request).catch((err: Error) => {
         throw new Error("Error during joinning the room: " + err);

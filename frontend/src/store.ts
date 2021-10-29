@@ -2,14 +2,32 @@ import Konva from "konva";
 import { InjectionKey } from "vue";
 import { createStore, Store } from "vuex";
 
+export interface User {
+  userId: string;
+  role?: UserTypes;
+  userColor?: string;
+}
+
+enum UserTypes {
+  Owner,
+}
+
+function createUser(id: string): User {
+  return {
+    userId: id,
+    role: UserTypes.Owner,
+    userColor: selectColor(Math.floor(Math.random() * 10)),
+  };
+}
 export interface State {
   isOnline: boolean;
   stage?: Konva.Stage;
   currentLayer?: Konva.Layer;
   currentTool: string;
   layers: Konva.Layer[];
-  user: { userId: string; roomId: string; role?: string };
-  userColor: string;
+  user: User;
+  roomId: string;
+  allUsers: User[];
 }
 
 export const key: InjectionKey<Store<State>> = Symbol();
@@ -21,20 +39,25 @@ function selectColor(number: number) {
 
 export const store = createStore<State>({
   state: {
-    isOnline: true,
+    isOnline: false,
     stage: undefined,
     currentLayer: undefined,
     currentTool: "Select",
-    userColor: selectColor(Math.floor(Math.random() * 10)),
     layers: [],
-    user: { userId: Math.random().toString(), roomId: "1" },
+    roomId: "1",
+    user: createUser(Math.random.toString()),
+    allUsers: [
+      createUser("Test User 1"),
+      createUser("Test User 2"),
+      createUser("Test User 3"),
+    ],
   },
   getters: {
     isOnline(state) {
       return state.isOnline;
     },
-    getUserColor(state) {
-      return state.userColor;
+    getUser(state) {
+      return state.user;
     },
     stage(state) {
       return state.stage;
@@ -56,8 +79,8 @@ export const store = createStore<State>({
     setOffline(state) {
       state.isOnline = false;
     },
-    setUserColor(state, color) {
-      state.userColor = color;
+    setUser(state, user) {
+      state.user = user;
     },
     setCurrentLayer(state, layer) {
       state.currentLayer = layer;
