@@ -8,7 +8,7 @@ import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
 import { SentRequestInterval } from "../OnlineBoardEventManager";
-import { getPointFromEvent, poll } from "../utils";
+import { getPointFromEvent, ItemColors, poll } from "../utils";
 
 export default class OnlineSelectToolHandler implements IHandler {
   intervalId: number | null = null;
@@ -16,24 +16,32 @@ export default class OnlineSelectToolHandler implements IHandler {
   currentEdge: Edge | null = null;
   private readonly MaxAttempts = 3;
   private readonly PollingTime = 100;
+  private boardManager: BoardManager;
   constructor(
-    private boardManager: BoardManager,
     private actionFactory: ActionFactory,
-    private hub: BoardHub
-  ) {}
+    private hub: BoardHub,
+    private offlineHighlighter: IHandler
+  ) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
 
   public setActive(eventManager: BaseBoardEventManager): void {
-    eventManager.vertexMouseDown = (event) => this.vertexMouseDown(event);
-    eventManager.mouseUp = (event) => this.mouseUp(event);
-    eventManager.edgeMouseDown = (event) => this.edgeMouseDown(event);
+    this.offlineHighlighter.setActive(eventManager);
+    eventManager.vertexMouseDown = async (event) =>
+      await this.vertexMouseDown(event);
+    eventManager.mouseUp = async () => await this.mouseUp();
+    eventManager.edgeMouseDown = async (event) =>
+      await this.edgeMouseDown(event);
   }
 
   public setInactive(): void {
+    this.offlineHighlighter.setInactive();
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
     }
 
     if (this.currentVertex !== null) {
+      this.currentVertex.setAttrs({ stroke: ItemColors.defaultStroke });
       const vertex = this.currentVertex;
       this.hub.sendAction(
         this.actionFactory.create(ActionTypes.ReleaseItem, vertex.asDTO())
@@ -42,9 +50,14 @@ export default class OnlineSelectToolHandler implements IHandler {
     }
 
     if (this.currentEdge !== null) {
+      this.currentEdge.setAttrs({ stroke: ItemColors.defaultStroke });
       const edge = this.currentEdge;
       this.hub.sendAction(
-        this.actionFactory.create(ActionTypes.ReleaseItem, edge.asDTO())
+        this.actionFactory.create(ActionTypes.ReleaseItem, [
+          edge.asDTO(),
+          edge.v1.asDTO(),
+          edge.v2.asDTO(),
+        ])
       );
       this.boardManager.setFollowMousePointerById(edge.attrs.id, false);
     }
@@ -54,7 +67,7 @@ export default class OnlineSelectToolHandler implements IHandler {
     this.currentEdge = null;
   }
 
-  private sendVertexEdit(vertex: Vertex) {
+  private async sendVertexEdit(vertex: Vertex) {
     const mousePos = this.boardManager.getMousePosition();
 
     const action = this.actionFactory.create(ActionTypes.Edit, {
@@ -62,26 +75,28 @@ export default class OnlineSelectToolHandler implements IHandler {
       x: mousePos.x,
       y: mousePos.y,
     });
-    return this.hub.sendAction(action);
+    await this.hub.sendAction(action);
   }
 
-  private sendVertexEditsFromEdge(edge: Edge) {
+  private async sendVertexEditsFromEdge(edge: Edge) {
     const mousePos = this.boardManager.getMousePosition();
     const {
       v1Pos,
       v2Pos,
     } = this.boardManager.edgeManager.calculcateNewVerticesPosition(mousePos);
 
-    const action1 = this.actionFactory.create(ActionTypes.Edit, {
-      ...edge.v1.asDTO(),
-      ...v1Pos,
-    });
-    const action2 = this.actionFactory.create(ActionTypes.Edit, {
-      ...edge.v2.asDTO(),
-      ...v2Pos,
-    });
-    this.hub.sendAction(action1);
-    return this.hub.sendAction(action2);
+    const action = this.actionFactory.create(ActionTypes.Edit, [
+      {
+        ...edge.v1.asDTO(),
+        ...v1Pos,
+      },
+      {
+        ...edge.v2.asDTO(),
+        ...v2Pos,
+      },
+    ]);
+
+    await this.hub.sendAction(action);
   }
 
   private async vertexMouseDown(event: KonvaEventObject<any>) {
@@ -91,7 +106,7 @@ export default class OnlineSelectToolHandler implements IHandler {
       ActionTypes.RequestToEdit,
       vertex.asDTO()
     );
-    this.hub.sendAction(action);
+    await this.hub.sendAction(action);
 
     const result = await poll({
       fn: () => {
@@ -99,8 +114,12 @@ export default class OnlineSelectToolHandler implements IHandler {
           this.currentVertex !== null &&
           this.currentVertex.followMousePointer
         ) {
+          if (this.intervalId !== null) {
+            clearInterval(this.intervalId);
+          }
+          this.currentVertex.setAttrs({ stroke: this.hub.userColor() });
           this.intervalId = window.setInterval(
-            (x: Vertex) => this.sendVertexEdit(x),
+            async (x: Vertex) => await this.sendVertexEdit(x),
             SentRequestInterval,
             this.currentVertex
           );
@@ -120,18 +139,19 @@ export default class OnlineSelectToolHandler implements IHandler {
     }
   }
 
-  private mouseUp(event: KonvaEventObject<any>) {
+  private mouseUp() {
     this.setInactive();
   }
 
   private async edgeMouseDown(event: KonvaEventObject<any>) {
     const edge = event.target as Edge;
     this.currentEdge = edge;
-    const action = this.actionFactory.create(
-      ActionTypes.RequestToEdit,
-      edge.asDTO()
-    );
-    this.hub.sendAction(action);
+    const action = this.actionFactory.create(ActionTypes.RequestToEdit, [
+      edge.asDTO(),
+      edge.v1.asDTO(),
+      edge.v2.asDTO(),
+    ]);
+    await this.hub.sendAction(action);
 
     const result = await poll({
       fn: () => {
@@ -140,9 +160,19 @@ export default class OnlineSelectToolHandler implements IHandler {
             event.target as Edge,
             getPointFromEvent(event)
           );
+          if (this.intervalId !== null) {
+            clearInterval(this.intervalId);
+          }
+          this.currentEdge.setAttrs({ stroke: this.hub.userColor() });
+          this.hub.sendAction(
+            this.actionFactory.create(
+              ActionTypes.Edit,
+              this.currentEdge.asDTO()
+            )
+          );
           this.intervalId = window.setInterval(
-            (x: Edge) => this.sendVertexEditsFromEdge(x),
-            SentRequestInterval,
+            async (x: Edge) => await this.sendVertexEditsFromEdge(x),
+            SentRequestInterval * 1.3,
             this.currentEdge
           );
           return true;

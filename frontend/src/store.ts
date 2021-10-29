@@ -9,9 +9,15 @@ export interface State {
   currentTool: string;
   layers: Konva.Layer[];
   user: { userId: string; roomId: string; role?: string };
+  userColor: string;
 }
 
 export const key: InjectionKey<Store<State>> = Symbol();
+
+function selectColor(number: number) {
+  const hue = number * 137.508;
+  return `hsl(${hue},50%,75%)`;
+}
 
 export const store = createStore<State>({
   state: {
@@ -19,6 +25,7 @@ export const store = createStore<State>({
     stage: undefined,
     currentLayer: undefined,
     currentTool: "Select",
+    userColor: selectColor(Math.floor(Math.random() * 10)),
     layers: [],
     user: { userId: Math.random().toString(), roomId: "1" },
   },
@@ -26,7 +33,9 @@ export const store = createStore<State>({
     isOnline(state) {
       return state.isOnline;
     },
-
+    getUserColor(state) {
+      return state.userColor;
+    },
     stage(state) {
       return state.stage;
     },
@@ -47,7 +56,9 @@ export const store = createStore<State>({
     setOffline(state) {
       state.isOnline = false;
     },
-
+    setUserColor(state, color) {
+      state.userColor = color;
+    },
     setCurrentLayer(state, layer) {
       state.currentLayer = layer;
     },

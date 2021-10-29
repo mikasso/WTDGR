@@ -12,6 +12,7 @@ import OnlineEraseToolHandler from "./Online/OnlineEraseToolHandler";
 import OnlineSelectToolHandler from "./Online/OnlineSelectToolHandler";
 import OnlineVertextoolHandler from "./Online/OnlineVertexToolHandler";
 import OnlinePencilToolHandler from "./Online/OnlinePencilToolHandler";
+import OnlineMultiselectToolHandler from "./Online/OnlineMultiselectToolHandler";
 
 export const SentRequestInterval = 20;
 
@@ -24,40 +25,39 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   eraseHandler: IHandler;
   pencilHandler: IHandler;
   highlightHandler: IHandler;
+  multiselectHandler: IHandler;
   handlers: IHandler[];
   constructor(
-    boardManager: BoardManager,
     store: Store<State>,
     hub: BoardHub,
     actionFactory: ActionFactory
   ) {
-    super(boardManager, store);
+    super(store);
     this.actionFactory = actionFactory;
     this.hub = hub;
+    this.highlightHandler = new OfflineHighlightToolHandler();
     this.selectHandler = new OnlineSelectToolHandler(
-      this.boardManager,
       this.actionFactory,
-      this.hub
+      this.hub,
+      this.highlightHandler
     );
-    this.edgeHandler = new OnlineEdgeToolHandler(
-      this.boardManager,
-      this.actionFactory,
-      this.hub
-    );
+    this.edgeHandler = new OnlineEdgeToolHandler(this.actionFactory, this.hub);
     this.vertexHandler = new OnlineVertextoolHandler(
-      this.boardManager,
       this.actionFactory,
       this.hub
     );
-    this.highlightHandler = new OfflineHighlightToolHandler(this.boardManager);
+    this.highlightHandler = new OfflineHighlightToolHandler();
     this.pencilHandler = new OnlinePencilToolHandler(
-      this.boardManager,
       this.actionFactory,
       this.hub
     );
 
     this.eraseHandler = new OnlineEraseToolHandler(
-      this.boardManager,
+      this.actionFactory,
+      this.hub,
+      this.highlightHandler
+    );
+    this.multiselectHandler = new OnlineMultiselectToolHandler(
       this.actionFactory,
       this.hub,
       this.highlightHandler
@@ -90,6 +90,9 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
         break;
       case "Pencil":
         this.pencilHandler.setActive(this);
+        break;
+      case "Multiselect":
+        this.multiselectHandler.setActive(this);
         break;
     }
   }

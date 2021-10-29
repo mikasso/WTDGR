@@ -67,6 +67,9 @@
       </el-dropdown>
     </div>
     <div style="display: flex; align-items: center;">
+      <el-button @click="openFileHandler" style="margin-right: 15px">
+        Import / Export graph
+      </el-button>
       <el-tag v-if="!isOnline" class="connBadge" type="danger"
         >Disconnected</el-tag
       >
@@ -91,6 +94,9 @@ import { computed, defineComponent } from "vue";
 import { useStore } from "vuex";
 import draggable from "vuedraggable";
 import "element-plus/dist/index.css";
+import Konva from "konva";
+import { ClassNames } from "../js/KonvaManager/ClassNames";
+import { Vertex } from "../js/KonvaManager/VertexManager";
 
 interface layerData {
   id: string;
@@ -104,7 +110,6 @@ export default defineComponent({
     draggable,
   },
   setup(props, { emit }) {
-    console.log("Toolbar setup");
     const store = useStore<State>(key);
 
     const layers = computed({
@@ -173,6 +178,7 @@ export default defineComponent({
       addLayer,
       hover,
       emit,
+      store,
     };
   },
   mounted() {
@@ -186,6 +192,7 @@ export default defineComponent({
         { name: "Edge", file: "Edge.png" },
         { name: "Pencil", file: "Pencil.png" },
         { name: "Erase", file: "Erase.png" },
+        { name: "Multiselect", file: "Multiselect.png" },
       ],
 
       vertex_styles: ["circle"],
@@ -216,6 +223,11 @@ export default defineComponent({
           index1: event!.moved.oldIndex,
           index2: event!.moved.newIndex,
         },
+      });
+    },
+    openFileHandler() {
+      this.emit("toolbarAction", {
+        type: "openFileHandler",
       });
     },
   },

@@ -4,4 +4,5 @@ export enum ClassNames {
   Edge = "Edge",
   Layer = "Layer",
   PencilLine = "PencilLine",
+  SelectLine = "SelectLine",
 }

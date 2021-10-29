@@ -5,11 +5,12 @@ import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
 
-export default class OffLineSelectHandler implements IHandler {
+export default class OfflineSelectHandler implements IHandler {
+  private boardManager: BoardManager;
   constructor(
-    private boardManager: BoardManager,
-    private highlightHandler: IHandler
-  ) {}
+    private highlightHandler: IHandler) {
+    this.boardManager = BoardManager.getBoardManager();
+  }
   setInactive(): void {
     this.boardManager.disableDrag();
     this.highlightHandler.setInactive();

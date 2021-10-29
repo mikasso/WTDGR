@@ -17,7 +17,7 @@ namespace Backend.Core
         public int Count => _vertices.Count;
         private List<Vertex> VertexList { get => _vertices.Values.ToList(); }
 
-        public bool Add(IRoomItem vertex) => _vertices.TryAdd(vertex.Id, (Vertex)vertex);
+        public bool Add(IRoomItem vertex, string userId) => _vertices.TryAdd(vertex.Id, (Vertex)vertex);
 
         public bool Delete(string Id) {
             _edgeManager.DeleteWithVertex(Id);

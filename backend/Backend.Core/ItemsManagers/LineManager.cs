@@ -10,7 +10,10 @@ namespace Backend.Core
         public int Count => _lines.Count;
         private List<Line> LinesList { get => _lines.Values.ToList(); }
 
-        public bool Add(IRoomItem line) => _lines.TryAdd(line.Id, (Line) line);
+        public bool Add(IRoomItem line, string userId)  {
+            line.EditorId = userId;
+            return _lines.TryAdd(line.Id, (Line) line);
+        }
 
         public bool Delete(string Id) => _lines.Remove(Id);
 

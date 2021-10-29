@@ -15,13 +15,14 @@
         </div>
       </el-main>
 
-      <el-aside class="aside" width="250px">userzy </el-aside>
+      <el-aside class="aside" width="250px">userzy</el-aside>
     </el-container>
+    <FileWindow ref="fileWindow" />
   </el-container>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, computed } from "vue";
 import OnlineBoardEventManager from "../js/BoardEventManager/OnlineBoardEventManager";
 import OfflineBoardEventManager from "../js/BoardEventManager/OfflineBoardEventManager";
 import BoardManager from "../js/KonvaManager/BoardManager";
@@ -34,11 +35,7 @@ import { useStore } from "vuex";
 import { key, State } from "../store";
 import { useWindowSize } from "vue-window-size";
 import Toolbar from "./Toolbar.vue";
-
-interface User {
-  userId: string;
-  roomId: string;
-}
+import FileWindow from "./FileWindow.vue";
 
 interface BoardData {
   eventManager?: BaseBoardEventManager;
@@ -57,12 +54,13 @@ export default defineComponent({
   },
   components: {
     Toolbar,
+    FileWindow,
   },
   watch: {
     isOnline: {
       deep: true,
-      handler(isOnline: boolean) {
-        this.handleConnectionChange(isOnline);
+      async handler(isOnline: boolean) {
+        await this.handleConnectionChange(isOnline);
       },
     },
     currentTool: {
@@ -111,52 +109,57 @@ export default defineComponent({
       windowHeight: height,
     };
   },
-  mounted() {
-    this.handleConnectionChange(this.isOnline);
+  async mounted() {
+    await this.handleConnectionChange(this.isOnline);
   },
   methods: {
-    handleConnectionChange(isOnline: boolean) {
-      this.initalizeStageAndLayers();
-      const boardManager = new BoardManager(this.store);
+    async handleConnectionChange(isOnline: boolean) {
+      this.initalizeStageAndLayers(isOnline);
+      if (this.eventManager !== undefined) {
+        this.eventManager.toolChanged("None");
+      }
+      BoardManager.createBoardManagerSingleton(this.store);
+      let boardManager = BoardManager.getBoardManager();
       if (isOnline) {
         const apiManager = new ApiManager(boardManager, this.store);
         const hub = new BoardHub(apiManager, this.store);
+        (this.$refs["fileWindow"] as typeof FileWindow).hub = hub;
         this.eventManager = new OnlineBoardEventManager(
-          boardManager,
           this.store,
           hub,
           new ActionFactory(this.store.state.user.userId, boardManager)
         );
         this.hub = hub;
-        this.hub?.joinRoomPromise().catch(async () => {
+        this.hub.joinRoom().catch(async () => {
           alert("Failed to connect with hub, switching to ofline");
         });
       } else {
         if (this.hub !== undefined) {
-          this.hub.disconnectPromise().catch(async () => {
-            alert("Failed to connect with hub, switching to ofline");
-          });
+          await this.hub.disconnect();
+          this.hub = undefined;
         }
         this.hub = undefined;
-        this.eventManager = new OfflineBoardEventManager(
-          boardManager,
-          this.store
-        );
+        this.eventManager = new OfflineBoardEventManager(this.store);
       }
 
       this.eventManager?.toolChanged(this.currentTool);
     },
-    initalizeStageAndLayers() {
-      const initLayer = new Konva.Layer({ id: "Layer 1" });
+    initalizeStageAndLayers(isOnline: boolean) {
       const initStage = new Konva.Stage({
         container: "board",
         width: this.getWidth(),
         height: this.getHeigth(),
       });
-      initStage.add(initLayer);
       this.store.commit("setStage", initStage);
-      this.store.commit("setLayers", [initLayer]);
-      this.store.commit("setCurrentLayer", initLayer);
+      if (isOnline === false) {
+        const initLayer = new Konva.Layer({ id: "Layer 1" });
+        initStage.add(initLayer);
+        this.store.commit("setLayers", [initLayer]);
+        this.store.commit("setCurrentLayer", initLayer);
+      } else {
+        this.store.commit("setLayers", []);
+        this.store.commit("setCurrentLayer", null);
+      }
     },
     getHeigth() {
       if (document.getElementById("root") == null) return 0;
@@ -180,6 +183,9 @@ export default defineComponent({
         this.highlightLayer(action.value as string, false);
       if (action.type == "removeLayer")
         this.removeLayer(action.value as string);
+      if (action.type == "openFileHandler") {
+        (this.$refs["fileWindow"] as typeof FileWindow).dialogVisible = true;
+      }
     },
     addLayer() {
       this.eventManager?.addLayer();

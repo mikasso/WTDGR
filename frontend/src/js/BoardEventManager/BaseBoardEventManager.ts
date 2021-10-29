@@ -7,6 +7,7 @@ import { Store } from "vuex";
 import BoardManager from "../KonvaManager/BoardManager";
 import { ClassNames } from "../KonvaManager/ClassNames";
 import { Edge } from "../KonvaManager/EdgeManager";
+import { SelectLine } from "../KonvaManager/MultiselectManager";
 import { PencilLine } from "../KonvaManager/PencilManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 import { IHandler } from "./IHandler";
@@ -31,18 +32,19 @@ export default abstract class BaseBoardEventManager implements IEventBinder {
   edgeMouseLeave!: (event: KonvaEventObject<any>) => void;
   edgeMouseDown!: (event: KonvaEventObject<any>) => void;
   edgeMouseUp!: (event: KonvaEventObject<any>) => void;
+  multiselectMouseDown!: (event: KonvaEventObject<any>) => void;
   pencilClick!: (event: KonvaEventObject<any>) => void;
 
   boardManager: BoardManager;
   store: Store<State>;
   handlers: IHandler[];
 
-  constructor(boardManager: BoardManager, store: Store<State>) {
-    this.boardManager = boardManager;
+  constructor(store: Store<State>) {
+    this.boardManager = BoardManager.getBoardManager();
     this.boardManager.eventManager = this;
     this.store = store;
     this.clearHandlers();
-    this.bindStageEvents(boardManager.stage);
+    this.bindStageEvents(this.boardManager.stage);
     this.handlers = [];
   }
 
@@ -56,6 +58,9 @@ export default abstract class BaseBoardEventManager implements IEventBinder {
         break;
       case ClassNames.PencilLine:
         this.bindPencilEvents(item as PencilLine);
+        break;
+      case "Line":
+        this.bindMultiselectEvents(item as SelectLine);
         break;
       default:
         throw new Error(
@@ -158,6 +163,12 @@ export default abstract class BaseBoardEventManager implements IEventBinder {
   private bindPencilEvents(pencil: PencilLine) {
     pencil.on("click", (event: any) => {
       this.pencilClick(event);
+    });
+  }
+
+  private bindMultiselectEvents(line: SelectLine) {
+    line.on("mousedown", (event) => {
+      this.multiselectMouseDown(event);
     });
   }
 }

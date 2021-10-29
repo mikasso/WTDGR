@@ -2,50 +2,54 @@ import { State } from "@/store";
 import {
   HubConnection,
   HubConnectionBuilder,
+  HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
+import { NodeConfig } from "konva/types/Node";
 import { Store } from "vuex";
+import { getAppConfig } from "../BoardEventManager/utils";
 import UserAction from "./Action";
 import ApiManager from "./ApiHandler";
-
 export default class BoardHub {
-  private get user() {
-    return this.store.state.user;
-  }
-
   private connection: HubConnection;
-  onCloseMethod: (attempt: number) => Promise<void>;
   constructor(private apiManager: ApiManager, private store: Store<State>) {
+    const config = getAppConfig();
     this.connection = new HubConnectionBuilder()
-      .withUrl("http://localhost:5000/graphHub")
+      .withUrl(config.hubEndPoint)
       .configureLogging(LogLevel.Information)
       .build();
 
-    this.connection.on("ReceiveJoinResponse", (user) => {
-      console.log(user);
-    });
+    this.connection.on("ReceiveJoinResponse", (user) => {});
     this.connection.on(
       "ReceiveAction",
       (action: UserAction, isSucceded: boolean) => {
         this.apiManager.receiveAction(action, isSucceded);
       }
     );
+    this.connection.on("GetGraph", (items: NodeConfig[]) => {
+      this.apiManager.loadItems(items);
+    });
     this.connection.on("ReceiveActionResponse", (actionResponse: string) => {
       this.apiManager.receiveActionResponse(actionResponse);
     });
+    this.connection.on("ReceiveText", (text: string) => {});
 
-    this.onCloseMethod = this.reJoinRoom;
-    const closeHandler = async (that: BoardHub) => {
-      that.store.commit("setOffline");
-      await that.onCloseMethod(0);
-    };
-    this.connection.onclose(async () => closeHandler(this));
+    this.connection.onclose(() => this.store.commit("setOffline"));
+    this.connection.onreconnected(() => this.store.commit("setOnline"));
+    this.connection.onreconnecting(() => this.store.commit("setOffline"));
+  }
+
+  public userColor() {
+    return this.store.state.userColor;
+  }
+  private get user() {
+    return this.store.state.user;
   }
 
   public sendAction(action: UserAction) {
     return this.connection
       .invoke("SendAction", action)
-      .catch((err: Error) => alert(err.toString()));
+      .catch((err: Error) => console.error(err.toString()));
   }
 
   public createRoom(username: string) {
@@ -57,7 +61,7 @@ export default class BoardHub {
     });
   }
 
-  public joinRoomPromise() {
+  public joinRoom() {
     return this.connection.start().then(() => {
       const request = {
         Id: this.user.userId,
@@ -70,23 +74,8 @@ export default class BoardHub {
     });
   }
 
-  public disconnectPromise() {
-    this.onCloseMethod = () => Promise.resolve();
-    return this.connection.stop();
-  }
-
-  private async reJoinRoom(attempt: number) {
-    console.warn("SignalR: attemp to reconnect");
-    await this.joinRoomPromise()
-      .then(() => {
-        this.store.commit("setOnline");
-      })
-      .catch((err: Error) => {
-        console.error(err);
-        setTimeout(
-          async () => this.reJoinRoom(attempt + 1),
-          Math.pow(2, attempt) * 1000
-        );
-      });
+  public async disconnect() {
+    if (this.connection.state == HubConnectionState.Connected)
+      return await this.connection.stop();
   }
 }

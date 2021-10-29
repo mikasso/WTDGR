@@ -1,0 +1,8 @@
+{
+  "Development": {
+    "hubEndPoint": "http://localhost:5000/graphHub"
+  },
+  "Production": {
+    "hubEndPoint": "http://153.19.216.51:5000/graphHub"
+  }
+}
