@@ -16,7 +16,7 @@ namespace Backend.Tests
 
         public RoomManagerTestsBase()
         {
-            _roomManager = new RoomManagerFactory().CreateRoomManager();
+            _roomManager = new RoomManagerFactory(new TimeProvider()).CreateRoomManager();
         }
 
         protected async Task<string> AddVertexToId(string UserId = "User1")

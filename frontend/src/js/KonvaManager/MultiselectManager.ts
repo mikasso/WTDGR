@@ -3,8 +3,6 @@ import { Cordinates, Vertex } from "./VertexManager";
 import classifyPoint from "robust-point-in-polygon";
 import { ClassNames } from "./ClassNames";
 import BoardManager from "./BoardManager";
-import { toHandlers } from "@vue/runtime-core";
-import { formatArrayBuffer } from "@microsoft/signalr/dist/esm/Utils";
 
 type Point = [number, number];
 

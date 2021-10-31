@@ -1,20 +1,10 @@
 import { Formater } from "./Formater";
 import Konva from "konva";
 import { Cordinates } from "../../KonvaManager/VertexManager";
-import BoardHub from "../../SignalR/Hub";
-import BoardManager from "../../KonvaManager/BoardManager";
-import { State } from "@/store";
-import { Store } from "vuex";
 
 export { GdfFormater };
 
-console.log(Formater);
-
 class GdfFormater extends Formater {
-  constructor(hub: BoardHub) {
-    super(hub);
-  }
-
   stageToString(): string {
     const layers = this.getLayers();
     let nodesString = "nodedef>name VARCHAR,x DOUBLE,y DOUBLE\n";

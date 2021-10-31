@@ -9,21 +9,23 @@ using System.Collections.Generic;
 namespace Backend.Service
 {
 
-    public interface IGraphHub 
+    public interface IGraphHub
     {
         Task SendAction(UserAction userAction);
         Task ReceiveAction(UserAction userAction, bool isSucceded = true);
         Task ReceiveActionResponse(UserActionFailure actionResponse);
-        Task SendText(string message);
+        Task ReceiveRoomId(string roomId);
         Task ReceiveText(string message);
+        Task ReceiveWarninig(string message);
         Task ReceiveJoinResponse(User user);
-        Task GetGraph(IList<IRoomItem> items);
+        Task ReceiveGraph(IList<IRoomItem> items);
+        Task GetGraph();
     }
 
     public partial class GraphHub : Hub<IGraphHub>
     {
         private IRoomsContainer _roomsContainer;
-        public GraphHub(IRoomsContainer roomsContainer) 
+        public GraphHub(IRoomsContainer roomsContainer)
         {
             _roomsContainer = roomsContainer;
         }
@@ -38,23 +40,27 @@ namespace Backend.Service
             set { Context.Items.Add("Group", value); }
         }
         private IRoomManager? Room => MyUser != null ? _roomsContainer.GetRoom(MyUser.RoomId) : null;
-        public async Task CreateRoom(User owner)
+        public async Task CreateRoom(string ownerId)
         {
+            if (!_roomsContainer.CanCreate)
+            {
+                await Clients.Caller.ReceiveWarninig("Server couldnot create a room, because the rooms count hosted by the server has reached the limit");
+                Context.Abort();
+            }
+
             var roomManager = _roomsContainer.CreateRoom();
-            owner = roomManager.CreateOwner(owner);
-            await AssignUserToContext(owner);
-            await ReplyForJoin(owner);
+            roomManager.Users.CreateOwner(ownerId);
+            await Clients.Caller.ReceiveRoomId(roomManager.RoomId);
         }
         public async Task JoinRoom(User user)
         {
-            if (CanJoinToRoom(user))
+            if (await CanJoinToRoom(user))
             {
                 await AssignUserToContext(user);
                 await ReplyForJoin(user);
             }
             else
             {
-                await Clients.Caller.ReceiveText("Error: User cannot join this room");
                 Context.Abort();
             }
         }
@@ -67,9 +73,9 @@ namespace Backend.Service
                 var additionalInfo = exception == null ? " No exception catched." : exception.Message;
                 Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
                 var actionResults = Room.HandleUserDisconnectAsync(MyUser.Id);
-                await foreach(ActionResult actionResult in actionResults)
+                await foreach (ActionResult actionResult in actionResults)
                 {
-                    await HandleReceiveActionResult(actionResult,MyUser.Id);
+                    await HandleReceiveActionResult(actionResult, MyUser.Id);
                 }
                 Room.Users.Delete(MyUser.Id);
             }
@@ -91,10 +97,21 @@ namespace Backend.Service
             userAction.UserId = MyUser.Id;
             if (MyGroup == null)
             {
-                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason="You re not in any group"});
+                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason = "You are not in any room!" });
+                return;
             }
             var actionResult = await Room.ExecuteActionAsync(userAction);
             await HandleReceiveActionResult(actionResult, userAction.UserId);
+        }
+
+        public async Task GetGraph()
+        {
+            if (MyGroup == null)
+            {
+                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason = "You are not in any room!" });
+                return;
+            }
+            await Clients.Caller.ReceiveGraph(Room.GetRoomImage());
         }
 
         private async Task HandleReceiveActionResult(ActionResult actionResult, string userId)
@@ -121,21 +138,25 @@ namespace Backend.Service
             await MyGroup.ReceiveText(message);
             Log.Information(message);
             await Clients.Caller.ReceiveJoinResponse(user);
-            await Clients.Caller.GetGraph(Room.GetRoomImage());
         }
 
-        private bool CanJoinToRoom(User user)
+        private async Task<bool> CanJoinToRoom(User user)
         {
             try
             {
                 var room = _roomsContainer.GetRoom(user.RoomId);
-                var result = room.Users.Exists(user.Id);
-                if (result) Log.Information($"User already exists in this room, id: {user.Id}");
-                return !result;
+                var alreadyExist = room.Users.Exists(user.Id);
+                if (alreadyExist)
+                {
+                    Log.Information($"User already exists in this room, id: {user.Id}");
+                    await Clients.Caller.ReceiveWarninig($"You cannot join this room, there is already {user.Id} in the room.");
+                }
+                return (alreadyExist == false);
             }
             catch (Exception e)
             {
                 Log.Error(e, $"User: {user.Id} failed to connect to room: {user.RoomId} The room doesnt exists");
+                await Clients.Caller.ReceiveWarninig($"You cannot join this room. The room doesnt exists.");
                 return false;
             }
         }

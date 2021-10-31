@@ -13,13 +13,10 @@ namespace Backend.Models
 
     public class User : IIdentifiable
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
+
         public string Id { get; set; }
-        [BsonRequired]
+
         public string Role { get; set; } 
-        [BsonRequired]
         public string RoomId { get; set; }
-        public string Type { get => "User"; set  { throw new Exception(); } }
     }
 }

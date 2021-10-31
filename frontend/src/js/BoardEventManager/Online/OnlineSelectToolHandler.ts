@@ -4,6 +4,7 @@ import { Vertex } from "@/js/KonvaManager/VertexManager";
 import { ActionFactory } from "@/js/SignalR/Action";
 import { ActionTypes } from "@/js/SignalR/ApiHandler";
 import BoardHub from "@/js/SignalR/Hub";
+import { getUserColor } from "@/js/SignalR/User";
 import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
@@ -80,10 +81,8 @@ export default class OnlineSelectToolHandler implements IHandler {
 
   private async sendVertexEditsFromEdge(edge: Edge) {
     const mousePos = this.boardManager.getMousePosition();
-    const {
-      v1Pos,
-      v2Pos,
-    } = this.boardManager.edgeManager.calculcateNewVerticesPosition(mousePos);
+    const { v1Pos, v2Pos } =
+      this.boardManager.edgeManager.calculcateNewVerticesPosition(mousePos);
 
     const action = this.actionFactory.create(ActionTypes.Edit, [
       {
@@ -117,7 +116,7 @@ export default class OnlineSelectToolHandler implements IHandler {
           if (this.intervalId !== null) {
             clearInterval(this.intervalId);
           }
-          this.currentVertex.setAttrs({ stroke: this.hub.userColor() });
+          this.currentVertex.setAttrs({ stroke: getUserColor() });
           this.intervalId = window.setInterval(
             async (x: Vertex) => await this.sendVertexEdit(x),
             SentRequestInterval,
@@ -163,7 +162,7 @@ export default class OnlineSelectToolHandler implements IHandler {
           if (this.intervalId !== null) {
             clearInterval(this.intervalId);
           }
-          this.currentEdge.setAttrs({ stroke: this.hub.userColor() });
+          this.currentEdge.setAttrs({ stroke: getUserColor() });
           this.hub.sendAction(
             this.actionFactory.create(
               ActionTypes.Edit,
