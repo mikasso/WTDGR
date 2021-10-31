@@ -29,14 +29,12 @@ export default class ApiManager {
   }
 
   public loadItems(items: NodeConfig[]) {
-    console.log("Recieved items", items);
     for (const item of items) {
       this.receiveAdd("room", item);
     }
   }
 
   public receiveAction(action: UserAction, isSucceded: boolean) {
-    console.log("Recieved action", action);
     for (const item of action.items) {
       switch (action.actionType) {
         case ActionTypes.Add:

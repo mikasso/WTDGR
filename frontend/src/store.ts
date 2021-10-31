@@ -71,7 +71,6 @@ export const store = createStore<State>({
       state.connectionState = value;
     },
     setUser(state, user) {
-      console.log("change of user");
       state.user = user;
     },
     setRoomId(state, roomId) {

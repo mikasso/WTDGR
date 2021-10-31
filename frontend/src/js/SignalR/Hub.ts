@@ -36,13 +36,15 @@ export default class BoardHub {
     this.connectionState = HubConnectionState.Disconnected;
 
     this.connection.on("ReceiveRoomId", (roomId: string) => {
-      console.log("RoomID:" + roomId);
       store.commit("setRoomId", roomId);
       store.commit("setOnline");
     });
 
     this.connection.on("ReceiveJoinResponse", (user) => {
       this.requestGraph();
+    });
+    this.connection.on("ReceiveWarninig", (warning: string) => {
+      alert(warning);
     });
     this.connection.on(
       "ReceiveAction",
@@ -83,7 +85,6 @@ export default class BoardHub {
   }
 
   public async createRoom() {
-    console.log(this.store.state.user.userId);
     try {
       if (this.connection.state !== HubConnectionState.Connected)
         await this.connection.start();
@@ -93,11 +94,10 @@ export default class BoardHub {
           this.store.state.user.userId
         );
       } catch (e) {
-        alert("Error during creating the room: " + e);
         return false;
       }
     } catch (e) {
-      alert("Error during connecting the hub: " + e);
+      alert("Error during connecting the server, it might be unavaiable.");
       return false;
     }
     return true;
@@ -116,11 +116,11 @@ export default class BoardHub {
         await this.connection.invoke("JoinRoom", request);
         this.connectionState = HubConnectionState.Connected;
       } catch (e) {
-        alert("Error during joinning the room: " + e);
+        alert("Error during joinning the room ");
         return false;
       }
     } catch (e) {
-      alert("Error during connecting the hub: " + e);
+      alert("Error during connecting the hub ");
       return false;
     }
     return true;

@@ -64,6 +64,9 @@ import { createUser, UserTypes } from "@/js/SignalR/User";
 import { defineComponent } from "vue";
 import { useStore } from "vuex";
 import { key, State, store } from "../store";
+
+const isNameInvalid = (name: string) => name.match("^[^0-9][^@#]+$") === null;
+
 export default defineComponent({
   name: "WelcomeWindow",
   emits: ["connectionResult"],
@@ -89,10 +92,10 @@ export default defineComponent({
   },
   computed: {
     isUserDataInvalid() {
-      return this.roomId === "" || this.userId === "";
+      return this.roomId === "" || isNameInvalid(this.userId);
     },
     isOwnerIdInvalid() {
-      return this.ownerId === "";
+      return isNameInvalid(this.ownerId);
     },
   },
   methods: {
@@ -103,6 +106,7 @@ export default defineComponent({
       this.isOpened = true;
     },
     tryToJoin() {
+      this.roomId = this.roomId.trim();
       this.store.commit("setUser", createUser(this.userId));
       this.store.commit("setRoomId", this.roomId);
       this.store.commit("setOnline");
