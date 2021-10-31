@@ -14,10 +14,11 @@ namespace Backend.Service
         Task SendAction(UserAction userAction);
         Task ReceiveAction(UserAction userAction, bool isSucceded = true);
         Task ReceiveActionResponse(UserActionFailure actionResponse);
-        Task SendText(string message);
+        Task ReceiveRoomId(string roomId);
         Task ReceiveText(string message);
         Task ReceiveJoinResponse(User user);
-        Task GetGraph(IList<IRoomItem> items);
+        Task ReceiveGraph(IList<IRoomItem> items);
+        Task GetGraph();
     }
 
     public partial class GraphHub : Hub<IGraphHub>
@@ -38,12 +39,11 @@ namespace Backend.Service
             set { Context.Items.Add("Group", value); }
         }
         private IRoomManager? Room => MyUser != null ? _roomsContainer.GetRoom(MyUser.RoomId) : null;
-        public async Task CreateRoom(User owner)
+        public async Task CreateRoom(string ownerId)
         {
             var roomManager = _roomsContainer.CreateRoom();
-            owner = roomManager.CreateOwner(owner);
-            await AssignUserToContext(owner);
-            await ReplyForJoin(owner);
+            roomManager.Users.CreateOwner(ownerId);
+            await Clients.Caller.ReceiveRoomId(roomManager.RoomId);
         }
         public async Task JoinRoom(User user)
         {
@@ -91,10 +91,21 @@ namespace Backend.Service
             userAction.UserId = MyUser.Id;
             if (MyGroup == null)
             {
-                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason="You re not in any group"});
+                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason= "You are not in any room!" });
+                return;
             }
             var actionResult = await Room.ExecuteActionAsync(userAction);
             await HandleReceiveActionResult(actionResult, userAction.UserId);
+        }
+
+        public async Task GetGraph()
+        {
+            if (MyGroup == null )
+            {
+                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason = "You are not in any room!" });
+                return;
+            }
+            await Clients.Caller.ReceiveGraph(Room.GetRoomImage());
         }
 
         private async Task HandleReceiveActionResult(ActionResult actionResult, string userId)
@@ -121,7 +132,6 @@ namespace Backend.Service
             await MyGroup.ReceiveText(message);
             Log.Information(message);
             await Clients.Caller.ReceiveJoinResponse(user);
-            await Clients.Caller.GetGraph(Room.GetRoomImage());
         }
 
         private bool CanJoinToRoom(User user)

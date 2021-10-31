@@ -1,4 +1,5 @@
 ﻿using Backend.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,22 +7,40 @@ namespace Backend.Core
 {
     public interface IRoomUsersManager
     {
-        public bool SetAdmin(string username);
-        public bool RemoveAdmin(string username);
-        public bool Add(User user);
-        public User Get(string id);
-        public bool Delete(string id);
-        public IList<User> GetAll();
-        public bool Exists(User user);
-        public bool Exists(string userName);
+        bool SetAdmin(string username);
+        bool RemoveAdmin(string username);
+        bool Add(User user);
+        User Get(string id);
+        bool Delete(string id);
+        IList<User> GetAll();
+        bool Exists(User user);
+        bool Exists(string userName);
+        User CreateOwner(string ownerId);
     }
     public class RoomUsersManager : IRoomUsersManager
     {
         private Dictionary<string, User> _users = new Dictionary<string, User>();
         private string _roomId;
+
+        public User Owner { get; private set; }
+
         public RoomUsersManager(string id)
         {
             _roomId = id;
+        }
+
+        public User CreateOwner(string ownerId)
+        {
+            if (Owner != default)
+                throw new Exception("Owner already exists!");
+            var owner = new User()
+            {
+                Id = ownerId,
+                Role = UserRoles.Owner,
+                RoomId = _roomId,
+            };
+            Owner = owner;
+            return owner;
         }
         public bool SetAdmin(string username)
         {

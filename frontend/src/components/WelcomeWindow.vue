@@ -1,7 +1,7 @@
 <template>
   <el-dialog
-    v-model="dialogVisible"
-    title="Welcome"
+    v-model="isOpened"
+    title="Connection menu"
     width="50%"
     center
     :close-on-click-modal="false"
@@ -11,14 +11,26 @@
     <el-row class="main-row">
       <el-col :span="8" class="col-left">
         <p style="font-size: 20px">Create new room</p>
-        <el-button :disabled="true" class="col-btn" type="primary">
+        <el-form>
+          <el-form-item>
+            <el-input placeholder="Your name" v-model="ownerId"></el-input>
+          </el-form-item>
+        </el-form>
+        <el-button
+          @click="create"
+          class="col-btn"
+          type="primary"
+          v-bind:disabled="isOwnerIdInvalid"
+        >
           Create
         </el-button>
       </el-col>
+
       <el-col :span="8" class="col-middle">
         <p style="font-size: 20px">Join existing room</p>
         <el-form>
           <el-form-item>
+            <el-input placeholder="Your name" v-model="userId"></el-input>
             <el-input placeholder="Room ID" v-model="roomId"></el-input>
           </el-form-item>
         </el-form>
@@ -27,6 +39,7 @@
           @click="tryToJoin"
           type="primary"
           class="col-btn"
+          v-bind:disabled="isUserDataInvalid"
         >
           <span>Join</span>
         </el-button>
@@ -34,6 +47,7 @@
           Failed to join a room
         </span>
       </el-col>
+
       <el-col :span="8" class="col-right">
         <p style="font-size: 20px">Use the table in offline mode</p>
         <el-button @click="drawOffline" type="primary">
@@ -45,12 +59,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
-import ApiManager from "../js/SignalR/ApiHandler";
-import BoardHub from "../js/SignalR/Hub";
-import BoardManager from "../js/KonvaManager/BoardManager";
+import BoardHub from "@/js/SignalR/Hub";
+import { createUser, UserTypes } from "@/js/SignalR/User";
+import { defineComponent } from "vue";
 import { useStore } from "vuex";
-import { key, State } from "../store";
+import { key, State, store } from "../store";
 export default defineComponent({
   name: "WelcomeWindow",
   emits: ["connectionResult"],
@@ -62,38 +75,49 @@ export default defineComponent({
     };
   },
   data() {
+    const userId = store.state.user.userId;
+    const roomId = store.state.roomId;
     return {
-      dialogVisible: true,
-      roomId: "",
+      roomId: roomId,
+      userId: userId,
+      ownerId: userId,
+      isOpened: true,
       joining: false,
       creating: false,
       failedToJoin: false,
     };
   },
+  computed: {
+    isUserDataInvalid() {
+      return this.roomId === "" || this.userId === "";
+    },
+    isOwnerIdInvalid() {
+      return this.ownerId === "";
+    },
+  },
   methods: {
-    async tryToJoin() {
-      this.failedToJoin = false;
-      const boardManager = new BoardManager(this.store);
-      const apiManager = new ApiManager(boardManager, this.store);
-      const hub = new BoardHub(apiManager, this.store);
-      this.joining = true;
-      await hub?.joinRoomPromise().catch(async () => {
-        this.joining = false;
-        this.failedToJoin = true;
-      });
-      if (this.failedToJoin) return;
-      this.emit("connectionResult", {
-        type: "join",
-        hub: hub,
-        boardManager: boardManager,
-      } as any);
-      this.dialogVisible = false;
+    open() {
+      this.userId = store.state.user.userId;
+      this.roomId = store.state.roomId;
+      this.store.commit("setOffline");
+      this.isOpened = true;
+    },
+    tryToJoin() {
+      this.store.commit("setUser", createUser(this.userId));
+      this.store.commit("setRoomId", this.roomId);
+      this.store.commit("setOnline");
+      this.isOpened = false;
     },
     drawOffline() {
-      this.emit("connectionResult", {
-        type: "offline",
-      } as any);
-      this.dialogVisible = false;
+      this.store.commit("setRoomId", "");
+      this.store.commit("setOffline");
+      this.isOpened = false;
+    },
+    create() {
+      this.store.commit("setUser", createUser(this.ownerId, UserTypes.Owner));
+      BoardHub.getBoardHub()
+        .createRoom()
+        .then(() => (this.isOpened = false));
     },
   },
 });
@@ -128,5 +152,8 @@ export default defineComponent({
 }
 .main-row {
   min-height: 231px;
+}
+.el-input {
+  margin-bottom: 1%;
 }
 </style>

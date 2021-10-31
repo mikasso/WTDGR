@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Backend.Core
@@ -14,10 +15,15 @@ namespace Backend.Core
     }
     public class RoomManagerFactory : IRoomManagerFactory
     {
+        private  readonly ITimeProvider _timeProvider;
+
+        public RoomManagerFactory(ITimeProvider timeProvider)
+        {
+            _timeProvider = timeProvider;
+        }
         public IRoomManager CreateRoomManager()
         {
-            //string id = Guid.NewGuid().ToString();
-            string id = "1";
+            string id = Regex.Replace(Convert.ToBase64String(Guid.NewGuid().ToByteArray()), "[/+=]", "");
             RoomUsersManager usersManager = new(id);
             EdgeManager edgeManager = new();
             VerticesManager verticesManager = new();
@@ -26,7 +32,7 @@ namespace Backend.Core
             layersManager.Initialize(verticesManager);
             edgeManager.Initialize(verticesManager);
             verticesManager.Initialize(edgeManager);
-            return new RoomManager(id, usersManager, verticesManager, edgeManager, lineManager, layersManager);
+            return new RoomManager(id, _timeProvider, usersManager, verticesManager, edgeManager, lineManager, layersManager);
         }
     }
 }

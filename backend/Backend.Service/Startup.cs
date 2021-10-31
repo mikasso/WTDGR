@@ -27,6 +27,7 @@ namespace Backend.Service
         public void ConfigureServices(IServiceCollection services)
         {
             //Start room 1 TODO delete this line
+            services.AddSingleton<ITimeProvider, TimeProvider>();
             services.AddSingleton<IRoomManagerFactory, RoomManagerFactory>();
             services.AddSingleton<IRoomsContainer, RoomsContainer>();
             //Configure SPA service 

@@ -12,10 +12,12 @@ import BoardHub from "../../SignalR/Hub";
 export { Formater };
 
 abstract class Formater {
-  boardManager: BoardManager;
-  stage: Konva.Stage;
-  store: Store<State>;
-  constructor(private hub: BoardHub) {
+  private boardManager: BoardManager;
+  private stage: Konva.Stage;
+  private store: Store<State>;
+  private hub: BoardHub;
+  constructor() {
+    this.hub = BoardHub.getBoardHub();
     this.boardManager = BoardManager.getBoardManager();
     this.store = this.boardManager.store;
     this.stage = this.boardManager.store.state.stage!;

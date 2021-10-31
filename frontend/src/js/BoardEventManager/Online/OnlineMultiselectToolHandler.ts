@@ -10,7 +10,8 @@ import BoardHub from "@/js/SignalR/Hub";
 import { ActionTypes } from "@/js/SignalR/ApiHandler";
 import { SentRequestInterval } from "../OnlineBoardEventManager";
 import { ItemColors } from "../utils";
-
+import { store } from "@/store";
+import { getUserColor } from "@/js/SignalR/User";
 export default class OnlineMultiselectToolHandler implements IHandler {
   dragInterval: number | null = null;
   drawInterval: number | undefined;
@@ -84,13 +85,13 @@ export default class OnlineMultiselectToolHandler implements IHandler {
       this.dragInterval = null;
     } else {
       this.boardManager.finishMultiselect();
-      const selectedVertexes = this.boardManager.multiselectManager
-        .selectedVertexes;
+      const selectedVertexes =
+        this.boardManager.multiselectManager.selectedVertexes;
       if (selectedVertexes.length == 0) return;
       this.vertexesDTO = [];
       for (const vertex of selectedVertexes) {
         vertex.setAttrs({
-          stroke: this.hub.userColor(),
+          stroke: getUserColor(),
         });
         this.vertexesDTO.push(vertex.asDTO());
       }
@@ -104,10 +105,11 @@ export default class OnlineMultiselectToolHandler implements IHandler {
 
   private sendVertexesEdit() {
     const mousePos = this.boardManager.getMousePosition();
-    this.vertexesDTO = this.boardManager.multiselectManager.updatedSelectedPosAsDto(
-      mousePos,
-      this.hub.userColor()
-    );
+    this.vertexesDTO =
+      this.boardManager.multiselectManager.updatedSelectedPosAsDto(
+        mousePos,
+        getUserColor()
+      );
     this.boardManager.multiselectManager.moveDrawing(mousePos);
 
     const action = this.actionFactory.create(

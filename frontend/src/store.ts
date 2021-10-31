@@ -1,26 +1,12 @@
+import { HubConnectionState } from "@microsoft/signalr";
 import Konva from "konva";
 import { InjectionKey } from "vue";
 import { createStore, Store } from "vuex";
+import { createUser, User } from "./js/SignalR/User";
 
-export interface User {
-  userId: string;
-  role?: UserTypes;
-  userColor?: string;
-}
-
-enum UserTypes {
-  Owner,
-}
-
-function createUser(id: string): User {
-  return {
-    userId: id,
-    role: UserTypes.Owner,
-    userColor: selectColor(Math.floor(Math.random() * 10)),
-  };
-}
 export interface State {
   isOnline: boolean;
+  connectionState: HubConnectionState;
   stage?: Konva.Stage;
   currentLayer?: Konva.Layer;
   currentTool: string;
@@ -32,20 +18,16 @@ export interface State {
 
 export const key: InjectionKey<Store<State>> = Symbol();
 
-function selectColor(number: number) {
-  const hue = number * 137.508;
-  return `hsl(${hue},50%,75%)`;
-}
-
 export const store = createStore<State>({
   state: {
     isOnline: false,
     stage: undefined,
     currentLayer: undefined,
+    connectionState: HubConnectionState.Disconnected,
     currentTool: "Select",
     layers: [],
-    roomId: "1",
-    user: createUser(Math.random.toString()),
+    roomId: "",
+    user: createUser("Mikolaj"),
     allUsers: [
       createUser("Test User 1"),
       createUser("Test User 2"),
@@ -59,6 +41,9 @@ export const store = createStore<State>({
     getUser(state) {
       return state.user;
     },
+    getRoomId(state) {
+      return state.roomId;
+    },
     stage(state) {
       return state.stage;
     },
@@ -71,6 +56,9 @@ export const store = createStore<State>({
     getCurrentTool(state) {
       return state.currentTool;
     },
+    getConnectionState(state) {
+      return state.connectionState;
+    },
   },
   mutations: {
     setOnline(state) {
@@ -79,8 +67,15 @@ export const store = createStore<State>({
     setOffline(state) {
       state.isOnline = false;
     },
+    setConnectionState(state, value) {
+      state.connectionState = value;
+    },
     setUser(state, user) {
+      console.log("change of user");
       state.user = user;
+    },
+    setRoomId(state, roomId) {
+      state.roomId = roomId;
     },
     setCurrentLayer(state, layer) {
       state.currentLayer = layer;

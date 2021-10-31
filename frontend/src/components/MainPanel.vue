@@ -1,12 +1,12 @@
 <template>
   <el-container class="wrapper">
-    <WelcomeWindow @connectionResult="handleConnection($event)"></WelcomeWindow>
+    <WelcomeWindow ref="welcomeWindow" />
     <el-header class="header" height="55px">
       <Toolbar @toolbarAction="handleToolbarAction($event)" />
     </el-header>
 
     <el-container>
-      <el-main class="main" style="padding: 0px;">
+      <el-main class="main" style="padding: 0px">
         <div id="root">
           <div
             id="board"
@@ -27,7 +27,6 @@ import { defineComponent, computed } from "vue";
 import OnlineBoardEventManager from "../js/BoardEventManager/OnlineBoardEventManager";
 import OfflineBoardEventManager from "../js/BoardEventManager/OfflineBoardEventManager";
 import BoardManager from "../js/KonvaManager/BoardManager";
-import ApiManager from "../js/SignalR/ApiHandler";
 import BoardHub from "../js/SignalR/Hub";
 import { ActionFactory } from "../js/SignalR/Action";
 import Konva from "konva";
@@ -37,6 +36,8 @@ import { key, State } from "../store";
 import { useWindowSize } from "vue-window-size";
 import Toolbar from "./Toolbar.vue";
 import FileWindow from "./FileWindow.vue";
+import WelcomeWindow from "./WelcomeWindow.vue";
+import UsersList from "./UsersList.vue";
 
 interface BoardData {
   eventManager?: BaseBoardEventManager;
@@ -55,6 +56,9 @@ export default defineComponent({
   },
   components: {
     Toolbar,
+    WelcomeWindow,
+    // eslint-disable-next-line vue/no-unused-components
+    UsersList,
     FileWindow,
   },
   watch: {
@@ -103,6 +107,7 @@ export default defineComponent({
     const currentTool = computed(() => {
       return store.state.currentTool;
     });
+    BoardManager.createBoardManagerSingleton(store);
     return {
       connectionStarted,
       store,
@@ -112,36 +117,29 @@ export default defineComponent({
       windowHeight: height,
     };
   },
-  async mounted() {
-    await this.handleConnectionChange(this.isOnline);
-  },
   methods: {
     async handleConnectionChange(isOnline: boolean) {
       this.initalizeStageAndLayers(isOnline);
+      const hub = BoardHub.getBoardHub();
       if (this.eventManager !== undefined) {
         this.eventManager.toolChanged("None");
       }
-      BoardManager.createBoardManagerSingleton(this.store);
-      let boardManager = BoardManager.getBoardManager();
+
       if (isOnline) {
-        const apiManager = new ApiManager(boardManager, this.store);
-        const hub = new BoardHub(apiManager, this.store);
-        (this.$refs["fileWindow"] as typeof FileWindow).hub = hub;
         this.eventManager = new OnlineBoardEventManager(
           this.store,
           hub,
-          new ActionFactory(this.store.state.user.id, boardManager)
+          new ActionFactory(
+            this.store.state.user.userId,
+            BoardManager.getBoardManager()
+          )
         );
-        this.hub = hub;
-        this.hub.joinRoom().catch(async () => {
-          alert("Failed to connect with hub, switching to ofline");
-        });
-      } else {
-        if (this.hub !== undefined) {
-          await this.hub.disconnect();
-          this.hub = undefined;
+        const joinResult = await hub.joinRoom();
+        if (joinResult === false) {
+          this.store.commit("setOffline");
         }
-        this.hub = undefined;
+      } else {
+        await hub.disconnect();
         this.eventManager = new OfflineBoardEventManager(this.store);
       }
 
@@ -174,20 +172,23 @@ export default defineComponent({
     },
 
     handleToolbarAction(action: toolbarAction) {
-      if (action.type == "addLayer") this.addLayer();
-      if (action.type == "reorderLayers")
+      if (action.type === "addLayer") this.addLayer();
+      if (action.type === "reorderLayers")
         this.reorderLayers(
           action.value.index1 as number,
           action.value.index2 as number
         );
-      if (action.type == "highlightLayerOn")
+      if (action.type === "highlightLayerOn")
         this.highlightLayer(action.value as string, true);
-      if (action.type == "highlightLayerOff")
+      if (action.type === "highlightLayerOff")
         this.highlightLayer(action.value as string, false);
-      if (action.type == "removeLayer")
+      if (action.type === "removeLayer")
         this.removeLayer(action.value as string);
-      if (action.type == "openFileHandler") {
+      if (action.type === "openFileHandler") {
         (this.$refs["fileWindow"] as typeof FileWindow).dialogVisible = true;
+      }
+      if (action.type === "openWelcomeWindow") {
+        (this.$refs["welcomeWindow"] as typeof WelcomeWindow).open();
       }
     },
     addLayer() {

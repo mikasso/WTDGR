@@ -60,19 +60,14 @@ import { defineComponent, ref } from "vue";
 import { useStore } from "vuex";
 import { key, State } from "../store";
 import { getFormater } from "../js/Utils/FileUtils";
-import BoardHub from "../js/SignalR/Hub";
-interface fileInput {
-  value: any;
-}
+
 export default defineComponent({
   name: "WelcomeWindow",
   setup(props, { emit }) {
     const store = useStore<State>(key);
-    let hub: BoardHub | undefined;
     return {
       store,
       emit,
-      hub,
     };
   },
   data() {
@@ -80,7 +75,6 @@ export default defineComponent({
       dialogVisible: false,
       downloadUrl: "",
       showError: false,
-
       exportFormat: "gdf",
       importFormat: "gdf",
       exportFormats: ["gdf"],
@@ -89,7 +83,7 @@ export default defineComponent({
   },
   methods: {
     download() {
-      const formater = getFormater(this.hub!, this.exportFormat);
+      const formater = getFormater(this.exportFormat);
       this.downloadUrl = formater.exportStage();
     },
     upload() {
@@ -97,7 +91,7 @@ export default defineComponent({
     },
     async fileUploaded(event: any) {
       this.showError = false;
-      const formater = getFormater(this.hub!, this.importFormat);
+      const formater = getFormater(this.importFormat);
       const result = await formater.importStage(event!.target.files[0]);
       if (result) this.dialogVisible = false;
       else this.showError = true;
