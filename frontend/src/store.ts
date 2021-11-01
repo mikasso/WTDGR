@@ -27,7 +27,7 @@ export const store = createStore<State>({
     currentTool: "Select",
     layers: [],
     roomId: "",
-    user: createUser("Mikolaj"),
+    user: createUser(""),
     allUsers: [
       createUser("Test User 1"),
       createUser("Test User 2"),

@@ -16,7 +16,9 @@
         </div>
       </el-main>
 
-      <el-aside class="aside" width="250px">userzy</el-aside>
+      <el-aside class="aside" width="250px">
+        <UsersList />
+      </el-aside>
     </el-container>
     <FileWindow ref="fileWindow" />
   </el-container>
@@ -116,6 +118,9 @@ export default defineComponent({
       windowWidth: width,
       windowHeight: height,
     };
+  },
+  mounted() {
+    this.handleConnectionChange(false);
   },
   methods: {
     async handleConnectionChange(isOnline: boolean) {
