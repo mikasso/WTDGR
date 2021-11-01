@@ -260,30 +260,12 @@ export default class BoardManager {
     return pencilLine;
   }
 
-  addPencilWithPencil(
-    points: number[],
-    attrs?: Konva.LineConfig,
-    layerId: string = this.currentLayer.id()
-  ): PencilLine {
-    const layer: Konva.Layer = this.getLayerById(layerId)!;
-    const pencilLine = this.pencilManager.newLineWithPoints(
-      points,
-      layer,
-      attrs
-    );
-    this.eventManager.bindItem(pencilLine);
-    return pencilLine;
-  }
-
   createPencil(position: Cordinates) {
     const pencilDrawing = this.pencilManager.create(
       position,
       this.currentLayer
     );
     return pencilDrawing;
-    // this.pencilManager.draw(pencilDrawing);
-    // pencilDrawing.redraw();
-    // this.eventManager.bindItem(pencilDrawing);
   }
 
   movePencil(position: Cordinates) {
