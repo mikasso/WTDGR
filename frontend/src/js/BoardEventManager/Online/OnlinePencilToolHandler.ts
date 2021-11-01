@@ -12,6 +12,8 @@ import { SentRequestInterval } from "../OnlineBoardEventManager";
 export default class OnlinePencilToolHandler implements IHandler {
   private boardManager: BoardManager;
   intervalId: number | null = null;
+  private pencilLineEditSend = 20;
+  private editCounter = 0;
   constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
     this.boardManager = BoardManager.getBoardManager();
   }
@@ -36,34 +38,43 @@ export default class OnlinePencilToolHandler implements IHandler {
     const drawing = this.boardManager.createPencil(mousePos);
     const action = this.actionFactory.create(ActionTypes.Add, drawing.asDTO());
     this.hub.sendAction(action);
+    this.editCounter = 0;
     this.intervalId = window.setInterval(
-      () => this.sendDrawingEdit(),
+      () => this.drawLine(),
       SentRequestInterval
     );
   }
 
-  private sendDrawingEdit() {
+  private drawLine() {
     const currentDrawing = this.boardManager.pencilManager.currentDrawing;
-    console.log(currentDrawing);
     if (currentDrawing != null) {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.pencilManager.appendPoint(mousePos);
-      const pointsTemp = [...currentDrawing.attrs.points];
-      currentDrawing.attrs.points = [mousePos.x, mousePos.y];
-      const action = this.actionFactory.create(
-        ActionTypes.Edit,
-        currentDrawing.asDTO()
-      );
-      currentDrawing.attrs.points = pointsTemp;
       currentDrawing.layer.draw();
-      return this.hub.sendAction(action);
+      this.editCounter += 1;
+      if(this.editCounter % this.pencilLineEditSend == 0) {
+        this.sendLineEdit(currentDrawing)
+      }
     }
+  }
+
+  sendLineEdit(line: PencilLine){
+    const action = this.actionFactory.create(
+      ActionTypes.Edit,
+      line.asDTO()
+    );
+    this.hub.sendAction(action)
   }
 
   private mouseUp() {
     if (this.intervalId !== null) {
+      const currentDrawing = this.boardManager.pencilManager.currentDrawing;
+      if (currentDrawing != null) {
+        this.sendLineEdit(currentDrawing)
+      }
       clearInterval(this.intervalId);
       this.intervalId = null;
+      this.editCounter = 0;
     }
   }
 }

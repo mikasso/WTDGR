@@ -311,10 +311,10 @@ export default class BoardManager {
 
   editPencilLine(lineDTO: LineDTO) {
     const line = this.findById(lineDTO.id) as PencilLine;
-    const linePoints = line.attrs.points;
-    linePoints.push(lineDTO.points[0]);
-    linePoints.push(lineDTO.points[1]);
-    lineDTO.points = linePoints;
+    // const linePoints = line.attrs.points;
+    // linePoints.push(lineDTO.points[0]);
+    // linePoints.push(lineDTO.points[1]);
+    // lineDTO.points = linePoints;
     line.setAttrs(lineDTO);
     line.redraw();
   }
