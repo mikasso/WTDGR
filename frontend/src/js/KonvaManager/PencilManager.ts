@@ -26,6 +26,7 @@ export class PencilLine extends Konva.Line {
 export default class PencilManager {
   currentDrawing: PencilLine | undefined;
   isDrawing: boolean;
+  awaitingAdd = false;
   constructor() {
     this.currentDrawing = undefined;
     this.isDrawing = false;
@@ -39,12 +40,7 @@ export default class PencilManager {
     lineJoin: "round",
   };
 
-  newLine(
-    position: Cordinates,
-    layer: Konva.Layer,
-    config: any = this.defualtConfig
-  ) {
-    config.points = [position.x, position.y];
+  newLine(layer: Konva.Layer, config: any = this.defualtConfig) {
     const newLine = new PencilLine(config, layer);
     return newLine;
   }
@@ -54,7 +50,8 @@ export default class PencilManager {
     layer: Konva.Layer,
     config: any = this.defualtConfig
   ) {
-    const newLine = this.newLine(position, layer, config);
+    config.points = [position.x, position.y];
+    const newLine = this.newLine(layer, config);
     this.isDrawing = true;
     this.currentDrawing = newLine;
     return newLine;

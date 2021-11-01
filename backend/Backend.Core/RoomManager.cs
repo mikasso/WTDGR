@@ -107,7 +107,7 @@ namespace Backend.Core
             }
             catch (Exception e)
             {
-                Log.Error("Cannot dispatch user action message! \n" + e.StackTrace);
+                Log.Error("Cannot dispatch user action message! \n" + e.Message + "\n" + e.StackTrace);
                 return actionResult;
             }
 

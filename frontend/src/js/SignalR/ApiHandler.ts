@@ -96,16 +96,26 @@ export default class ApiManager {
             this.boardManager.setCurrentLayer(item.id);
           break;
         case ClassNames.PencilLine: {
-          console.log(item.points.length);
-          const pencilLine = this.boardManager.addPencil(
-            {
-              x: item.points[0] as number,
-              y: item.points[1] as number,
-            },
-            item as LineConfig,
-            item.layer as string
-          );
-          this.boardManager.draw(pencilLine);
+          if (
+            this.boardManager.pencilManager.awaitingAdd &&
+            this.boardManager.pencilManager.currentDrawing?.attrs.points[0] ==
+              item.points[0] &&
+            this.boardManager.pencilManager.currentDrawing?.attrs.points[1] ==
+              item.points[1]
+          ) {
+            this.boardManager.pencilManager.currentDrawing?.id(item.id);
+            this.boardManager.pencilManager.awaitingAdd = false;
+            this.boardManager.draw(
+              this.boardManager.pencilManager.currentDrawing!
+            );
+          } else {
+            const pencilLine = this.boardManager.addPencil(
+              item as LineConfig,
+              item.layer as string
+            );
+            this.boardManager.draw(pencilLine);
+            pencilLine.layer.draw();
+          }
           break;
         }
         default:

@@ -244,17 +244,11 @@ export default class BoardManager {
   }
 
   addPencil(
-    position: Cordinates,
     attrs?: Konva.LineConfig,
     layerId: string = this.currentLayer.id()
   ): PencilLine {
     const layer: Konva.Layer = this.getLayerById(layerId)!;
-    const pencilLine = this.pencilManager.newLine(position, layer, attrs);
-    if (
-      position.x == this.pencilManager.currentDrawing?.attrs.points[0] &&
-      position.y == this.pencilManager.currentDrawing?.attrs.points[1]
-    )
-      this.pencilManager.currentDrawing = pencilLine;
+    const pencilLine = this.pencilManager.newLine(layer, attrs);
     this.eventManager.bindItem(pencilLine);
     return pencilLine;
   }

@@ -38,6 +38,7 @@ export default class OnlinePencilToolHandler implements IHandler {
     const drawing = this.boardManager.createPencil(mousePos);
     const action = this.actionFactory.create(ActionTypes.Add, drawing.asDTO());
     this.hub.sendAction(action);
+    this.boardManager.pencilManager.awaitingAdd = true;
     this.editCounter = 0;
     this.intervalId = window.setInterval(
       () => this.drawLine(),
@@ -52,25 +53,22 @@ export default class OnlinePencilToolHandler implements IHandler {
       this.boardManager.pencilManager.appendPoint(mousePos);
       currentDrawing.layer.draw();
       this.editCounter += 1;
-      if(this.editCounter % this.pencilLineEditSend == 0) {
-        this.sendLineEdit(currentDrawing)
+      if (this.editCounter % this.pencilLineEditSend == 0) {
+        this.sendLineEdit(currentDrawing);
       }
     }
   }
 
-  sendLineEdit(line: PencilLine){
-    const action = this.actionFactory.create(
-      ActionTypes.Edit,
-      line.asDTO()
-    );
-    this.hub.sendAction(action)
+  sendLineEdit(line: PencilLine) {
+    const action = this.actionFactory.create(ActionTypes.Edit, line.asDTO());
+    this.hub.sendAction(action);
   }
 
   private mouseUp() {
     if (this.intervalId !== null) {
       const currentDrawing = this.boardManager.pencilManager.currentDrawing;
       if (currentDrawing != null) {
-        this.sendLineEdit(currentDrawing)
+        this.sendLineEdit(currentDrawing);
       }
       clearInterval(this.intervalId);
       this.intervalId = null;
