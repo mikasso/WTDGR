@@ -1,6 +1,6 @@
 <template>
   <el-row justify="space-between" align="middle" style="height: 100%">
-    <div style="display: flex; align-items: center;">
+    <div style="display: flex; align-items: center">
       <el-tooltip
         v-for="(tool, index) in toolbar.tools"
         :key="index"
@@ -29,7 +29,7 @@
               handle=".handle"
               :item-key="(element) => element"
             >
-              <template #item="{element}">
+              <template #item="{ element }">
                 <div
                   class="layer-item noselect"
                   @mouseover="highlightLayer(element, true)"
@@ -66,23 +66,20 @@
         </template>
       </el-dropdown>
     </div>
-    <div style="display: flex; align-items: center;">
+    <div style="display: flex; align-items: center">
       <el-button @click="openFileHandler" style="margin-right: 15px">
         Import / Export graph
       </el-button>
-      <el-tag v-if="!isOnline" class="connBadge" type="danger"
-        >Disconnected</el-tag
-      >
-      <el-tag v-if="isOnline" class="connBadge" type="success"
-        >Connected</el-tag
+
+      <span v-if="roomId != ''">
+        RoomId: {{ roomId }} UserId: {{ userId }}
+      </span>
+      <el-tag class="connBadge" v-bind:type="connectionColorType">
+        {{ hubState }}</el-tag
       >
       <el-button-group class="connButtons">
-        <el-button @click="isOnline = true">
-          Connect
-        </el-button>
-        <el-button @click="isOnline = false">
-          Disconnect
-        </el-button>
+        <el-button @click="openWelcomeWindow"> Connect </el-button>
+        <el-button @click="isOnline = false"> Disconnect </el-button>
       </el-button-group>
     </div>
   </el-row>
@@ -94,9 +91,7 @@ import { computed, defineComponent } from "vue";
 import { useStore } from "vuex";
 import draggable from "vuedraggable";
 import "element-plus/dist/index.css";
-import Konva from "konva";
-import { ClassNames } from "../js/KonvaManager/ClassNames";
-import { Vertex } from "../js/KonvaManager/VertexManager";
+import { HubConnectionState } from "@microsoft/signalr";
 
 interface layerData {
   id: string;
@@ -113,7 +108,7 @@ export default defineComponent({
     const store = useStore<State>(key);
 
     const layers = computed({
-      get: function() {
+      get: function () {
         const tempLayers: layerData[] = [];
         for (const layer of store.state.layers)
           tempLayers.push({ id: layer.id(), zIndex: layer.zIndex() });
@@ -121,7 +116,7 @@ export default defineComponent({
           .sort((layer1, layer2) => layer2.zIndex - layer1.zIndex)
           .map((layer) => layer.id);
       },
-      set: function(layers: string[]) {
+      set: function (layers: string[]) {
         emit("toolbarAction", {
           type: "reorderLayers",
           value: layers,
@@ -130,11 +125,11 @@ export default defineComponent({
     });
 
     const currentLayer = computed({
-      get: function() {
+      get: function () {
         if (store.state.currentLayer == null) return "None";
         return store.state.currentLayer.attrs.id;
       },
-      set: function(layerId: string) {
+      set: function (layerId: string) {
         var layer = store.state.layers.find(
           (layer) => layer.attrs.id === layerId
         );
@@ -143,24 +138,39 @@ export default defineComponent({
     });
 
     const isOnline = computed({
-      get: function() {
+      get: function () {
         return store.state.isOnline;
       },
-      set: function(value: boolean) {
+      set: function (value: boolean) {
         if (value) store.commit("setOnline");
         else store.commit("setOffline");
       },
     });
 
+    const hubState = computed(function () {
+      return store.state.connectionState;
+    });
+
+    const connectionColorType = computed(function () {
+      switch (store.state.connectionState) {
+        case HubConnectionState.Connected:
+          return "success";
+        default:
+          return "danger";
+      }
+    });
+
     const currentTool = computed({
-      get: function() {
+      get: function () {
         return store.state.currentTool;
       },
-      set: function(tool: string) {
+      set: function (tool: string) {
         store.commit("setCurrentTool", tool);
       },
     });
 
+    const roomId = computed(() => store.state.roomId);
+    const userId = computed(() => store.state.user.userId);
     const addLayer = () => {
       emit("toolbarAction", {
         type: "addLayer",
@@ -176,7 +186,11 @@ export default defineComponent({
       isOnline,
       currentTool,
       addLayer,
+      hubState,
+      connectionColorType,
       hover,
+      roomId,
+      userId,
       emit,
       store,
     };
@@ -229,6 +243,9 @@ export default defineComponent({
       this.emit("toolbarAction", {
         type: "openFileHandler",
       });
+    },
+    openWelcomeWindow() {
+      this.emit("toolbarAction", { type: "openWelcomeWindow" });
     },
   },
 });

@@ -12,7 +12,6 @@ import Konva from "konva";
 import BaseBoardEventManager from "../BoardEventManager/BaseBoardEventManager";
 import { Store } from "vuex";
 import { State } from "@/store";
-import { getTransitionRawChildren } from "@vue/runtime-core";
 import { ClassNames } from "./ClassNames";
 
 export default class BoardManager {

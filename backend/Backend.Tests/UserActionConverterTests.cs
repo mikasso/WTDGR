@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,32 +16,30 @@ namespace Backend.Tests
     {
 
         [Fact]
-        public void TestDeserializing()
+        public void DeserializingItemShouldWork()
         {
-            string actionJson =
+            string itemJson =
                 @"{
-                ""ActionType"": ""Add"",
-                  ""Items"": [{
-                    ""Id"": ""1"",
-                    ""Type"": ""Vertex"",
-                    ""Layer"": ""1"",
-                  }],
-                  ""UserId"": ""1""
-                }";
-            var userAction = JsonConvert.DeserializeObject<UserAction>(actionJson, new Newtonsoft.Json.JsonSerializerSettings
-            {
-                TypeNameHandling = Newtonsoft.Json.TypeNameHandling.All,
-                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
-            });
-            userAction.Should().BeEquivalentTo(new UserAction{
-                ActionType=ActionType.Add,
-                Items = new List<IRoomItem>() { new Vertex() { Id = "1", Type = KonvaType.Vertex, Layer = "1" } },
-                UserId="1"
-            });
+                    ""id"": ""1"",
+                    ""type"": ""Vertex"",
+                    ""layer"": ""1"",
+                  }
+                ";
+
+            var converter = new RoomItemConverter();
+            JsonReader reader = new JsonTextReader(new StringReader(itemJson));
+            while (reader.TokenType == JsonToken.None)
+                if (!reader.Read())
+                    break;
+
+            var obj = converter.ReadJson(reader, typeof(IRoomItem), null, JsonSerializer.CreateDefault());
+            obj.Should().BeEquivalentTo(
+                 new Vertex() { Id = "1", Type = KonvaType.Vertex, Layer = "1" } 
+            );
         }
 
         [Fact]
-        public void TestSerializing()
+        public void SerializingUserActionShouldWork()
         {
             var userAction = new UserAction
             {

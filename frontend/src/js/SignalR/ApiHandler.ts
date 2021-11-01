@@ -1,4 +1,4 @@
-import { State } from "@/store";
+import { State, store } from "@/store";
 import Konva from "konva";
 import { NodeConfig } from "konva/types/Node";
 import { Store } from "vuex";
@@ -18,10 +18,12 @@ export enum ActionTypes {
   Delete = "Delete",
 }
 export default class ApiManager {
-  public constructor(
-    private boardManager: BoardManager,
-    private store: Store<State>
-  ) {}
+  private boardManager: BoardManager;
+  private store: Store<State>;
+  public constructor() {
+    this.boardManager = BoardManager.getBoardManager();
+    this.store = store;
+  }
 
   private get user() {
     return this.store.state.user;
@@ -36,7 +38,6 @@ export default class ApiManager {
   }
 
   public receiveAction(action: UserAction, isSucceded: boolean) {
-    console.log("Recieved action", action);
     for (const item of action.items) {
       switch (action.actionType) {
         case ActionTypes.Add:
