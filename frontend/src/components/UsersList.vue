@@ -1,17 +1,21 @@
 <template>
   <div class="users-list-main">
-    <div v-if="roomId != null" class="room-id" style="font-size: 20px">
+    <div v-if="roomId !== '' && roomId != null" class="room-id">
       <span>Room ID:</span>
       <strong>{{ roomId }}</strong>
+      <el-button class="copy-btn" @click="$copyText(roomId)">
+        <img :src="require('../assets/buttons/copy.svg')" />
+      </el-button>
     </div>
     <div class="users-list">
       <el-scrollbar height="400px">
         <div v-for="(user, index) in users" :key="index" class="user">
-          <img class="user-icon" :src="require('../assets/tools/user.svg')" />
-          <span style="margin-right: auto; margin-left: 5px;">
-            {{ user.id }}
+          <div class="user-circle" :style="'border: solid 4px '+user.userColor">
+            <img class="user-icon" :src="require('../assets/tools/user.svg')" />
+          </div>
+          <span style="margin-right: auto; margin-left: 5px;" class="username">
+            {{ user.userId }}
           </span>
-          <span>{{ user.role == null ? "-" : user.role }}</span>
         </div>
       </el-scrollbar>
     </div>
@@ -31,6 +35,7 @@ export default defineComponent({
     const users = computed(() => {
       return store.state.allUsers;
     });
+    console.log(users)
     return {
       roomId,
       store,
@@ -41,28 +46,39 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+.copy-btn{
+  width: 27px;
+  height: 27px;
+  min-height: 27px;
+  padding: 5px;
+  position: absolute;
+  right: -38px;
+  top: 2px;
+  img{
+    width: 16px;
+  }
+}
 .users-list-main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 15px 5px;
+  padding: 0 5px;
   .room-id {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 15px;
-    span {
-      font-size: 14px;
-    }
+    font-size: 0.9em;
+    position: relative;
     strong {
-      font-size: 18px;
+      font-size: 0.75em;
     }
   }
   .users-list {
     width: 100%;
     background-color: white;
     border: 1px lightgray solid;
-    padding: 10px 0;
+    padding: 8px 0;
     .user {
       display: flex;
       flex-direction: row;
@@ -71,13 +87,26 @@ export default defineComponent({
       border: 1px lightgray solid;
       background-color: #f6f6f6;
       border-radius: 3px;
-      margin-bottom: 5px;
-      margin-right: 12px;
-      margin-left: 12px;
-      padding: 12px 12px;
-      .user-icon {
-        width: 20px;
-        margin-bottom: 1px;
+      margin-bottom: 8px;
+      margin-right: 8px;
+      margin-left: 8px;
+      padding: 7px 12px;
+      .username{
+        font-size: 0.95em;
+      }
+      .user-circle{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 20px;
+        border-width: 3px;
+        background-color: white;
+        .user-icon {
+          width: 20px;
+          margin-bottom: 1px;
+        }
       }
     }
   }
