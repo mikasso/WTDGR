@@ -36,6 +36,7 @@ export default class BoardHub {
     this.connectionState = HubConnectionState.Disconnected;
 
     this.connection.on("ReceiveRoomId", (roomId: string) => {
+      console.log("ReceiveRoomId")
       store.commit("setRoomId", roomId);
       store.commit("setOnline");
     });

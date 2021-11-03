@@ -65,23 +65,21 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-    </div>
-    <div style="display: flex; align-items: center">
-      <el-button @click="openFileHandler" style="margin-right: 15px">
+      <el-button @click="openFileHandler" class="import-btn">
         Import / Export graph
       </el-button>
-
-      <span v-if="roomId != ''">
-        RoomId: {{ roomId }} UserId: {{ userId }}
-      </span>
-      <el-tag class="connBadge" v-bind:type="connectionColorType">
-        {{ hubState }}</el-tag
-      >
-      <el-button-group class="connButtons">
-        <el-button @click="openWelcomeWindow"> Connect </el-button>
-        <el-button @click="isOnline = false"> Disconnect </el-button>
-      </el-button-group>
     </div>
+    <div style="display: flex; align-items: center">
+    <el-tag class="connBadge" v-bind:type="connectionColorType">
+      {{ hubState }}
+    </el-tag>
+    <el-button class="conn-btn">
+    <img
+      @click="openWelcomeWindow"
+      class="conn-icon"
+      :src="require('../assets/buttons/setting.svg')"
+    /></el-button>
+  </div>
   </el-row>
 </template>
 
@@ -328,5 +326,29 @@ export default defineComponent({
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+.import-btn{
+  margin: 0px 10px;
+}
+.connBadge{
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+  padding-top: 3px;
+  height: 36px;
+  font-size: 0.9em;
+}
+.conn-btn{
+  margin-left: 0px;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+  height: 36px;
+  min-height: 36px;
+  width: 36px;
+  padding: 5px;
+  padding-top: 7px;
+  .conn-icon{
+    width: 21px;
+    height: 21px;
+  }
 }
 </style>

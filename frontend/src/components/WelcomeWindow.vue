@@ -2,11 +2,9 @@
   <el-dialog
     v-model="isOpened"
     title="Connection menu"
-    width="50%"
+    width="60%"
     center
     :close-on-click-modal="false"
-    :close-on-press-escape="false"
-    :show-close="false"
   >
     <el-row class="main-row">
       <el-col :span="8" class="col-left">
@@ -30,7 +28,7 @@
         <p style="font-size: 20px">Join existing room</p>
         <el-form>
           <el-form-item>
-            <el-input placeholder="Your name" v-model="userId"></el-input>
+            <el-input placeholder="Your name" v-model="userId" style="margin-bottom: 10px;"></el-input>
             <el-input placeholder="Room ID" v-model="roomId"></el-input>
           </el-form-item>
         </el-form>
@@ -102,7 +100,6 @@ export default defineComponent({
     open() {
       this.userId = store.state.user.userId;
       this.roomId = store.state.roomId;
-      this.store.commit("setOffline");
       this.isOpened = true;
     },
     tryToJoin() {
