@@ -67,7 +67,10 @@ export default defineComponent({
     isOnline: {
       deep: true,
       async handler(isOnline: boolean) {
-        await this.handleConnectionChange(isOnline);
+        {
+          await this.handleConnectionChange(isOnline);
+          console.log("connection change by online");
+        }
       },
     },
     currentTool: {
@@ -103,12 +106,8 @@ export default defineComponent({
     let connectionStarted = false;
     const store = useStore<State>(key);
     const { width, height } = useWindowSize();
-    const isOnline = computed(() => {
-      return store.state.isOnline;
-    });
-    const currentTool = computed(() => {
-      return store.state.currentTool;
-    });
+    const isOnline = computed(() => store.state.isOnline);
+    const currentTool = computed(() => store.state.currentTool);
     BoardManager.createBoardManagerSingleton(store);
     return {
       connectionStarted,
