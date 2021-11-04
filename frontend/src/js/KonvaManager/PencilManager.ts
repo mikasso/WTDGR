@@ -17,7 +17,6 @@ export class PencilLine extends Konva.Line {
   asDTO() {
     const dto = {
       ...this.attrs,
-      id: this.!id(),
       type: this.getClassName(),
     };
     return dto;
