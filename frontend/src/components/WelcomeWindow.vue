@@ -28,7 +28,11 @@
         <p style="font-size: 20px">Join existing room</p>
         <el-form>
           <el-form-item>
-            <el-input placeholder="Your name" v-model="userId" style="margin-bottom: 10px;"></el-input>
+            <el-input
+              placeholder="Your name"
+              v-model="userId"
+              style="margin-bottom: 10px"
+            ></el-input>
             <el-input placeholder="Room ID" v-model="roomId"></el-input>
           </el-form-item>
         </el-form>
@@ -67,12 +71,10 @@ const isNameInvalid = (name: string) => name.match("^[^0-9][^@#]+$") === null;
 
 export default defineComponent({
   name: "WelcomeWindow",
-  emits: ["connectionResult"],
-  setup(props, { emit }) {
+  setup(props) {
     const store = useStore<State>(key);
     return {
       store,
-      emit,
     };
   },
   data() {
@@ -89,10 +91,10 @@ export default defineComponent({
     };
   },
   computed: {
-    isUserDataInvalid() {
+    isUserDataInvalid: function (): boolean {
       return this.roomId === "" || isNameInvalid(this.userId);
     },
-    isOwnerIdInvalid() {
+    isOwnerIdInvalid: function (): boolean {
       return isNameInvalid(this.ownerId);
     },
   },
@@ -102,7 +104,9 @@ export default defineComponent({
       this.roomId = store.state.roomId;
       this.isOpened = true;
     },
-    tryToJoin() {
+    async tryToJoin() {
+      const hub = BoardHub.getBoardHub();
+      await hub.disconnect();
       this.roomId = this.roomId.trim();
       this.store.commit("setUser", createUser(this.userId));
       this.store.commit("setRoomId", this.roomId);
@@ -114,11 +118,11 @@ export default defineComponent({
       this.store.commit("setOffline");
       this.isOpened = false;
     },
-    create() {
+    async create() {
+      const hub = BoardHub.getBoardHub();
+      await hub.disconnect();
       this.store.commit("setUser", createUser(this.ownerId, UserTypes.Owner));
-      BoardHub.getBoardHub()
-        .createRoom()
-        .then(() => (this.isOpened = false));
+      hub.createRoom().then(() => (this.isOpened = false));
     },
   },
 });

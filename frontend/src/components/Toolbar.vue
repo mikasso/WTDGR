@@ -70,16 +70,16 @@
       </el-button>
     </div>
     <div style="display: flex; align-items: center">
-    <el-tag class="connBadge" v-bind:type="connectionColorType">
-      {{ hubState }}
-    </el-tag>
-    <el-button class="conn-btn">
-    <img
-      @click="openWelcomeWindow"
-      class="conn-icon"
-      :src="require('../assets/buttons/setting.svg')"
-    /></el-button>
-  </div>
+      <el-tag class="connBadge" v-bind:type="connectionColorType">
+        {{ hubState }}
+      </el-tag>
+      <el-button class="conn-btn">
+        <img
+          @click="openWelcomeWindow"
+          class="conn-icon"
+          :src="require('../assets/buttons/setting.svg')"
+      /></el-button>
+    </div>
   </el-row>
 </template>
 
@@ -135,19 +135,8 @@ export default defineComponent({
       },
     });
 
-    const isOnline = computed({
-      get: function () {
-        return store.state.isOnline;
-      },
-      set: function (value: boolean) {
-        if (value) store.commit("setOnline");
-        else store.commit("setOffline");
-      },
-    });
-
-    const hubState = computed(function () {
-      return store.state.connectionState;
-    });
+    const isOnline = computed(() => store.state.isOnline);
+    const hubState = computed(() => store.state.connectionState);
 
     const connectionColorType = computed(function () {
       switch (store.state.connectionState) {
@@ -327,17 +316,17 @@ export default defineComponent({
   -ms-user-select: none;
   user-select: none;
 }
-.import-btn{
+.import-btn {
   margin: 0px 10px;
 }
-.connBadge{
+.connBadge {
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
   padding-top: 3px;
   height: 36px;
   font-size: 0.9em;
 }
-.conn-btn{
+.conn-btn {
   margin-left: 0px;
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
@@ -346,7 +335,7 @@ export default defineComponent({
   width: 36px;
   padding: 5px;
   padding-top: 7px;
-  .conn-icon{
+  .conn-icon {
     width: 21px;
     height: 21px;
   }
