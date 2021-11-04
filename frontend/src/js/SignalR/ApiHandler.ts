@@ -8,6 +8,7 @@ import { ClassNames } from "../KonvaManager/ClassNames";
 import { Edge, EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 import UserAction from "./Action";
+import { LineConfig } from "konva/types/shapes/Line";
 
 export enum ActionTypes {
   Add = "Add",
@@ -24,9 +25,11 @@ export default class ApiManager {
     this.store = store;
   }
 
-  public receiveActionResponse(response: string) {
-    console.log(response);
+  private get user() {
+    return this.store.state.user;
   }
+
+  public receiveActionResponse(response: string) {}
 
   public loadItems(items: NodeConfig[]) {
     for (const item of items) {
@@ -56,10 +59,6 @@ export default class ApiManager {
           throw Error(`Not implemented action type ${action.actionType}`);
       }
     }
-  }
-
-  private get user() {
-    return this.store.state.user;
   }
 
   private receiveAdd(actionUserId: string, item: NodeConfig) {
@@ -96,6 +95,29 @@ export default class ApiManager {
           )
             this.boardManager.setCurrentLayer(item.id);
           break;
+        case ClassNames.PencilLine: {
+          if (
+            this.boardManager.pencilManager.awaitingAdd &&
+            this.boardManager.pencilManager.currentDrawing?.attrs.points[0] ==
+              item.points[0] &&
+            this.boardManager.pencilManager.currentDrawing?.attrs.points[1] ==
+              item.points[1]
+          ) {
+            this.boardManager.pencilManager.currentDrawing?.id(item.id);
+            this.boardManager.pencilManager.awaitingAdd = false;
+            this.boardManager.draw(
+              this.boardManager.pencilManager.currentDrawing!
+            );
+          } else {
+            const pencilLine = this.boardManager.addPencil(
+              item as LineConfig,
+              item.layer as string
+            );
+            this.boardManager.draw(pencilLine);
+            pencilLine.layer.draw();
+          }
+          break;
+        }
         default:
           throw Error(`Not implemented add for ${item.type}`);
       }
@@ -115,6 +137,9 @@ export default class ApiManager {
           break;
         case ClassNames.Layer:
           this.boardManager.deleteLayer(item.id);
+          break;
+        case ClassNames.PencilLine:
+          this.boardManager.deletePencilLine(item.id);
           break;
         default:
           throw Error(`Not implemented  delete for ${item.type}`);
@@ -141,6 +166,11 @@ export default class ApiManager {
           item.replaceWithId as string
         );
         break;
+      case ClassNames.PencilLine: {
+        if (item.id != this.boardManager.pencilManager.currentDrawing?.attrs.id)
+          this.boardManager.editPencilLine(item as LineDTO);
+        break;
+      }
       default:
         throw Error(`Not implemented edit for ${item.type}`);
     }

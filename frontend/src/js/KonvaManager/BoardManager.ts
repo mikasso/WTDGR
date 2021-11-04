@@ -238,15 +238,38 @@ export default class BoardManager {
       position,
       this.currentLayer
     );
+    this.pencilManager.draw(pencilDrawing);
+    pencilDrawing.redraw();
     this.eventManager.bindItem(pencilDrawing);
+  }
+
+  addPencil(
+    attrs?: Konva.LineConfig,
+    layerId: string = this.currentLayer.id()
+  ): PencilLine {
+    const layer: Konva.Layer = this.getLayerById(layerId)!;
+    const pencilLine = this.pencilManager.newLine(layer, attrs);
+    this.eventManager.bindItem(pencilLine);
+    return pencilLine;
+  }
+
+  createPencil(position: Cordinates) {
+    const pencilDrawing = this.pencilManager.create(
+      position,
+      this.currentLayer
+    );
+    this.eventManager.bindItem(pencilDrawing);
+    return pencilDrawing;
   }
 
   movePencil(position: Cordinates) {
     this.pencilManager.appendPoint(position);
+    this.pencilManager.currentDrawing?.redraw();
   }
 
   finishPencilDrawing() {
     this.pencilManager.finishDrawing();
+    this.pencilManager.currentDrawing?.redraw();
   }
 
   startMultiselect(position: Cordinates) {
@@ -274,6 +297,17 @@ export default class BoardManager {
 
   eraseDrawing(drawing: any) {
     this.pencilManager.removeDrawing(drawing);
+  }
+
+  deletePencilLine(lineId: string) {
+    const line = this.findById(lineId) as PencilLine;
+    this.pencilManager.removeDrawing(line);
+  }
+
+  editPencilLine(lineDTO: LineDTO) {
+    const line = this.findById(lineDTO.id) as PencilLine;
+    line.setAttrs(lineDTO);
+    line.redraw();
   }
 
   selectLayer(layerId: string) {

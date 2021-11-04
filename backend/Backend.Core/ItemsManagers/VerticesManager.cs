@@ -15,7 +15,7 @@ namespace Backend.Core
             _edgeManager = edgeManager;
         }
         public int Count => _vertices.Count;
-        private List<Vertex> EdgesList { get => _vertices.Values.ToList(); }
+        private List<Vertex> VertexList { get => _vertices.Values.ToList(); }
 
         public bool Add(IRoomItem vertex, string userId) => _vertices.TryAdd(vertex.Id, (Vertex)vertex);
 
@@ -28,7 +28,7 @@ namespace Backend.Core
 
         public IRoomItem Get(string Id) => _vertices.GetValueOrDefault(Id);
 
-        public IList<IRoomItem> GetAll() => EdgesList.Cast<IRoomItem>().ToList();
+        public IList<IRoomItem> GetAll() => VertexList.Cast<IRoomItem>().ToList();
 
         public bool Update(IRoomItem vertex)
         {

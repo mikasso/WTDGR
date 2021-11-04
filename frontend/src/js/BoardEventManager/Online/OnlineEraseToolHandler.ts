@@ -1,5 +1,6 @@
 import BoardManager from "@/js/KonvaManager/BoardManager";
 import { Edge } from "@/js/KonvaManager/EdgeManager";
+import { PencilLine } from "@/js/KonvaManager/PencilManager";
 import { Vertex } from "@/js/KonvaManager/VertexManager";
 import { ActionFactory } from "@/js/SignalR/Action";
 import { ActionTypes } from "@/js/SignalR/ApiHandler";
@@ -44,9 +45,11 @@ export default class OnlineEraseToolHandler implements IHandler {
   }
 
   private pencilClick(event: KonvaEventObject<any>) {
-    //TODO it is not online
-    console.warn("TODO: only offline method");
-    const drawing = event.target;
-    this.boardManager.eraseDrawing(drawing);
+    const drawing = event.target as PencilLine;
+    const action = this.actionFactory.create(
+      ActionTypes.Delete,
+      drawing.asDTO()
+    );
+    this.hub.sendAction(action);
   }
 }

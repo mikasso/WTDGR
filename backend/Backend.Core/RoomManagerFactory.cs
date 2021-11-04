@@ -15,7 +15,7 @@ namespace Backend.Core
     }
     public class RoomManagerFactory : IRoomManagerFactory
     {
-        private  readonly ITimeProvider _timeProvider;
+        private readonly ITimeProvider _timeProvider;
 
         public RoomManagerFactory(ITimeProvider timeProvider)
         {
@@ -29,10 +29,11 @@ namespace Backend.Core
             VerticesManager verticesManager = new();
             LayersManager layersManager = new();
             LineManager lineManager = new();
+            PencilManager pencilManager = new();
             layersManager.Initialize(verticesManager);
             edgeManager.Initialize(verticesManager);
             verticesManager.Initialize(edgeManager);
-            return new RoomManager(id, _timeProvider, usersManager, verticesManager, edgeManager, lineManager, layersManager);
+            return new RoomManager(id, _timeProvider, usersManager, verticesManager, edgeManager, lineManager, layersManager, pencilManager);
         }
     }
 }

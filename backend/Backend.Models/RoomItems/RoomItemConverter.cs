@@ -42,6 +42,8 @@ namespace Backend.Models
                     return new Edge();
                 case "TemporaryLine":
                     return new Line();
+                case "PencilLine":
+                    return new PencilLine();
                 default:
                     throw new InvalidCastException($"Cant cast when type value is {value}");
             }

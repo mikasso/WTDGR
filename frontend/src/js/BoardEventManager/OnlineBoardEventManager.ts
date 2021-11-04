@@ -7,14 +7,14 @@ import BoardHub from "../SignalR/Hub";
 import BaseBoardEventManager from "./BaseBoardEventManager";
 import { IHandler } from "./IHandler";
 import OfflineHighlightToolHandler from "./Offline/OfflineHighlightToolHandler";
-import OfflinePencilToolHandler from "./Offline/OfflinePencilToolHandler";
 import OnlineEdgeToolHandler from "./Online/OnlineEdgeToolHandler";
 import OnlineEraseToolHandler from "./Online/OnlineEraseToolHandler";
 import OnlineSelectToolHandler from "./Online/OnlineSelectToolHandler";
 import OnlineVertextoolHandler from "./Online/OnlineVertexToolHandler";
+import OnlinePencilToolHandler from "./Online/OnlinePencilToolHandler";
 import OnlineMultiselectToolHandler from "./Online/OnlineMultiselectToolHandler";
 
-export const SentRequestInterval = 20;
+export const SentRequestInterval = 25;
 
 export default class OnlineBoardEventManager extends BaseBoardEventManager {
   actionFactory: ActionFactory;
@@ -36,7 +36,6 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     this.actionFactory = actionFactory;
     this.hub = hub;
     this.highlightHandler = new OfflineHighlightToolHandler();
-    this.pencilHandler = new OfflinePencilToolHandler();
     this.selectHandler = new OnlineSelectToolHandler(
       this.actionFactory,
       this.hub,
@@ -47,6 +46,11 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.actionFactory,
       this.hub
     );
+    this.pencilHandler = new OnlinePencilToolHandler(
+      this.actionFactory,
+      this.hub
+    );
+
     this.eraseHandler = new OnlineEraseToolHandler(
       this.actionFactory,
       this.hub,
@@ -63,7 +67,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.vertexHandler,
       this.eraseHandler,
       this.eraseHandler,
-      this.multiselectHandler,
+      this.pencilHandler,
     ];
   }
 

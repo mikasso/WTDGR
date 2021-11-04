@@ -14,7 +14,7 @@ namespace Backend.Core
     {
         public string RoomId { get; init; }
         public IRoomUsersManager Users { get; init; }
-        
+
         public DateTime LastEditTimeStamp { get; private set; }
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
@@ -22,8 +22,9 @@ namespace Backend.Core
         private readonly IRoomItemsManager _edgeManager;
         private readonly IRoomItemsManager _lineManager;
         private readonly IRoomItemsManager _layersManager;
+        private readonly IRoomItemsManager _pencilManager;
         private readonly ITimeProvider _timeProvider;
-        public RoomManager(string id, ITimeProvider timeProvider, IRoomUsersManager usersManager, IRoomItemsManager verticesManager, IRoomItemsManager edgeManager, IRoomItemsManager lineManager, IRoomItemsManager layersManager)
+        public RoomManager(string id, ITimeProvider timeProvider, IRoomUsersManager usersManager, IRoomItemsManager verticesManager, IRoomItemsManager edgeManager, IRoomItemsManager lineManager, IRoomItemsManager layersManager, IRoomItemsManager pencilManager)
         {
             Log.Information($"Starting new room. Id: {id}");
             LastEditTimeStamp = timeProvider.Now();
@@ -34,6 +35,7 @@ namespace Backend.Core
             _edgeManager = edgeManager;
             _lineManager = lineManager;
             _layersManager = layersManager;
+            _pencilManager = pencilManager;
         }
 
         public async IAsyncEnumerable<ActionResult> HandleUserDisconnectAsync(string userId)
@@ -45,7 +47,7 @@ namespace Backend.Core
                 actionsToExcute.Add(new UserAction()
                 {
                     ActionType = ActionType.Delete,
-                    Items = new List<IRoomItem>(){ new Line() { Id = line.Id, Type = KonvaType.Line } },
+                    Items = new List<IRoomItem>() { new Line() { Id = line.Id, Type = KonvaType.Line } },
                     UserId = userId
                 });
             }
@@ -74,6 +76,7 @@ namespace Backend.Core
                 .Concat(_verticesManager.GetAll())
                 .Concat(_edgeManager.GetAll())
                 .Concat(_lineManager.GetAll())
+                .Concat(_pencilManager.GetAll())
                 .ToList();
         }
 
@@ -104,7 +107,7 @@ namespace Backend.Core
             }
             catch (Exception e)
             {
-                Log.Error("Cannot dispatch user action message! \n" + e.StackTrace);
+                Log.Error("Cannot dispatch user action message! \n" + e.Message + "\n" + e.StackTrace);
                 return actionResult;
             }
 
@@ -134,7 +137,7 @@ namespace Backend.Core
                     case ActionType.Add:
                         if (item.Id == null)
                             item.Id = Guid.NewGuid().ToString();
-                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Add(item,userId); });
+                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Add(item, userId); });
                         break;
                     case ActionType.RequestToEdit:
                         item.EditorId = userId;
@@ -193,6 +196,7 @@ namespace Backend.Core
                 KonvaType.Layer => _layersManager,
                 KonvaType.Edge => _edgeManager,
                 KonvaType.Line => _lineManager,
+                KonvaType.PencilLine => _pencilManager,
                 _ => throw new NotImplementedException(),
             };
         }
