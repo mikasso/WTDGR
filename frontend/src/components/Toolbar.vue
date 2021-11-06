@@ -188,19 +188,8 @@ export default defineComponent({
       },
     });
 
-    const isOnline = computed({
-      get: function () {
-        return store.state.isOnline;
-      },
-      set: function (value: boolean) {
-        if (value) store.commit("setOnline");
-        else store.commit("setOffline");
-      },
-    });
-
-    const hubState = computed(function () {
-      return store.state.connectionState;
-    });
+    const isOnline = computed(() => store.state.isOnline);
+    const hubState = computed(() => store.state.connectionState);
 
     const connectionColorType = computed(function () {
       switch (store.state.connectionState) {
@@ -435,7 +424,7 @@ export default defineComponent({
   user-select: none;
 }
 .import-btn {
-  margin: 0px 15px;
+  margin: 0px 10px;
 }
 .connBadge {
   border-top-right-radius: 0px;
