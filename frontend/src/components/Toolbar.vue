@@ -18,7 +18,12 @@
         </el-button>
       </el-tooltip>
 
-      <el-dropdown split-button :hide-on-click="false" v-if="layers != null">
+      <el-dropdown
+        split-button
+        :hide-on-click="false"
+        v-if="layers != null"
+        style="margin-right: 15px"
+      >
         {{ currentLayer }}
         <template #dropdown>
           <el-dropdown-menu class="drop-menu">
@@ -65,21 +70,67 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
+
+      <el-dropdown split-button :hide-on-click="false">
+        Vertex styles
+        <template #dropdown>
+          <el-dropdown-menu class="drop-menu styles-menu">
+            <el-row>
+              <el-col class="center" :span="4"> Size: </el-col>
+              <el-col :span="20" class="center">
+                <el-button
+                  v-for="(style, index) in styles.vertex.size"
+                  @click="styleSelected(style, 'vertex', styles.vertex.size)"
+                  class="style-button"
+                  :class="{ styleSelected: style.selected }"
+                  :key="index"
+                >
+                  <img :src="require('../assets/buttons/' + style.file)"
+                /></el-button>
+              </el-col>
+            </el-row>
+            <el-row style="margin-top: 10px">
+              <el-col class="center" :span="4"> Color: </el-col>
+              <el-col :span="3" />
+              <el-col :span="14">
+                <el-row style="justify-content: center">
+                  <el-col
+                    :span="4"
+                    v-for="(style, index) in styles.vertex.fill"
+                    :key="index"
+                  >
+                    <div
+                      @click="
+                        styleSelected(style, 'vertex', styles.vertex.fill)
+                      "
+                      class="color-button"
+                      :style="'background-color:' + style.settings.fill"
+                      :class="{ colorSelected: style.selected }"
+                    ></div>
+                  </el-col>
+                </el-row>
+              </el-col>
+              <el-col :span="3" />
+            </el-row>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
       <el-button @click="openFileHandler" class="import-btn">
         Import / Export graph
       </el-button>
     </div>
+
     <div style="display: flex; align-items: center">
-    <el-tag class="connBadge" v-bind:type="connectionColorType">
-      {{ hubState }}
-    </el-tag>
-    <el-button class="conn-btn">
-    <img
-      @click="openWelcomeWindow"
-      class="conn-icon"
-      :src="require('../assets/buttons/setting.svg')"
-    /></el-button>
-  </div>
+      <el-tag class="connBadge" v-bind:type="connectionColorType">
+        {{ hubState }}
+      </el-tag>
+      <el-button class="conn-btn">
+        <img
+          @click="openWelcomeWindow"
+          class="conn-icon"
+          :src="require('../assets/buttons/setting.svg')"
+      /></el-button>
+    </div>
   </el-row>
 </template>
 
@@ -90,6 +141,7 @@ import { useStore } from "vuex";
 import draggable from "vuedraggable";
 import "element-plus/dist/index.css";
 import { HubConnectionState } from "@microsoft/signalr";
+import BoardManager from "../js/KonvaManager/BoardManager";
 
 interface layerData {
   id: string;
@@ -104,6 +156,7 @@ export default defineComponent({
   },
   setup(props, { emit }) {
     const store = useStore<State>(key);
+    const boardManager = BoardManager.getBoardManager();
 
     const layers = computed({
       get: function () {
@@ -191,6 +244,7 @@ export default defineComponent({
       userId,
       emit,
       store,
+      boardManager,
     };
   },
   mounted() {
@@ -214,6 +268,43 @@ export default defineComponent({
       edge_style: "line",
     },
     drag: false,
+
+    styles: {
+      vertex: {
+        size: [
+          {
+            file: "small.png",
+            settings: { radius: 7 },
+          },
+          {
+            file: "medium.png",
+            settings: { radius: 12 },
+            selected: true,
+          },
+          {
+            file: "big.png",
+            settings: { radius: 18 },
+          },
+        ],
+        fill: [
+          { settings: { fill: "#000" } },
+          {
+            settings: { fill: "#A8A8A8" },
+            selected: true,
+          },
+          { settings: { fill: "#880015" } },
+          { settings: { fill: "#ed1c24" } },
+          { settings: { fill: "#ff7f27" } },
+          { settings: { fill: "#FFF000" } },
+          { settings: { fill: "#FFF" } },
+          { settings: { fill: "#22b14c" } },
+          { settings: { fill: "#00a2e8" } },
+          { settings: { fill: "#3f48c8" } },
+          { settings: { fill: "#b97a57" } },
+          { settings: { fill: "#b5e617" } },
+        ],
+      },
+    },
   }),
   methods: {
     highlightLayer(layerId: string, on: boolean) {
@@ -244,6 +335,22 @@ export default defineComponent({
     },
     openWelcomeWindow() {
       this.emit("toolbarAction", { type: "openWelcomeWindow" });
+    },
+    styleSelected(style: any, category: string, subcategory: any) {
+      if (category == "vertex") {
+        for (const otherStyle of subcategory) otherStyle.selected = false;
+        for (const setting in style.settings) {
+          if (setting == "radius") {
+            this.boardManager.vertexManager.defaultConfig.radius =
+              style.settings[setting];
+          }
+          if (setting == "fill") {
+            this.boardManager.vertexManager.defaultConfig.fill =
+              style.settings[setting];
+          }
+        }
+      }
+      style.selected = true;
     },
   },
 });
@@ -327,17 +434,17 @@ export default defineComponent({
   -ms-user-select: none;
   user-select: none;
 }
-.import-btn{
-  margin: 0px 10px;
+.import-btn {
+  margin: 0px 15px;
 }
-.connBadge{
+.connBadge {
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
   padding-top: 3px;
   height: 36px;
   font-size: 0.9em;
 }
-.conn-btn{
+.conn-btn {
   margin-left: 0px;
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
@@ -346,9 +453,38 @@ export default defineComponent({
   width: 36px;
   padding: 5px;
   padding-top: 7px;
-  .conn-icon{
+  .conn-icon {
     width: 21px;
     height: 21px;
   }
+}
+.styles-menu {
+  width: 400px;
+  font-size: 1.1rem;
+}
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.style-button {
+  padding: 0px;
+  width: 50px;
+  height: 50px;
+  margin-left: 5px;
+}
+.color-button {
+  padding: 0px;
+  width: 25px;
+  height: 25px;
+  margin: 2px;
+  border: 2px gray solid;
+}
+.styleSelected {
+  border: 2px black solid;
+}
+.colorSelected {
+  border: 3px black solid;
+  margin: 1px;
 }
 </style>
