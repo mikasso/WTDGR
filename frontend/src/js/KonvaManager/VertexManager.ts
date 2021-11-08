@@ -42,23 +42,21 @@ export default class VertexManager {
   private dragEnabled = false;
   constructor() {}
 
-  get defaultConfig() {
-    return {
-      type: "Vertex",
-      radius: 12,
-      fill: "#A8A8A8",
-      stroke: ItemColors.defaultStroke,
-      ...this.highlightConfigOff,
-      draggeble: this.dragEnabled,
-    };
-  }
-
   private readonly highlightConfigOn = {
     strokeWidth: 3,
   };
 
   private readonly highlightConfigOff = {
     strokeWidth: 2,
+  };
+
+  public defaultConfig = {
+    type: "Vertex",
+    radius: 12,
+    fill: "#A8A8A8",
+    stroke: ItemColors.defaultStroke,
+    draggeble: this.dragEnabled,
+    ...this.highlightConfigOff,
   };
 
   public enableDrag(layers: Konva.Layer[]) {
