@@ -15,11 +15,6 @@ namespace Backend.Tests
     public class RoomManagerTests : RoomManagerTestsBase
     {
 
-        public RoomManagerTests()
-        {
-            _roomManager.Users.Add(new User() { Id = "User1" });
-            _roomManager.Users.Add(new User() { Id = "User2" });
-        }
 
         [Fact]
         public async Task RoomShouldContain1VertexAfterAddAction()
@@ -66,29 +61,6 @@ namespace Backend.Tests
             deleteResult.Receviers.Should().Be(Receviers.all);
             deleteResult.UserAction.Should().BeEquivalentTo(deleteAction);
             roomImage.Where(x=>x.Type!=KonvaType.Layer).Should().BeEmpty();
-        }
-
-        [Fact]
-        public async Task ShouldDisallowEditVertexWhenItIsRequestBySomeoneOther()
-        {
-            var vertexId = await AddVertexToId();
-            var requestAction = new UserAction()
-            {
-                ActionType = ActionType.RequestToEdit,
-                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
-                UserId = "User1"
-            };
-            var requestResult = await _roomManager.ExecuteActionAsync(requestAction);
-            requestResult.IsSucceded.Should().Be(true);
-
-            var editAction = new UserAction()
-            {
-                ActionType = ActionType.Edit,
-                Items = new List<IRoomItem>() { new Vertex() { Id = vertexId, Type = KonvaType.Vertex } },
-                UserId = "User2"
-            };
-            var editResult = await _roomManager.ExecuteActionAsync(editAction);
-            editResult.IsSucceded.Should().Be(false);
         }
 
         [Fact]

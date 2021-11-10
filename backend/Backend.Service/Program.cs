@@ -34,10 +34,10 @@ namespace Backend.Service
             {
                 webBuilder.UseStartup<Startup>();
             })
-             .ConfigureServices(services =>
-             {
-                 services.AddHostedService<RoomsCleaner>();
-             });
+            .ConfigureServices(services =>
+            {
+                services.AddHostedService<RoomsCleaner>();
+            });
         
     }
 }

@@ -40,6 +40,7 @@ import Toolbar from "./Toolbar.vue";
 import FileWindow from "./FileWindow.vue";
 import WelcomeWindow from "./WelcomeWindow.vue";
 import UsersList from "./UsersList.vue";
+import { UserRole } from "@/js/SignalR/User";
 
 interface BoardData {
   eventManager?: BaseBoardEventManager;
@@ -70,6 +71,17 @@ export default defineComponent({
         {
           await this.handleConnectionChange(isOnline);
           console.log("connection change by online");
+        }
+      },
+    },
+    userRole: {
+      deep: true,
+      handler(userRole: UserRole) {
+        if (this.isOnline === false) return;
+        if (userRole === UserRole.Viewer) {
+          this.eventManager?.toolChanged("None");
+        } else {
+          this.eventManager?.toolChanged(this.store.state.currentTool);
         }
       },
     },
@@ -108,11 +120,13 @@ export default defineComponent({
     const { width, height } = useWindowSize();
     const isOnline = computed(() => store.state.isOnline);
     const currentTool = computed(() => store.state.currentTool);
+    const userRole = computed(() => store.state.user.role);
     BoardManager.createBoardManagerSingleton(store);
     return {
       connectionStarted,
       store,
       isOnline,
+      userRole,
       currentTool,
       windowWidth: width,
       windowHeight: height,
@@ -134,7 +148,7 @@ export default defineComponent({
           this.store,
           hub,
           new ActionFactory(
-            this.store.state.user.userId,
+            this.store.state.user.id,
             BoardManager.getBoardManager()
           )
         );

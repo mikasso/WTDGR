@@ -2,7 +2,7 @@ import { HubConnectionState } from "@microsoft/signalr";
 import Konva from "konva";
 import { InjectionKey } from "vue";
 import { createStore, Store } from "vuex";
-import { createUser, User } from "./js/SignalR/User";
+import { createUser, User, UserRole } from "./js/SignalR/User";
 
 export interface State {
   isOnline: boolean;
@@ -28,11 +28,7 @@ export const store = createStore<State>({
     layers: [],
     roomId: "",
     user: createUser(""),
-    allUsers: [
-      createUser("Test User 1"),
-      createUser("Test User 2"),
-      createUser("Test User 3"),
-    ],
+    allUsers: [],
   },
   getters: {
     isOnline(state) {
@@ -50,6 +46,9 @@ export const store = createStore<State>({
     getCurrentLayer(state) {
       return state.currentLayer;
     },
+    getAllUsers(state) {
+      return state.allUsers;
+    },
     getLayers(state) {
       return state.layers;
     },
@@ -66,12 +65,24 @@ export const store = createStore<State>({
     },
     setOffline(state) {
       state.isOnline = false;
+      state.allUsers = [];
     },
     setConnectionState(state, value) {
       state.connectionState = value;
     },
     setUser(state, user) {
       state.user = user;
+    },
+    setAllUsers(state, users: User[]) {
+      const myNewRole = users.find((x) => x.id === state.user.id)?.role;
+      if (myNewRole === undefined) {
+        console.warn("Attempt to assign unknown role. New role is viewer");
+      } else {
+        if (state.user.role != myNewRole) {
+          state.user.role = myNewRole;
+        }
+      }
+      state.allUsers = users;
     },
     setRoomId(state, roomId) {
       state.roomId = roomId;

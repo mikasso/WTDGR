@@ -8,6 +8,7 @@ using FluentAssertions;
 using Backend.Core;
 using System;
 using Moq;
+using Microsoft.Extensions.Configuration;
 
 namespace Backend.Tests
 {
@@ -23,7 +24,9 @@ namespace Backend.Tests
             _currentDate = new DateTime(2000, 1, 1, 13, 0, 0);
             timeProviderMock.Setup(x => x.Now()).Returns(() => _currentDate);
             _timeProvider = timeProviderMock.Object;
-            _sut = new RoomsContainer(new RoomManagerFactory(_timeProvider), _timeProvider);
+            var mockedConfig = new Mock<IConfiguration>();
+            mockedConfig.Setup(x => x["RoomsLimit"]).Returns("100");
+            _sut = new RoomsContainer(new RoomManagerFactory(_timeProvider), _timeProvider, mockedConfig.Object);
         }
         [Fact]
         public void ShouldDeleteRoomsThatHaveNotBeenEditForLongTime()

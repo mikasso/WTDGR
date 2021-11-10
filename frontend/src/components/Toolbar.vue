@@ -157,7 +157,7 @@ export default defineComponent({
     });
 
     const roomId = computed(() => store.state.roomId);
-    const userId = computed(() => store.state.user.userId);
+    const userId = computed(() => store.state.user.id);
     const addLayer = () => {
       emit("toolbarAction", {
         type: "addLayer",

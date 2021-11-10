@@ -9,9 +9,9 @@ namespace Backend.Core
     {
         string RoomId { get; }
         IRoomUsersManager Users { get; }
-        IAsyncEnumerable<ActionResult> HandleUserDisconnectAsync(string userId);
+        IList<UserAction> HandleUserRevokeEditor(string userId);
         DateTime LastEditTimeStamp { get; }
         IList<IRoomItem> GetRoomImage();
-        Task<ActionResult> ExecuteActionAsync(UserAction userAction);
+        Task<ActionResult> ExecuteActionAsync(UserAction userAction, bool isUserActionForced = false);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Backend.Core;
 using Backend.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -16,7 +17,7 @@ namespace BackendTests
                 {
                     return new User
                     {
-                        Role = "User",
+                        Role = UserRole.Editor,
                         Id = "User_1",
                         RoomId = "130139"
                     };
@@ -29,6 +30,7 @@ namespace BackendTests
         {
             //Arrange
             _sut = new RoomUsersManager("1");
+            _sut.CreateOwner("someone");
         }
         [Fact]
         public void UserExists_AfterAddShouldReturnTrue()
@@ -59,19 +61,6 @@ namespace BackendTests
             //Assert
             Assert.False(exists);
         }
-
-        [Fact]
-        public void UserUpdate_ShouldReturnTrue()
-        {
-            var Added = NewUser;
-            _sut.Add(Added);
-            //Act
-            _sut.SetAdmin(NewUser.Id);
-            var newRole = _sut.Get(Added.Id).Role;
-            //Assert
-            Assert.True(newRole == "Admin");
-        }
-
 
         [Fact]
         public void Get_ShouldReturnGivenUser()
@@ -126,6 +115,12 @@ namespace BackendTests
             {
                 Assert.Equal(item.Founded.Id, item.ShouldFound.Id);
             }
+        }
+
+        [Fact]
+        public void  CreatingOwnerSecondTime_Should_ThrowsErrorWhenCalledTwice()
+        {
+            Assert.Throws<Exception>(() => _sut.CreateOwner("1"));
         }
     }
 }

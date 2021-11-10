@@ -13,10 +13,16 @@ namespace Backend.Tests
     public abstract class RoomManagerTestsBase
     {
         protected IRoomManager _roomManager;
-
+        protected const string _ownerId = "owner";
         public RoomManagerTestsBase()
         {
             _roomManager = new RoomManagerFactory(new TimeProvider()).CreateRoomManager();
+            _roomManager.Users.CreateOwner(_ownerId);
+            _roomManager.Users.Add(new User() { Id = _ownerId, Role = UserRole.Owner, RoomId = "1" });
+            _roomManager.Users.Add(new User() { Id = "User1", Role = UserRole.Editor, RoomId = "1" });
+            _roomManager.Users.Add(new User() { Id = "User2", Role = UserRole.Editor, RoomId = "1" });
+            _roomManager.Users.SetEditor(_ownerId, "User1");
+            _roomManager.Users.SetEditor(_ownerId, "User2");
         }
 
         protected async Task<string> AddVertexToId(string UserId = "User1")

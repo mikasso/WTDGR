@@ -9,6 +9,7 @@ import { Edge, EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 import UserAction from "./Action";
 import { LineConfig } from "konva/types/shapes/Line";
+import { User } from "./User";
 
 export enum ActionTypes {
   Add = "Add",
@@ -38,13 +39,14 @@ export default class ApiManager {
   }
 
   public receiveAction(action: UserAction, isSucceded: boolean) {
+    console.log(action);
     for (const item of action.items) {
       switch (action.actionType) {
         case ActionTypes.Add:
-          this.receiveAdd(action.userId, item);
+          if (isSucceded === true) this.receiveAdd(action.userId, item);
           break;
         case ActionTypes.Edit:
-          this.receiveEdit(action, item);
+          if (isSucceded === true) this.receiveEdit(action, item);
           break;
         case ActionTypes.RequestToEdit:
           this.receiveRequestToEdit(action, item, isSucceded);
@@ -53,7 +55,7 @@ export default class ApiManager {
           this.receiveReleaseItem(action, item);
           break;
         case ActionTypes.Delete:
-          this.receiveDelete(action, item);
+          if (isSucceded === true) this.receiveDelete(action, item);
           break;
         default:
           throw Error(`Not implemented action type ${action.actionType}`);
@@ -89,7 +91,7 @@ export default class ApiManager {
         case ClassNames.Layer:
           this.boardManager.receiveAddLayer(item.id);
           if (
-            actionUserId === this.user.userId ||
+            actionUserId === this.user.id ||
             this.store.state.currentLayer === undefined ||
             this.store.state.currentLayer === null
           )
@@ -185,7 +187,7 @@ export default class ApiManager {
       switch (item.type) {
         case ClassNames.Vertex:
           if (isSucceded) {
-            if (this.store.state.user.userId === action.userId) {
+            if (this.store.state.user.id === action.userId) {
               this.boardManager.setFollowMousePointerById(item.id, true);
             }
             const vertex = this.boardManager.findById(item.id) as Vertex;
@@ -195,7 +197,7 @@ export default class ApiManager {
           break;
         case ClassNames.Edge:
           if (isSucceded) {
-            if (this.store.state.user.userId === action.userId) {
+            if (this.store.state.user.id === action.userId) {
               this.boardManager.setFollowMousePointerById(item.id, true);
             }
           } else console.error("cannot edit vertex" + item.id);

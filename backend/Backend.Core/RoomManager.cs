@@ -38,7 +38,7 @@ namespace Backend.Core
             _pencilManager = pencilManager;
         }
 
-        public async IAsyncEnumerable<ActionResult> HandleUserDisconnectAsync(string userId)
+        public IList<UserAction> HandleUserRevokeEditor(string userId)
         {
             var actionsToExcute = new List<UserAction>();
             var line = _lineManager.GetAll().FirstOrDefault(x => x.EditorId == userId);
@@ -48,26 +48,26 @@ namespace Backend.Core
                 {
                     ActionType = ActionType.Delete,
                     Items = new List<IRoomItem>() { new Line() { Id = line.Id, Type = KonvaType.Line } },
-                    UserId = userId
+                    UserId = userId,
                 });
             }
 
             var edges = _edgeManager.GetAll().Where(x => x.EditorId == userId);
             var vertices = _verticesManager.GetAll().Where(x => x.EditorId == userId);
-            var items = edges.Concat(vertices).ToList();
-            if (items.Count >= 1)
+            var pencilLines = _pencilManager.GetAll().Where(x => x.EditorId == userId);
+            var items = edges.Concat(vertices).Concat(pencilLines).ToList();
+            if (items.Count > 0)
             {
                 var releaseAction = new UserAction()
                 {
                     ActionType = ActionType.ReleaseItem,
-                    Items = items,
-                    UserId = userId
+                    Items = items, //dac tu moze new ItemType() {ID =item.id, layer , editor } 
+                    UserId = userId,
 
                 };
                 actionsToExcute.Add(releaseAction);
             }
-            foreach (var userAction in actionsToExcute)
-                yield return await ExecuteActionAsync(userAction);
+            return actionsToExcute;
         }
 
         public IList<IRoomItem> GetRoomImage()
@@ -80,37 +80,29 @@ namespace Backend.Core
                 .ToList();
         }
 
-        public async Task<ActionResult> ExecuteActionAsync(UserAction userAction)
+        public async Task<ActionResult> ExecuteActionAsync(UserAction userAction, bool isUserActionForced = false)
         {
             LastEditTimeStamp = _timeProvider.Now();
-            var actionResult = new ActionResult() { IsSucceded = false, Receviers = Receviers.caller };
+
+            var actionResult = ActionResult.GetNegativeActionResult(userAction);
+            if (Users.CanEdit(userAction.UserId) == false && isUserActionForced == false)
+            {
+                Log.Information($"{userAction.UserId} does not have enough permission to edit the board state.");
+                return actionResult;
+            }
+            var action = DispatchAction(userAction);
+            await _semaphore.WaitAsync();
             try
             {
-                var action = DispatchAction(userAction);
-                await _semaphore.WaitAsync();
-                try
-                {
-                    actionResult.IsSucceded = action();
-                }
-                finally
-                {
-                    _semaphore.Release();
-                }
-                actionResult.Receviers = DispatchReceivers(actionResult.IsSucceded, userAction.ActionType);
-                actionResult.UserAction = userAction;
-                return actionResult;
+                actionResult.IsSucceded = action();
             }
-            catch (ItemLockedException)
+            finally
             {
-                Log.Information("Cannot execute user acrtion because the item is currently locked");
-                return actionResult;
-            }
-            catch (Exception e)
-            {
-                Log.Error("Cannot dispatch user action message! \n" + e.Message + "\n" + e.StackTrace);
-                return actionResult;
+                _semaphore.Release();
             }
 
+            actionResult.Receviers = actionResult.IsSucceded ? Receviers.all : Receviers.caller;
+            return actionResult;
         }
 
         private Func<bool> DispatchAction(UserAction userAction)
@@ -121,30 +113,31 @@ namespace Backend.Core
             foreach (var item in items)
             {
                 Log.Information($"Dispatching Action, Room Id: {RoomId}, Action type:{userAction.ActionType}\n{item.ToJsonString()}");
-
+                var itemManager = DispatchItemManager(item.Type);
+                
                 void throwIfNotFree(IRoomItem item, string userId)
                 {
-                    if (!IsItemFree(item, userId))
-                    {
-                        throw new ItemLockedException();
-                    }
+                    var realItemState = itemManager.Get(item.Id);
+                    if (realItemState == null)
+                        throw new ItemDoesNotExistException("Can not do operation diffrent than add when item has no id!");
+                    if (realItemState.EditorId == null)
+                        return;
+                    if (realItemState.EditorId != userId)
+                        throw new ItemLockedException($"Item is already being edited by ${realItemState.EditorId}");
                 }
-
-                var itemManager = DispatchItemManager(item.Type);
 
                 switch (userAction.ActionType)
                 {
                     case ActionType.Add:
                         if (item.Id == null)
                             item.Id = Guid.NewGuid().ToString();
-                        actions.Add(() => { throwIfNotFree(item, userId); return itemManager.Add(item, userId); });
+                        actions.Add(() => {  return itemManager.Add(item, userId); });
                         break;
                     case ActionType.RequestToEdit:
-                        item.EditorId = userId;
-                        //var user = Users.Get(userId);
                         actions.Add(() =>
                         {
                             throwIfNotFree(item, userId);
+                            item.EditorId = userId;
                             return itemManager.Update(item);
                         });
                         break;
@@ -164,28 +157,8 @@ namespace Backend.Core
                         break;
                 }
             }
+
             return () => actions.All(action => action());
-        }
-
-
-        private bool IsItemFree(IRoomItem item, string userId)
-        {
-            if (item.Type != KonvaType.Vertex) return true;
-
-            var itemId = item.Id;
-            var vertex = _verticesManager.Get(itemId);
-            if (vertex == null)
-                return true;
-            if (vertex.EditorId == null)
-                return true;
-            return vertex.EditorId == userId;
-        }
-        private Receviers DispatchReceivers(bool isSucceded, ActionType actionType)
-        {
-            return actionType switch
-            {
-                _ => isSucceded ? Receviers.all : Receviers.caller,
-            };
         }
 
         private IRoomItemsManager DispatchItemManager(KonvaType konvaType)
@@ -200,7 +173,5 @@ namespace Backend.Core
                 _ => throw new NotImplementedException(),
             };
         }
-
-
     }
 }

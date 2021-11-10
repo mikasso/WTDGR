@@ -14,7 +14,7 @@ import { store } from "@/store";
 import { getUserColor } from "@/js/SignalR/User";
 export default class OnlineMultiselectToolHandler implements IHandler {
   dragInterval: number | null = null;
-  drawInterval: number | undefined;
+  drawInterval: number | null = null;
   vertexesDTO: any[] = [];
   private readonly MaxAttempts = 3;
   private readonly PollingTime = 100;
@@ -37,8 +37,8 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   }
   public setInactive(): void {
     this.offlineHighlighter.setInactive();
-    if (this.dragInterval !== null) clearInterval(this.dragInterval);
-    if (this.drawInterval !== null) clearInterval(this.drawInterval);
+    if (this.dragInterval != null) clearInterval(this.dragInterval);
+    if (this.drawInterval != null) clearInterval(this.drawInterval);
     this.releaseVertexes();
     this.dragInterval = null;
     this.boardManager.setHighlightOfSelected(false);
@@ -125,14 +125,22 @@ export default class OnlineMultiselectToolHandler implements IHandler {
 
     await poll({
       fn: () => {
-        if (this.dragInterval !== null) {
-          clearInterval(this.dragInterval);
+        const areAllVertexEditable =
+          this.boardManager.multiselectManager.selectedVertexes.every(
+            (x) => x.followMousePointer
+          );
+
+        if (areAllVertexEditable) {
+          if (this.dragInterval !== null) {
+            clearInterval(this.dragInterval);
+          }
+          this.dragInterval = window.setInterval(
+            () => this.sendVertexesEdit(),
+            SentRequestInterval
+          );
+          return true;
         }
-        this.dragInterval = window.setInterval(
-          () => this.sendVertexesEdit(),
-          SentRequestInterval
-        );
-        return true;
+        return false;
       },
       interval: this.PollingTime,
       maxAttempts: this.MaxAttempts,

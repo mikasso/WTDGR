@@ -17,18 +17,28 @@ export default class OnlinePencilToolHandler implements IHandler {
   constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
     this.boardManager = BoardManager.getBoardManager();
   }
-  setInactive(): void {
+  async setInactive(): Promise<void> {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
+      const currentDrawing = this.boardManager.pencilManager.currentDrawing;
+      if (currentDrawing != null) {
+        await this.sendLineEdit(currentDrawing);
+        const releaseAction = this.actionFactory.create(
+          ActionTypes.ReleaseItem,
+          currentDrawing.asDTO()
+        );
+        await this.hub.sendAction(releaseAction);
+      }
+      this.editCounter = 0;
     }
   }
   setActive(eventManager: BaseBoardEventManager): void {
-    eventManager.mouseDown = (event) => this.mouseDown(event);
-    eventManager.mouseUp = () => this.mouseUp();
+    eventManager.mouseDown = async (event) => await this.mouseDown(event);
+    eventManager.mouseUp = async () => await this.mouseUp();
   }
 
-  private mouseDown(event: KonvaEventObject<any>) {
+  private async mouseDown(event: KonvaEventObject<any>) {
     if (!isLeftClick(event)) return;
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
@@ -41,12 +51,12 @@ export default class OnlinePencilToolHandler implements IHandler {
     this.boardManager.pencilManager.awaitingAdd = true;
     this.editCounter = 0;
     this.intervalId = window.setInterval(
-      () => this.drawLine(),
+      async () => await this.drawLine(),
       SentRequestInterval
     );
   }
 
-  private drawLine() {
+  private async drawLine() {
     const currentDrawing = this.boardManager.pencilManager.currentDrawing;
     if (currentDrawing != null) {
       const mousePos = this.boardManager.getMousePosition();
@@ -54,25 +64,17 @@ export default class OnlinePencilToolHandler implements IHandler {
       currentDrawing.layer.draw();
       this.editCounter += 1;
       if (this.editCounter % this.pencilLineEditSend == 0) {
-        this.sendLineEdit(currentDrawing);
+        await this.sendLineEdit(currentDrawing);
       }
     }
   }
 
-  sendLineEdit(line: PencilLine) {
+  async sendLineEdit(line: PencilLine) {
     const action = this.actionFactory.create(ActionTypes.Edit, line.asDTO());
-    this.hub.sendAction(action);
+    await this.hub.sendAction(action);
   }
 
-  private mouseUp() {
-    if (this.intervalId !== null) {
-      const currentDrawing = this.boardManager.pencilManager.currentDrawing;
-      if (currentDrawing != null) {
-        this.sendLineEdit(currentDrawing);
-      }
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-      this.editCounter = 0;
-    }
+  private async mouseUp() {
+    await this.setInactive();
   }
 }
