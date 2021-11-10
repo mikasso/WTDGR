@@ -39,7 +39,6 @@ export default class ApiManager {
   }
 
   public receiveAction(action: UserAction, isSucceded: boolean) {
-    console.log(action);
     for (const item of action.items) {
       switch (action.actionType) {
         case ActionTypes.Add:

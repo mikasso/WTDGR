@@ -51,8 +51,6 @@
 </template>
 
 <script lang="ts">
-import BoardManager from "@/js/KonvaManager/BoardManager";
-import ApiManager from "@/js/SignalR/ApiHandler";
 import BoardHub from "@/js/SignalR/Hub";
 import { User, UserRole } from "@/js/SignalR/User";
 import { key, State } from "@/store";
@@ -70,7 +68,6 @@ export default defineComponent({
     const myRole = computed(() => {
       return store.state.user.role;
     });
-    console.log(users);
     return {
       roomId,
       store,

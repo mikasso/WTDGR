@@ -70,7 +70,6 @@ export default defineComponent({
       async handler(isOnline: boolean) {
         {
           await this.handleConnectionChange(isOnline);
-          console.log("connection change by online");
         }
       },
     },
