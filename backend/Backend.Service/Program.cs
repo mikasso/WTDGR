@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using System;
 
 namespace Backend.Service
 {
@@ -10,13 +11,9 @@ namespace Backend.Service
     {
         public static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .WriteTo.File("C:\\WTDGR_logs.txt", rollingInterval: RollingInterval.Day)
-            .CreateLogger();
+            Log.Logger = ConfigureLogger().CreateLogger();
             var app = CreateHostBuilder(args).Build();
-            Log.Information("Service starting..");
-            Log.Information("Waiting for connections");
+            Log.Information($"Service is starting");
             app.Run();
             Log.Information("Service has turned down.");
         }
@@ -26,8 +23,8 @@ namespace Backend.Service
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
-                logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
-                logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
+                var filterLogLevel = IsProduction() ? LogLevel.Error : LogLevel.Information;
+                logging.SetMinimumLevel(filterLogLevel);
                 logging.AddConsole();
             })
             .ConfigureWebHostDefaults(webBuilder =>
@@ -39,5 +36,18 @@ namespace Backend.Service
                 services.AddHostedService<RoomsCleaner>();
             });
         
+        private static LoggerConfiguration ConfigureLogger()
+        {
+            var loggerConfiguration = new LoggerConfiguration()
+            .WriteTo.Console();
+
+            if (IsProduction())
+                loggerConfiguration.MinimumLevel.Information();
+            else
+                loggerConfiguration.MinimumLevel.Debug();
+            return loggerConfiguration;
+        }
+        private static bool IsProduction() => Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production";
+
     }
 }
