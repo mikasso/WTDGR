@@ -30,11 +30,12 @@ namespace Backend.Service
 
             services.AddCors(options =>
             {
-                options.AddDefaultPolicy( builder =>
+                options.AddPolicy(vue.CorsPolicyName, builder =>
                 {
-                    builder.AllowAnyOrigin()
+                    builder.WithOrigins(vue.Url)
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .AllowCredentials();
                 });
             });
             services.AddSignalR().AddNewtonsoftJsonProtocol((x) =>
@@ -45,7 +46,7 @@ namespace Backend.Service
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseCors();
+            app.UseCors(vue.CorsPolicyName);
             app.UseRouting();
             if (env.IsDevelopment())
             {
