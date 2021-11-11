@@ -10,12 +10,40 @@
     <div class="users-list">
       <el-scrollbar height="400px">
         <div v-for="(user, index) in users" :key="index" class="user">
-          <div class="user-circle" :style="'border: solid 4px '+user.userColor">
-            <img class="user-icon" :src="require('../assets/tools/user.svg')" />
+          <div
+            class="user-circle"
+            :style="'border: solid 4px ' + user.userColor"
+          >
+            <img
+              class="user-icon"
+              :src="require('../assets/users/avatar.svg')"
+            />
           </div>
-          <span style="margin-right: auto; margin-left: 5px;" class="username">
-            {{ user.userId }}
+          <span style="margin-right: auto; margin-left: 5px" class="username">
+            {{ user.id }}
           </span>
+
+          <div
+            @click="changeUserPermission(user)"
+            v-bind:class="
+              myRole === 'Owner'
+                ? 'user-icon user-icon-for-owner-view '
+                : 'user-icon'
+            "
+          >
+            <img
+              v-if="user.role === 'Viewer'"
+              :src="require('../assets/users/viewer.svg')"
+            />
+            <img
+              v-if="user.role === 'Editor'"
+              :src="require('../assets/users/editor.svg')"
+            />
+            <img
+              v-if="user.role === 'Owner'"
+              :src="require('../assets/users/owner.svg')"
+            />
+          </div>
         </div>
       </el-scrollbar>
     </div>
@@ -23,6 +51,8 @@
 </template>
 
 <script lang="ts">
+import BoardHub from "@/js/SignalR/Hub";
+import { User, UserRole } from "@/js/SignalR/User";
 import { key, State } from "@/store";
 import { computed, defineComponent } from "vue";
 import { useStore } from "vuex";
@@ -35,18 +65,30 @@ export default defineComponent({
     const users = computed(() => {
       return store.state.allUsers;
     });
-    console.log(users)
+    const myRole = computed(() => {
+      return store.state.user.role;
+    });
     return {
       roomId,
       store,
       users,
+      myRole,
     };
+  },
+  methods: {
+    async changeUserPermission(user: User) {
+      if (this.myRole !== UserRole.Owner) return;
+      const role =
+        user.role === UserRole.Viewer ? UserRole.Editor : UserRole.Viewer;
+      const hub = BoardHub.getBoardHub();
+      await hub.setUserRole(user.id, role);
+    },
   },
 });
 </script>
 
 <style scoped lang="scss">
-.copy-btn{
+.copy-btn {
   width: 27px;
   height: 27px;
   min-height: 27px;
@@ -54,7 +96,7 @@ export default defineComponent({
   position: absolute;
   right: -38px;
   top: 2px;
-  img{
+  img {
     width: 16px;
   }
 }
@@ -91,10 +133,10 @@ export default defineComponent({
       margin-right: 8px;
       margin-left: 8px;
       padding: 7px 12px;
-      .username{
+      .username {
         font-size: 0.95em;
       }
-      .user-circle{
+      .user-circle {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -105,8 +147,17 @@ export default defineComponent({
         background-color: white;
         .user-icon {
           width: 20px;
+          height: 20px;
           margin-bottom: 1px;
         }
+      }
+      .user-icon {
+        width: 20px;
+        height: 20px;
+        margin-bottom: 1px;
+      }
+      .user-icon-for-owner-view {
+        cursor: pointer;
       }
     }
   }

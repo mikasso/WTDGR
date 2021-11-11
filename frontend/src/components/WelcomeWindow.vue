@@ -62,7 +62,7 @@
 
 <script lang="ts">
 import BoardHub from "@/js/SignalR/Hub";
-import { createUser, UserTypes } from "@/js/SignalR/User";
+import { createUser, UserRole } from "@/js/SignalR/User";
 import { defineComponent } from "vue";
 import { useStore } from "vuex";
 import { key, State, store } from "../store";
@@ -78,7 +78,7 @@ export default defineComponent({
     };
   },
   data() {
-    const userId = store.state.user.userId;
+    const userId = store.state.user.id;
     const roomId = store.state.roomId;
     return {
       roomId: roomId,
@@ -100,7 +100,7 @@ export default defineComponent({
   },
   methods: {
     open() {
-      this.userId = store.state.user.userId;
+      this.userId = store.state.user.id;
       this.roomId = store.state.roomId;
       this.isOpened = true;
     },
@@ -121,7 +121,7 @@ export default defineComponent({
     async create() {
       const hub = BoardHub.getBoardHub();
       await hub.disconnect();
-      this.store.commit("setUser", createUser(this.ownerId, UserTypes.Owner));
+      this.store.commit("setUser", createUser(this.ownerId, UserRole.Owner));
       hub.createRoom().then(() => (this.isOpened = false));
     },
   },

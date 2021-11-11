@@ -12,7 +12,10 @@ namespace Backend.Models
 
         public bool IsSucceded { get; set; }
 
-        public Receviers Receviers { get; set;} 
+        public Receviers Receviers { get; set;}
+
+        public static ActionResult GetNegativeActionResult(UserAction action) => 
+            new ActionResult() { IsSucceded = false, Receviers = Receviers.caller, UserAction = action }; 
     }
 
     public enum Receviers

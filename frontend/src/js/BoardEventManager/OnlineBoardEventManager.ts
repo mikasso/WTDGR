@@ -13,6 +13,7 @@ import OnlineSelectToolHandler from "./Online/OnlineSelectToolHandler";
 import OnlineVertextoolHandler from "./Online/OnlineVertexToolHandler";
 import OnlinePencilToolHandler from "./Online/OnlinePencilToolHandler";
 import OnlineMultiselectToolHandler from "./Online/OnlineMultiselectToolHandler";
+import { UserRole } from "../SignalR/User";
 
 export const SentRequestInterval = 25;
 
@@ -72,6 +73,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
   }
 
   public toolChanged(toolName: string) {
+    if (this.store.state.user.role === UserRole.Viewer) toolName = "None";
     this.clearHandlers();
     this.handlers.forEach((handler) => handler.setInactive());
     switch (toolName) {
@@ -92,6 +94,8 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
         break;
       case "Multiselect":
         this.multiselectHandler.setActive(this);
+        break;
+      case "None":
         break;
     }
   }

@@ -7,8 +7,8 @@ namespace Backend.Core
 {
     public interface IRoomUsersManager
     {
-        bool SetAdmin(string username);
-        bool RemoveAdmin(string username);
+        bool SetEditor(string requester, string username);
+        bool SetViewer(string requester, string username);
         bool Add(User user);
         User Get(string id);
         bool Delete(string id);
@@ -16,6 +16,7 @@ namespace Backend.Core
         bool Exists(User user);
         bool Exists(string userName);
         User CreateOwner(string ownerId);
+        bool CanEdit(string id);
     }
     public class RoomUsersManager : IRoomUsersManager
     {
@@ -23,7 +24,6 @@ namespace Backend.Core
         private string _roomId;
 
         public User Owner { get; private set; }
-
         public RoomUsersManager(string id)
         {
             _roomId = id;
@@ -36,31 +36,46 @@ namespace Backend.Core
             var owner = new User()
             {
                 Id = ownerId,
-                Role = UserRoles.Owner,
+                Role = UserRole.Owner,
                 RoomId = _roomId,
             };
             Owner = owner;
             return owner;
         }
-        public bool SetAdmin(string username)
+        public bool SetEditor(string requester, string username)
         {
-            if (!Exists(username))
+            if (!isUpdatePossible(requester, username))
                 return false;
             var admin = _users[username];
-            admin.Role = UserRoles.Admin;
+            admin.Role = UserRole.Editor;
             return true;
         }
-        public bool RemoveAdmin(string username)
+        public bool SetViewer(string requester,string username)
         {
-            if (!Exists(username))
+            if (!isUpdatePossible(requester, username))
                 return false;
             var user = _users[username];
-            user.Role = UserRoles.User;
+            user.Role = UserRole.Viewer;
             return true;
         }
+
+        private bool isUpdatePossible(string requester, string username)
+        {
+            return requester == Owner.Id && username != Owner.Id && Exists(username);
+        }
+
+        public bool CanEdit(string userId)
+        {
+            var user = Get(userId);
+            return user.Role != UserRole.Viewer;
+        }
+
         public bool Add(User user)
         {
-            user.Role = UserRoles.User;
+            if (user.Id != Owner.Id)
+                user.Role = UserRole.Viewer;
+            else
+                user.Role = UserRole.Owner;
             return _users.TryAdd(user.Id, user);
         }
 

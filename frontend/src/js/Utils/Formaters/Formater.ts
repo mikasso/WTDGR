@@ -49,7 +49,7 @@ abstract class Formater {
     const vertex = this.boardManager.createVertex(position);
     if (this.store.state.isOnline) {
       const actionFactory = new ActionFactory(
-        this.store.state.user.userId,
+        this.store.state.user.id,
         this.boardManager
       );
       const action = actionFactory.create(ActionTypes.Add, vertex.asDTO());
@@ -66,7 +66,7 @@ abstract class Formater {
     if (edge == undefined) return;
     if (this.store.state.isOnline) {
       const actionFactory = new ActionFactory(
-        this.store.state.user.userId,
+        this.store.state.user.id,
         this.boardManager
       );
       const action = actionFactory.create(ActionTypes.Add, edge.asDTO());

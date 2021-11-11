@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Backend.Core;
 using Backend.Models;
-using Microsoft.AspNet.SignalR;
 
 namespace Backend.Service
 {

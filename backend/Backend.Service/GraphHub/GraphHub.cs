@@ -4,24 +4,10 @@ using System.Threading.Tasks;
 using System;
 using Serilog;
 using Backend.Core;
-using System.Collections.Generic;
+using System.Linq;
 
 namespace Backend.Service
 {
-
-    public interface IGraphHub
-    {
-        Task SendAction(UserAction userAction);
-        Task ReceiveAction(UserAction userAction, bool isSucceded = true);
-        Task ReceiveActionResponse(UserActionFailure actionResponse);
-        Task ReceiveRoomId(string roomId);
-        Task ReceiveText(string message);
-        Task ReceiveWarninig(string message);
-        Task ReceiveJoinResponse(User user);
-        Task ReceiveGraph(IList<IRoomItem> items);
-        Task GetGraph();
-    }
-
     public partial class GraphHub : Hub<IGraphHub>
     {
         private IRoomsContainer _roomsContainer;
@@ -56,11 +42,18 @@ namespace Backend.Service
         {
             if (await CanJoinToRoom(user))
             {
-                await AssignUserToContext(user);
-                await ReplyForJoin(user);
+                MyUser = user;
+                await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
+                MyGroup = Clients.Group(user.RoomId);
+                Room.Users.Add(user);
+                Log.Information($"{user.Id}:  has joined the room {user.RoomId}.");
+                await Clients.Caller.ReceiveJoinResponse(true);
+                await MyGroup.ReceiveUsersList(Room.Users.GetAll());
             }
             else
             {
+                Log.Information($"{user.Id}: cannot join the room {user.RoomId}.");
+                await Clients.Caller.ReceiveJoinResponse(false);
                 Context.Abort();
             }
         }
@@ -72,12 +65,14 @@ namespace Backend.Service
             {
                 var additionalInfo = exception == null ? " No exception catched." : exception.Message;
                 Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
-                var actionResults = Room.HandleUserDisconnectAsync(MyUser.Id);
-                await foreach (ActionResult actionResult in actionResults)
+                var userActions = Room.HandleUserRevokeEditor(MyUser.Id);
+                foreach (var userAction in userActions)
                 {
+                    var actionResult = await Room.ExecuteActionAsync(userAction);
                     await HandleReceiveActionResult(actionResult, MyUser.Id);
                 }
                 Room.Users.Delete(MyUser.Id);
+                await MyGroup.ReceiveUsersList(Room.Users.GetAll());
             }
         }
         public async Task LeaveRoom()
@@ -100,10 +95,62 @@ namespace Backend.Service
                 await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason = "You are not in any room!" });
                 return;
             }
-            var actionResult = await Room.ExecuteActionAsync(userAction);
+
+            ActionResult actionResult = ActionResult.GetNegativeActionResult(userAction);
+            try
+            {
+                actionResult = await Room.ExecuteActionAsync(userAction);
+            }
+            catch (ItemLockedException e)
+            {
+                Log.Information(e.Message);
+            }
+            catch (Exception e)
+            {
+                Log.Error("Cannot dispatch user action message! \n" + e.Message + "\n" + e.StackTrace);
+                await Clients.Caller.ReceiveWarninig("Unexpected error occured, please rejoin room!");
+            }
+
             await HandleReceiveActionResult(actionResult, userAction.UserId);
         }
 
+        public async Task SetUserRole(string userId, UserRole role)
+        {
+            var result = false;
+            switch (role)
+            {
+                case UserRole.Editor:
+                    result = Room.Users.SetEditor(MyUser.Id, userId);
+                    break;
+                case UserRole.Viewer:
+                    result = Room.Users.SetViewer(MyUser.Id, userId);
+                    if (result == true)
+                    {
+                        var userActions = Room.HandleUserRevokeEditor(userId);
+                        foreach (var userAction in userActions)
+                        {
+                            var actionResult = await Room.ExecuteActionAsync(userAction, true);
+                            await HandleReceiveActionResult(actionResult, userId);
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+            if (result == true)
+            {
+                await MyGroup.ReceiveUsersList(Room.Users.GetAll());
+                Log.Information($"{userId} has become {role}");
+            }
+            else
+            {
+                await Clients.Caller.ReceiveWarninig($"You can not assing role: {role} that role to {userId}.");
+            }
+        }
+        public async Task GetUsersList()
+        {
+            await Clients.Caller.ReceiveUsersList(Room.Users.GetAll());
+        }
         public async Task GetGraph()
         {
             if (MyGroup == null)
@@ -122,22 +169,6 @@ namespace Backend.Service
             {
                 Log.Error($"Cannot execute action for user {userId}\n");
             }
-        }
-
-        private async Task<bool> AssignUserToContext(User user)
-        {
-            MyUser = user;
-            await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
-            MyGroup = Clients.Group(user.RoomId);
-            return Room.Users.Add(user);
-        }
-
-        private async Task ReplyForJoin(User user)
-        {
-            var message = $"{MyUser.Id}:  has joined the room {MyUser.RoomId}.";
-            await MyGroup.ReceiveText(message);
-            Log.Information(message);
-            await Clients.Caller.ReceiveJoinResponse(user);
         }
 
         private async Task<bool> CanJoinToRoom(User user)

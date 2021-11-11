@@ -10,6 +10,7 @@ import { Store } from "vuex";
 import { getAppConfig } from "../BoardEventManager/utils";
 import UserAction from "./Action";
 import ApiManager from "./ApiHandler";
+import { User, UserRole } from "./User";
 
 export default class BoardHub {
   private connection: HubConnection;
@@ -36,13 +37,12 @@ export default class BoardHub {
     this.connectionState = HubConnectionState.Disconnected;
 
     this.connection.on("ReceiveRoomId", (roomId: string) => {
-      console.log("ReceiveRoomId")
       store.commit("setRoomId", roomId);
       store.commit("setOnline");
     });
-
-    this.connection.on("ReceiveJoinResponse", (user) => {
-      this.requestGraph();
+    this.connection.on("ReceiveJoinResponse", (hasJoined) => {
+      if (hasJoined === true) this.requestGraph();
+      else alert("Cannot join this room, your nickname is already taken");
     });
     this.connection.on("ReceiveWarninig", (warning: string) => {
       alert(warning);
@@ -59,7 +59,9 @@ export default class BoardHub {
     this.connection.on("ReceiveActionResponse", (actionResponse: string) => {
       this.apiManager.receiveActionResponse(actionResponse);
     });
-
+    this.connection.on("ReceiveUsersList", (users: User[]) => {
+      this.store.commit("setAllUsers", users);
+    });
     this.connection.onclose(() => {
       this.store.commit("setOffline");
       this.connectionState = HubConnectionState.Disconnected;
@@ -79,6 +81,10 @@ export default class BoardHub {
       .catch((err: Error) => console.error(err.toString()));
   }
 
+  public async setUserRole(id: string, role: UserRole) {
+    await this.connection.invoke("SetUserRole", id, role);
+  }
+
   public requestGraph() {
     return this.connection
       .invoke("GetGraph")
@@ -90,10 +96,7 @@ export default class BoardHub {
       if (this.connection.state !== HubConnectionState.Connected)
         await this.connection.start();
       try {
-        await this.connection.invoke(
-          "CreateRoom",
-          this.store.state.user.userId
-        );
+        await this.connection.invoke("CreateRoom", this.store.state.user.id);
       } catch (e) {
         return false;
       }
@@ -109,8 +112,8 @@ export default class BoardHub {
       if (this.connection.state !== HubConnectionState.Connected)
         await this.connection.start();
       const request = {
-        Id: this.store.state.user.userId,
-        Role: "Owner",
+        Id: this.store.state.user.id,
+        UserColor: this.store.state.user.userColor,
         RoomId: this.store.state.roomId,
       };
       try {

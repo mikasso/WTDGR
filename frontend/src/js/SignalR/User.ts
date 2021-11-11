@@ -1,26 +1,27 @@
 import { store } from "@/store";
 
+export enum UserRole {
+  Owner = "Owner",
+  Editor = "Editor",
+  Viewer = "Viewer",
+}
 export interface User {
-  userId: string;
-  role?: UserTypes;
-  userColor?: string;
+  id: string;
+  role: UserRole;
+  userColor: string;
 }
 
 export function getUserColor() {
   return store.state.user.userColor ?? "black";
 }
 
-export enum UserTypes {
-  Owner,
-}
-
 export function createUser(
   id: string,
-  userType: UserTypes = UserTypes.Owner
+  userRole: UserRole = UserRole.Owner
 ): User {
   return {
-    userId: id,
-    role: userType,
+    id: id,
+    role: userRole,
     userColor: selectColor(Math.floor(Math.random() * 10)),
   };
 }
