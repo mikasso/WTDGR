@@ -1,0 +1,16 @@
+version: "3.4"
+
+services:
+  frontend:
+    image: mikasso/frontend:1.01
+    environment:
+      NODE_ENV: production
+    ports:
+      - 80:8080
+  backend:
+    image: mikasso/backend:1.01
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5000
+    ports:
+      - 5000:5000

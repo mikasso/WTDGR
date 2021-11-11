@@ -1,21 +1,25 @@
-﻿{
+{
   "profiles": {
     "BackendDev": {
       "commandName": "Project",
-      "dotnetRunMessages": "true",
-      "applicationUrl": "http://localhost:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "dotnetRunMessages": "true",
+      "applicationUrl": "http://localhost:5000"
     },
     "BackendProd": {
       "commandName": "Project",
-      "dotnetRunMessages": "true",
-
-      "applicationUrl": "http://153.19.216.51:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"
-      }
+      },
+      "dotnetRunMessages": "true",
+      "applicationUrl": "http://153.19.216.51:5000"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "publishAllPorts": true
     }
   }
 }

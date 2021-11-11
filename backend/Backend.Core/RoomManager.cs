@@ -61,7 +61,7 @@ namespace Backend.Core
                 var releaseAction = new UserAction()
                 {
                     ActionType = ActionType.ReleaseItem,
-                    Items = items, //dac tu moze new ItemType() {ID =item.id, layer , editor } 
+                    Items = items,  
                     UserId = userId,
 
                 };
@@ -87,7 +87,7 @@ namespace Backend.Core
             var actionResult = ActionResult.GetNegativeActionResult(userAction);
             if (Users.CanEdit(userAction.UserId) == false && isUserActionForced == false)
             {
-                Log.Information($"{userAction.UserId} does not have enough permission to edit the board state.");
+                Log.Debug($"{userAction.UserId} does not have enough permission to edit the board state.");
                 return actionResult;
             }
             var action = DispatchAction(userAction);
@@ -112,7 +112,7 @@ namespace Backend.Core
             var actions = new List<Func<bool>>();
             foreach (var item in items)
             {
-                Log.Information($"Dispatching Action, Room Id: {RoomId}, Action type:{userAction.ActionType}\n{item.ToJsonString()}");
+                Log.Debug($"Dispatching Action, Room Id: {RoomId}, User {userId}, Action type:{userAction.ActionType}\n{item.ToJsonString()}");
                 var itemManager = DispatchItemManager(item.Type);
                 
                 void throwIfNotFree(IRoomItem item, string userId)

@@ -46,13 +46,13 @@ namespace Backend.Service
                 await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
                 MyGroup = Clients.Group(user.RoomId);
                 Room.Users.Add(user);
-                Log.Information($"{user.Id}:  has joined the room {user.RoomId}.");
+                Log.Debug($"{user.Id}:  has joined the room {user.RoomId}.");
                 await Clients.Caller.ReceiveJoinResponse(true);
                 await MyGroup.ReceiveUsersList(Room.Users.GetAll());
             }
             else
             {
-                Log.Information($"{user.Id}: cannot join the room {user.RoomId}.");
+                Log.Debug($"{user.Id}: cannot join the room {user.RoomId}.");
                 await Clients.Caller.ReceiveJoinResponse(false);
                 Context.Abort();
             }
@@ -64,7 +64,7 @@ namespace Backend.Service
             if (Room != null && MyUser != null)
             {
                 var additionalInfo = exception == null ? " No exception catched." : exception.Message;
-                Log.Information($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
+                Log.Debug($"User {MyUser.Id} has disconnected from room:{Room.RoomId} due to\n {additionalInfo}");
                 var userActions = Room.HandleUserRevokeEditor(MyUser.Id);
                 foreach (var userAction in userActions)
                 {
@@ -88,7 +88,6 @@ namespace Backend.Service
         }
         public async Task SendAction(UserAction userAction)
         {
-            Log.Information($"Received action.");
             userAction.UserId = MyUser.Id;
             if (MyGroup == null)
             {
@@ -103,7 +102,7 @@ namespace Backend.Service
             }
             catch (ItemLockedException e)
             {
-                Log.Information(e.Message);
+                Log.Debug(e.Message);
             }
             catch (Exception e)
             {
@@ -140,7 +139,7 @@ namespace Backend.Service
             if (result == true)
             {
                 await MyGroup.ReceiveUsersList(Room.Users.GetAll());
-                Log.Information($"{userId} has become {role}");
+                Log.Debug($"{userId} has become {role}");
             }
             else
             {
@@ -167,7 +166,7 @@ namespace Backend.Service
             await receiver.ReceiveAction(actionResult.UserAction, actionResult.IsSucceded);
             if (!actionResult.IsSucceded)
             {
-                Log.Error($"Cannot execute action for user {userId}\n");
+                Log.Debug($"Cannot execute action for user {userId}\n");
             }
         }
 
@@ -179,14 +178,14 @@ namespace Backend.Service
                 var alreadyExist = room.Users.Exists(user.Id);
                 if (alreadyExist)
                 {
-                    Log.Information($"User already exists in this room, id: {user.Id}");
+                    Log.Debug($"User already exists in this room, id: {user.Id}");
                     await Clients.Caller.ReceiveWarninig($"You cannot join this room, there is already {user.Id} in the room.");
                 }
                 return (alreadyExist == false);
             }
             catch (Exception e)
             {
-                Log.Error(e, $"User: {user.Id} failed to connect to room: {user.RoomId} The room doesnt exists");
+                Log.Warning(e, $"User: {user.Id} failed to connect to room: {user.RoomId} The room doesnt exists");
                 await Clients.Caller.ReceiveWarninig($"You cannot join this room. The room doesnt exists.");
                 return false;
             }
