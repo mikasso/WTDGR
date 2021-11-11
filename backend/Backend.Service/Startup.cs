@@ -28,15 +28,13 @@ namespace Backend.Service
             services.AddSingleton<IRoomManagerFactory, RoomManagerFactory>();
             services.AddSingleton<IRoomsContainer, RoomsContainer>();
 
-            services.AddControllers();
             services.AddCors(options =>
             {
-                options.AddPolicy(vue.CorsPolicyName, builder =>
+                options.AddDefaultPolicy( builder =>
                 {
-                    builder.WithOrigins(vue.Url)
+                    builder.AllowAnyOrigin()
                     .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
+                    .AllowAnyMethod();
                 });
             });
             services.AddSignalR().AddNewtonsoftJsonProtocol((x) =>
@@ -47,8 +45,8 @@ namespace Backend.Service
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseCors();
             app.UseRouting();
-            app.UseCors(vue.CorsPolicyName);
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
