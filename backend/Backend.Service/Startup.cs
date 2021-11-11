@@ -28,7 +28,6 @@ namespace Backend.Service
             services.AddSingleton<IRoomManagerFactory, RoomManagerFactory>();
             services.AddSingleton<IRoomsContainer, RoomsContainer>();
 
-            services.AddControllers();
             services.AddCors(options =>
             {
                 options.AddPolicy(vue.CorsPolicyName, builder =>

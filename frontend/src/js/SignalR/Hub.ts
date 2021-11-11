@@ -102,6 +102,7 @@ export default class BoardHub {
       }
     } catch (e) {
       alert("Error during connecting the server, it might be unavaiable.");
+      console.error(e);
       return false;
     }
     return true;

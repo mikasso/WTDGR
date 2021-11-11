@@ -1,4 +1,9 @@
 module.exports = {
+  plugins: [
+    new webpack.DefinePlugin({
+      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+    }),
+  ],
   chainWebpack: (config) => {
     config.resolve.alias.set("vue", "@vue/compat");
     config.module

@@ -3,6 +3,6 @@
     "hubEndPoint": "http://localhost:5000/graphHub"
   },
   "Production": {
-    "hubEndPoint": "http://153.19.216.51:5000/graphHub"
+    "hubEndPoint": "http://54.37.138.218:5000/graphHub"
   }
 }
