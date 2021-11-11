@@ -46,8 +46,8 @@ namespace Backend.Service
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseCors(vue.CorsPolicyName);
             app.UseRouting();
+            app.UseCors(vue.CorsPolicyName);
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
