@@ -15,14 +15,12 @@ namespace Backend.Models
         public Receviers Receviers { get; set;}
 
         public static ActionResult GetNegativeActionResult(UserAction action) => 
-            new ActionResult() { IsSucceded = false, Receviers = Receviers.caller, UserAction = action }; 
+            new ActionResult() { IsSucceded = false, Receviers = Receviers.Caller, UserAction = action }; 
     }
 
     public enum Receviers
     {
-        all,
-        caller,
-        admins,
-        owner,
+        All,
+        Caller,
     }
 }

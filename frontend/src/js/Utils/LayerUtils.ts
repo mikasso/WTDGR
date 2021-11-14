@@ -3,9 +3,6 @@ import { ClassNames } from "../KonvaManager/ClassNames";
 
 export function sortItems(layer: Layer) {
   layer
-    .getChildren((node) => node.getClassName() === ClassNames.Vertex)
-    .each((vertex) => vertex.moveToBottom());
-  layer
     .getChildren((node) => node.getClassName() === ClassNames.Edge)
     .each((line) => line.moveToBottom());
 }

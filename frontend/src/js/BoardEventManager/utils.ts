@@ -1,6 +1,8 @@
 import { KonvaEventObject } from "konva/types/Node";
 import * as Configuration from "../../config.json";
 
+export const MaxLayersCount = 4;
+
 export function isLeftClick(event: KonvaEventObject<any>) {
   return event.evt.which === 1;
 }

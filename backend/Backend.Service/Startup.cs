@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Backend.Core;
 using Backend.Models;
+using Backend.Service.Configuration;
 
 namespace Backend.Service
 {

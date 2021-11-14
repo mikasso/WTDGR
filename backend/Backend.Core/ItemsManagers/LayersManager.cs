@@ -13,7 +13,7 @@ namespace Backend.Core
         public int Count => _layers.Count;
         private int _layerNameCount ;
         private IRoomItemsManager _vertexManager;
-
+        private const int _maxCount = 4;
         public void Initialize(IRoomItemsManager verticesManager)
         {
             _vertexManager = verticesManager;
@@ -22,6 +22,8 @@ namespace Backend.Core
         }
         public bool Add(IRoomItem item,string userId)
         {
+            if (Count >= _maxCount)
+                return false;
             var layer = (Layer)item;
             layer.Id = $"Layer {_layerNameCount}";
             _layerNameCount++;
