@@ -1,5 +1,5 @@
 ﻿using Backend.Core;
-using Backend.Core.Configuration;
+using Backend.Service.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;

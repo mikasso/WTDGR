@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System;
 using Serilog;
 using Backend.Core;
-using System.Linq;
 
 namespace Backend.Service
 {
@@ -75,23 +74,12 @@ namespace Backend.Service
                 await MyGroup.ReceiveUsersList(Room.Users.GetAll());
             }
         }
-        public async Task LeaveRoom()
-        {
-            Room.Users.Delete(MyUser.Id);
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, MyUser.RoomId);
-            await MyGroup.ReceiveText($"{Context.ConnectionId} has left the group {MyUser.RoomId}.");
-        }
-
-        public async Task SendText(string message)
-        {
-            await MyGroup.ReceiveText(message);
-        }
         public async Task SendAction(UserAction userAction)
         {
             userAction.UserId = MyUser.Id;
             if (MyGroup == null)
             {
-                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason = "You are not in any room!" });
+                await Clients.Caller.ReceiveWarninig( "You are not in any room!" );
                 return;
             }
 
@@ -154,7 +142,7 @@ namespace Backend.Service
         {
             if (MyGroup == null)
             {
-                await Clients.Caller.ReceiveActionResponse(new UserActionFailure() { Reason = "You are not in any room!" });
+                await Clients.Caller.ReceiveWarninig( "You are not in any room!" );
                 return;
             }
             await Clients.Caller.ReceiveGraph(Room.GetRoomImage());
@@ -162,7 +150,7 @@ namespace Backend.Service
 
         private async Task HandleReceiveActionResult(ActionResult actionResult, string userId)
         {
-            var receiver = actionResult.Receviers == Receviers.all ? MyGroup : Clients.Caller;
+            var receiver = actionResult.Receviers == Receviers.All ? MyGroup : Clients.Caller;
             await receiver.ReceiveAction(actionResult.UserAction, actionResult.IsSucceded);
             if (!actionResult.IsSucceded)
             {

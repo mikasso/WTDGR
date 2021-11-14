@@ -1,4 +1,4 @@
-﻿namespace Backend.Core
+﻿namespace Backend.Service.Configuration
 {
     public class VueSettings
     {
