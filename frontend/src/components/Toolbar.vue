@@ -64,7 +64,11 @@
                 </div>
               </template>
             </draggable>
-            <el-button class="layerButton" @click="addLayer()">
+            <el-button
+              class="layerButton"
+              @click="addLayer()"
+              v-bind:disabled="layers.length >= MaxLayersCount"
+            >
               <strong>Add layer</strong>
             </el-button>
           </el-dropdown-menu>
@@ -142,7 +146,7 @@ import draggable from "vuedraggable";
 import "element-plus/dist/index.css";
 import { HubConnectionState } from "@microsoft/signalr";
 import BoardManager from "../js/KonvaManager/BoardManager";
-
+import { MaxLayersCount } from "../js/BoardEventManager/utils";
 interface layerData {
   id: string;
   zIndex: number;
@@ -240,6 +244,7 @@ export default defineComponent({
     this.currentTool = "Select";
   },
   data: () => ({
+    MaxLayersCount: MaxLayersCount,
     toolbar: {
       tools: [
         { name: "Select", file: "Select.png" },

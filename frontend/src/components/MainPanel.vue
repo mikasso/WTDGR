@@ -41,6 +41,7 @@ import FileWindow from "./FileWindow.vue";
 import WelcomeWindow from "./WelcomeWindow.vue";
 import UsersList from "./UsersList.vue";
 import { UserRole } from "@/js/SignalR/User";
+import { MaxLayersCount } from "../js/BoardEventManager/utils";
 
 interface BoardData {
   eventManager?: BaseBoardEventManager;
