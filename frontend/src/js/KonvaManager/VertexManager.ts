@@ -25,10 +25,6 @@ export class Vertex extends Konva.Circle {
     this.followMousePointer = false;
   }
 
-  redraw() {
-    this.layer.draw();
-  }
-
   asDTO() {
     return {
       ...this.attrs,
@@ -92,9 +88,8 @@ export default class VertexManager {
     return newVertex;
   }
 
-  draw(vertex: Vertex) {
+  addVertexToLayer(vertex: Vertex) {
     vertex.layer.add(vertex);
-    vertex.layer.draw();
   }
 
   setHiglight(vertex: Vertex, isHighlithed: boolean) {
@@ -106,13 +101,10 @@ export default class VertexManager {
       vertex.setAttrs({
         ...this.highlightConfigOff,
       });
-
-    vertex.redraw();
   }
 
   remove(vertex: Vertex) {
     const vertexLayer = vertex.layer;
     vertex.destroy();
-    vertexLayer.draw();
   }
 }

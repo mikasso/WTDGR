@@ -14,7 +14,7 @@ import { store } from "@/store";
 import { getUserColor } from "@/js/SignalR/User";
 export default class OnlineMultiselectToolHandler implements IHandler {
   dragInterval: number | null = null;
-  drawInterval: number | null = null;
+  drawUpdateInterval: number | null = null;
   vertexesDTO: any[] = [];
   private readonly MaxAttempts = 3;
   private readonly PollingTime = 100;
@@ -38,7 +38,7 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   public setInactive(): void {
     this.offlineHighlighter.setInactive();
     if (this.dragInterval != null) clearInterval(this.dragInterval);
-    if (this.drawInterval != null) clearInterval(this.drawInterval);
+    if (this.drawUpdateInterval != null) clearInterval(this.drawUpdateInterval);
     this.releaseVertexes();
     this.dragInterval = null;
     this.boardManager.setHighlightOfSelected(false);
@@ -53,7 +53,7 @@ export default class OnlineMultiselectToolHandler implements IHandler {
     this.releaseVertexes();
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.startMultiselect(mousePos);
-    this.drawInterval = window.setInterval(
+    this.drawUpdateInterval = window.setInterval(
       () => this.updateDraw(),
       this.DrawTime
     );

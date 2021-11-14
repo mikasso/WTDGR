@@ -61,7 +61,6 @@ export default class OnlinePencilToolHandler implements IHandler {
     if (currentDrawing != null) {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.pencilManager.appendPoint(mousePos);
-      currentDrawing.layer.draw();
       this.editCounter += 1;
       if (this.editCounter % this.pencilLineEditSend == 0) {
         await this.sendLineEdit(currentDrawing);
