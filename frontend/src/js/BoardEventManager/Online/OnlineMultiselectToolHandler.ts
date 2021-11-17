@@ -60,6 +60,7 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   }
 
   private async updateDraw() {
+    console.log("updateD");
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.multiselectManager.appendPoint(mousePos);
   }
@@ -84,6 +85,7 @@ export default class OnlineMultiselectToolHandler implements IHandler {
       }
       this.dragInterval = null;
     } else {
+      if (this.drawInterval != null) clearInterval(this.drawInterval);
       this.boardManager.finishMultiselect();
       const selectedVertexes =
         this.boardManager.multiselectManager.selectedVertexes;
@@ -104,6 +106,7 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   }
 
   private sendVertexesEdit() {
+    console.log("sendVE");
     const mousePos = this.boardManager.getMousePosition();
     this.vertexesDTO =
       this.boardManager.multiselectManager.updatedSelectedPosAsDto(

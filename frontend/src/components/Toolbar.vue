@@ -76,8 +76,8 @@
         <template #dropdown>
           <el-dropdown-menu class="drop-menu styles-menu">
             <el-row>
-              <el-col class="center" :span="4"> Size: </el-col>
-              <el-col :span="20" class="center">
+              <el-col class="center" :span="8"> Size: </el-col>
+              <el-col :span="16" class="center">
                 <el-button
                   v-for="(style, index) in styles.vertex.size"
                   @click="styleSelected(style, 'vertex', styles.vertex.size)"
@@ -90,9 +90,8 @@
               </el-col>
             </el-row>
             <el-row style="margin-top: 10px">
-              <el-col class="center" :span="4"> Color: </el-col>
-              <el-col :span="3" />
-              <el-col :span="14">
+              <el-col class="center" :span="8"> Vertex color: </el-col>
+              <el-col :span="16">
                 <el-row style="justify-content: center">
                   <el-col
                     :span="4"
@@ -110,7 +109,27 @@
                   </el-col>
                 </el-row>
               </el-col>
-              <el-col :span="3" />
+            </el-row>
+            <el-row style="margin-top: 10px">
+              <el-col class="center" :span="8"> Pencil color: </el-col>
+              <el-col :span="16">
+                <el-row style="justify-content: center">
+                  <el-col
+                    :span="4"
+                    v-for="(style, index) in styles.pencil.fill"
+                    :key="index"
+                  >
+                    <div
+                      @click="
+                        styleSelected(style, 'pencil', styles.pencil.fill)
+                      "
+                      class="color-button"
+                      :style="'background-color:' + style.settings.fill"
+                      :class="{ colorSelected: style.selected }"
+                    ></div>
+                  </el-col>
+                </el-row>
+              </el-col>
             </el-row>
           </el-dropdown-menu>
         </template>
@@ -277,15 +296,28 @@ export default defineComponent({
         ],
         fill: [
           { settings: { fill: "#000" } },
-          {
-            settings: { fill: "#A8A8A8" },
-            selected: true,
-          },
+          { settings: { fill: "#A8A8A8" }, selected: true },
           { settings: { fill: "#880015" } },
           { settings: { fill: "#ed1c24" } },
           { settings: { fill: "#ff7f27" } },
           { settings: { fill: "#FFF000" } },
-          { settings: { fill: "#FFF" } },
+          { settings: { fill: "#FFFFFF" } },
+          { settings: { fill: "#22b14c" } },
+          { settings: { fill: "#00a2e8" } },
+          { settings: { fill: "#3f48c8" } },
+          { settings: { fill: "#b97a57" } },
+          { settings: { fill: "#b5e617" } },
+        ],
+      },
+      pencil: {
+        fill: [
+          { settings: { fill: "#000" } },
+          { settings: { fill: "#A8A8A8" } },
+          { settings: { fill: "#880015" } },
+          { settings: { fill: "#ed1c24" }, selected: true },
+          { settings: { fill: "#ff7f27" } },
+          { settings: { fill: "#FFF000" } },
+          { settings: { fill: "#FFFFFF" } },
           { settings: { fill: "#22b14c" } },
           { settings: { fill: "#00a2e8" } },
           { settings: { fill: "#3f48c8" } },
@@ -335,6 +367,15 @@ export default defineComponent({
           }
           if (setting == "fill") {
             this.boardManager.vertexManager.defaultConfig.fill =
+              style.settings[setting];
+          }
+        }
+      }
+      if (category == "pencil") {
+        for (const otherStyle of subcategory) otherStyle.selected = false;
+        for (const setting in style.settings) {
+          if (setting == "fill") {
+            this.boardManager.pencilManager.defualtConfig.stroke =
               style.settings[setting];
           }
         }
@@ -473,7 +514,7 @@ export default defineComponent({
   border: 2px black solid;
 }
 .colorSelected {
-  border: 3px black solid;
+  border: 3px #111 solid;
   margin: 1px;
 }
 </style>
