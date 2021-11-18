@@ -9,7 +9,6 @@ import { Edge, EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 import UserAction from "./Action";
 import { LineConfig } from "konva/types/shapes/Line";
-import { User } from "./User";
 
 export enum ActionTypes {
   Add = "Add",
@@ -220,8 +219,10 @@ export default class ApiManager {
             edge.setAttrs({ stroke: ItemColors.defaultStroke });
           }
           break;
+        case ClassNames.PencilLine:
+          break;
         default:
-          throw Error(`Not implemented receive edit for ${item.type}`);
+          throw Error(`Not implemented receive RealeseItem for ${item.type}`);
       }
   }
 }

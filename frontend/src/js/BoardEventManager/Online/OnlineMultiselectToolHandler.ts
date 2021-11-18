@@ -1,5 +1,4 @@
 import BoardManager from "@/js/KonvaManager/BoardManager";
-import { Edge } from "@/js/KonvaManager/EdgeManager";
 import { Vertex } from "@/js/KonvaManager/VertexManager";
 import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
@@ -10,7 +9,6 @@ import BoardHub from "@/js/SignalR/Hub";
 import { ActionTypes } from "@/js/SignalR/ApiHandler";
 import { SentRequestInterval } from "../OnlineBoardEventManager";
 import { ItemColors } from "../utils";
-import { store } from "@/store";
 import { getUserColor } from "@/js/SignalR/User";
 export default class OnlineMultiselectToolHandler implements IHandler {
   dragInterval: number | null = null;
@@ -18,13 +16,9 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   vertexesDTO: any[] = [];
   private readonly MaxAttempts = 3;
   private readonly PollingTime = 100;
-  private readonly DrawTime = 25;
+  private readonly DrawTime = 30;
   private boardManager: BoardManager;
-  constructor(
-    private actionFactory: ActionFactory,
-    private hub: BoardHub,
-    private offlineHighlighter: IHandler
-  ) {
+  constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
     this.boardManager = BoardManager.getBoardManager();
   }
 
@@ -36,7 +30,6 @@ export default class OnlineMultiselectToolHandler implements IHandler {
     this.vertexesDTO = [];
   }
   public setInactive(): void {
-    this.offlineHighlighter.setInactive();
     if (this.dragInterval != null) clearInterval(this.dragInterval);
     if (this.drawUpdateInterval != null) clearInterval(this.drawUpdateInterval);
     this.releaseVertexes();
@@ -84,6 +77,9 @@ export default class OnlineMultiselectToolHandler implements IHandler {
       }
       this.dragInterval = null;
     } else {
+      if (this.drawUpdateInterval != null)
+        clearInterval(this.drawUpdateInterval);
+      this.drawUpdateInterval = null;
       this.boardManager.finishMultiselect();
       const selectedVertexes =
         this.boardManager.multiselectManager.selectedVertexes;
@@ -136,7 +132,7 @@ export default class OnlineMultiselectToolHandler implements IHandler {
           }
           this.dragInterval = window.setInterval(
             () => this.sendVertexesEdit(),
-            SentRequestInterval
+            SentRequestInterval * 1.1
           );
           return true;
         }

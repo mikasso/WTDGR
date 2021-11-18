@@ -12,7 +12,7 @@ import { SentRequestInterval } from "../OnlineBoardEventManager";
 export default class OnlinePencilToolHandler implements IHandler {
   private boardManager: BoardManager;
   intervalId: number | null = null;
-  private pencilLineEditSend = 20;
+  private maxPointsBatchSize = 8;
   private editCounter = 0;
   constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
     this.boardManager = BoardManager.getBoardManager();
@@ -62,7 +62,7 @@ export default class OnlinePencilToolHandler implements IHandler {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.pencilManager.appendPoint(mousePos);
       this.editCounter += 1;
-      if (this.editCounter % this.pencilLineEditSend == 0) {
+      if (this.editCounter % this.maxPointsBatchSize == 0) {
         await this.sendLineEdit(currentDrawing);
       }
     }

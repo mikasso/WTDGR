@@ -30,7 +30,7 @@ export default class PencilManager {
 
   defualtConfig = {
     points: [],
-    stroke: "red",
+    stroke: "#ed1c24",
     strokeWidth: 3,
     lineCap: "round",
     lineJoin: "round",

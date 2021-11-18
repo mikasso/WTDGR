@@ -88,14 +88,14 @@ namespace Backend.Service
             {
                 actionResult = await Room.ExecuteActionAsync(userAction);
             }
-            catch (ItemLockedException e)
+            catch (Exception e) when (e is ItemDoesNotExistException or ItemLockedException)
             {
                 Log.Debug(e.Message);
             }
             catch (Exception e)
             {
                 Log.Error("Cannot dispatch user action message! \n" + e.Message + "\n" + e.StackTrace);
-                await Clients.Caller.ReceiveWarninig("Unexpected error occured, please rejoin room!");
+                await Clients.Caller.ReceiveWarninig("Unexpected error occurred, please rejoin room!");
             }
 
             await HandleReceiveActionResult(actionResult, userAction.UserId);

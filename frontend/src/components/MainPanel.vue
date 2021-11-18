@@ -185,7 +185,7 @@ export default defineComponent({
         window.clearInterval(this.stageRefreshIntervalId);
 
       this.stageRefreshIntervalId = window.setInterval(() => {
-        initStage.getLayers().each((x) => x.draw()), 30;
+        initStage.getLayers().each((x) => x.draw()), 35;
       });
     },
     getHeigth() {
