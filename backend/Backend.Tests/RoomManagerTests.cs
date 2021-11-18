@@ -30,7 +30,7 @@ namespace Backend.Tests
             var roomImage =  _roomManager.GetRoomImage();
 
             result.IsSucceded.Should().BeTrue();
-            result.Receviers.Should().Be(Receviers.all);
+            result.Receviers.Should().Be(Receviers.All);
             result.UserAction.Should().BeEquivalentTo(userAction);
             roomImage.Where(x => x.Type == KonvaType.Vertex).Should().ContainSingle();
         }
@@ -58,7 +58,7 @@ namespace Backend.Tests
             var roomImage = _roomManager.GetRoomImage();
 
             deleteResult.IsSucceded.Should().BeTrue();
-            deleteResult.Receviers.Should().Be(Receviers.all);
+            deleteResult.Receviers.Should().Be(Receviers.All);
             deleteResult.UserAction.Should().BeEquivalentTo(deleteAction);
             roomImage.Where(x=>x.Type!=KonvaType.Layer).Should().BeEmpty();
         }

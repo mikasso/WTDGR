@@ -1,5 +1,4 @@
-﻿using Backend.Core;
-using Backend.Models;
+﻿using Backend.Models;
 using Backend.Models.RoomItems;
 using Serilog;
 using System;
@@ -101,7 +100,7 @@ namespace Backend.Core
                 _semaphore.Release();
             }
 
-            actionResult.Receviers = actionResult.IsSucceded ? Receviers.all : Receviers.caller;
+            actionResult.Receviers = actionResult.IsSucceded ? Receviers.All : Receviers.Caller;
             return actionResult;
         }
 

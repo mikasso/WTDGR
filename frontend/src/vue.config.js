@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+"use strict";
+var webpack = require("webpack");
 module.exports = {
   plugins: [
     new webpack.DefinePlugin({

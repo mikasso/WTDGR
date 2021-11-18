@@ -37,11 +37,6 @@ export class Edge extends Konva.Line {
     this.points([this.v1.x(), this.v1.y(), this.v2.x(), this.v2.y()]);
   }
 
-  redraw() {
-    this.moveToBottom();
-    this.layer.draw();
-  }
-
   asDTO(): EdgeDTO {
     return {
       ...this.attrs,
@@ -71,11 +66,6 @@ export class TemporaryLine extends Konva.Line {
 
   updatePosition(mousePos: Cordinates) {
     this.points([this.v1.x(), this.v1.y(), mousePos.x, mousePos.y]);
-  }
-
-  redraw() {
-    this.moveToBottom();
-    this.layer.draw();
   }
 
   asDTO(): LineDTO {
@@ -126,7 +116,6 @@ export default class EdgeManager {
       point.x,
       point.y,
     ]);
-    this.currentLine.layer.draw();
     return true;
   }
 
@@ -162,9 +151,7 @@ export default class EdgeManager {
   }
 
   removeLine(line: TemporaryLine) {
-    const layerToRedraw = line.getLayer();
     line.destroy();
-    layerToRedraw?.draw();
   }
 
   public startDraggingEdge(edge: Edge, pos: Cordinates) {
@@ -181,9 +168,10 @@ export default class EdgeManager {
     this.draggedEdge = null;
   }
 
-  public calculcateNewVerticesPosition(
-    pos: Cordinates
-  ): { v1Pos: Cordinates; v2Pos: Cordinates } {
+  public calculcateNewVerticesPosition(pos: Cordinates): {
+    v1Pos: Cordinates;
+    v2Pos: Cordinates;
+  } {
     if (!this.draggedEdge) throw Error("edge shouldnt be null");
     return {
       v1Pos: {
@@ -204,7 +192,7 @@ export default class EdgeManager {
     this.draggedEdge.v2.position(v2Pos);
     this.dragEdges(this.draggedEdge.v1);
     this.dragEdges(this.draggedEdge.v2);
-    this.draggedEdge.redraw();
+    this.draggedEdge.moveToBottom();
   }
 
   public dragEdges(vertex: Vertex) {
@@ -223,12 +211,11 @@ export default class EdgeManager {
       edge.setAttrs({
         ...this.highlightConfigOff,
       });
-    edge.redraw();
+    edge.moveToBottom();
   }
 
   public removeEdges(edges: Edge[]) {
     if (!edges.length) return;
-    const edgesLayer = edges[0].layer;
     for (const edge of edges) {
       [edge.v1, edge.v2].forEach((vertex) => {
         if (vertex !== undefined)
@@ -236,16 +223,15 @@ export default class EdgeManager {
       });
       edge.remove();
     }
-    edgesLayer.draw();
   }
 
-  public draw(edge: Edge) {
+  public addEdgeToLayer(edge: Edge) {
     edge.layer.add(edge);
-    edge.redraw();
+    edge.moveToBottom();
   }
 
-  public drawLine(line: TemporaryLine) {
+  public addLineToLayer(line: TemporaryLine) {
     line.layer.add(line);
-    line.redraw();
+    line.moveToBottom();
   }
 }

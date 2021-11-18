@@ -7,9 +7,9 @@ import { IHandler } from "../IHandler";
 import { isLeftClick } from "../utils";
 
 export default class OfflineMultiselectToolHandler implements IHandler {
-  private drawInterval: number | undefined;
+  private drawUpdateInterval: number | undefined;
   private dragInterval: number | undefined;
-  private readonly drawTime = 25;
+  private readonly updateTime = 25;
   private readonly dragTime = 25;
   private boardManager: BoardManager;
   constructor() {
@@ -27,7 +27,7 @@ export default class OfflineMultiselectToolHandler implements IHandler {
     this.boardManager.multiselectManager.stopDrag();
     this.boardManager.multiselectManager.isDrawing = false;
     this.boardManager.multiselectManager.removeSelect();
-    if (this.drawInterval) clearInterval(this.drawInterval);
+    if (this.drawUpdateInterval) clearInterval(this.drawUpdateInterval);
     if (this.dragInterval) clearInterval(this.dragInterval);
   }
 
@@ -36,9 +36,9 @@ export default class OfflineMultiselectToolHandler implements IHandler {
     if (!isLeftClick(event)) return;
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.startMultiselect(mousePos);
-    this.drawInterval = window.setInterval(
+    this.drawUpdateInterval = window.setInterval(
       () => this.updateDraw(),
-      this.drawTime
+      this.updateTime
     );
   }
 
@@ -49,7 +49,7 @@ export default class OfflineMultiselectToolHandler implements IHandler {
       this.dragInterval = undefined;
     } else {
       this.boardManager.finishMultiselect();
-      clearInterval(this.drawInterval);
+      clearInterval(this.drawUpdateInterval);
       this.dragInterval = undefined;
     }
   }
@@ -71,6 +71,5 @@ export default class OfflineMultiselectToolHandler implements IHandler {
   private async updateDrag() {
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.multiselectManager.updateDrag(mousePos);
-    this.boardManager.multiselectManager.currentDrawing?.layer.draw();
   }
 }

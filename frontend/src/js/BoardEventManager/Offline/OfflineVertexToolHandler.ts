@@ -19,7 +19,7 @@ export default class OfflineVertexToolHandler implements IHandler {
     const mousePos = this.boardManager.getMousePosition();
     if (mousePos !== null) {
       const vertex = this.boardManager.createVertex(mousePos);
-      this.boardManager.draw(vertex);
+      this.boardManager.addItemToLayer(vertex);
     }
   }
 }

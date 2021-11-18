@@ -12,10 +12,6 @@ export class SelectLine extends Konva.Line {
     super(config);
     this.layer = layer;
   }
-
-  redraw(): void {
-    this.layer.draw();
-  }
 }
 
 export default class MultiselectManager {
@@ -54,13 +50,12 @@ export default class MultiselectManager {
     this.isDrawing = true;
     if (this.currentDrawing != null) this.removeSelect();
     this.currentDrawing = newLine;
-    this.draw(this.currentDrawing);
+    this.addSelectLineToLayer(this.currentDrawing);
     return newLine;
   }
 
-  draw(drawing: SelectLine) {
+  addSelectLineToLayer(drawing: SelectLine) {
     drawing.layer.add(drawing);
-    drawing.redraw();
   }
 
   appendPoint(position: Cordinates) {
@@ -69,17 +64,16 @@ export default class MultiselectManager {
     points.push(position.x);
     points.push(position.y);
     this.currentDrawing?.points(points);
-    this.currentDrawing?.redraw();
   }
 
   finishDrawing() {
     this.isDrawing = false;
     if (this.currentDrawing == null) return;
-    const layerToRedraw = this.currentDrawing?.layer;
+    const currentLayer = this.currentDrawing?.layer;
     this.selectedVertexes = [];
 
     const points = this.numberArrayToPoints(this.currentDrawing!.points());
-    for (const vertex of layerToRedraw!.getChildren(
+    for (const vertex of currentLayer!.getChildren(
       (node) => node.getClassName() === ClassNames.Vertex
     )) {
       if (classifyPoint(points, [vertex.x(), vertex.y()] as Point) == -1) {
@@ -87,7 +81,6 @@ export default class MultiselectManager {
       }
     }
     if (this.selectedVertexes.length == 0) this.removeSelect();
-    layerToRedraw!.draw();
   }
 
   startDrag(mousePos: Cordinates) {
@@ -146,10 +139,8 @@ export default class MultiselectManager {
 
   removeSelect() {
     if (!this.currentDrawing) return;
-    const removedDrawingLayer = this.currentDrawing!.layer;
     this.currentDrawing!.destroy();
     this.currentDrawing = undefined;
-    removedDrawingLayer.draw();
   }
 
   updatedSelectedPosAsDto(mousePos: Cordinates, color: string) {
