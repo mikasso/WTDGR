@@ -299,7 +299,7 @@ export default class BoardManager {
 
   editPencilLine(lineDTO: LineDTO) {
     const line = this.findById(lineDTO.id) as PencilLine;
-    line.setAttrs(lineDTO);
+    line.points([...line.points(), ...lineDTO.points]);
   }
 
   selectLayer(layerId: string) {
