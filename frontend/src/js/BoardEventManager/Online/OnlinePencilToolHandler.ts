@@ -5,10 +5,11 @@ import { ActionFactory } from "@/js/SignalR/Action";
 import { ActionTypes } from "@/js/SignalR/ApiHandler";
 import BoardHub from "@/js/SignalR/Hub";
 import { IHandler } from "../IHandler";
-import { isLeftClick } from "../utils";
+import { isLeftClick, poll } from "../utils";
 import { PencilLine } from "@/js/KonvaManager/PencilManager";
 import { SentRequestInterval } from "../OnlineBoardEventManager";
 
+const PointsBatchSize = 3;
 export default class OnlinePencilToolHandler implements IHandler {
   private boardManager: BoardManager;
   intervalId: number | null = null;
@@ -26,7 +27,7 @@ export default class OnlinePencilToolHandler implements IHandler {
         await this.sendLineEdit(currentDrawing);
         const releaseAction = this.actionFactory.create(
           ActionTypes.ReleaseItem,
-          currentDrawing.asDTO()
+          { ...currentDrawing.asDTO(), points: this.pointsBatch }
         );
         await this.hub.sendAction(releaseAction);
       }
@@ -41,19 +42,34 @@ export default class OnlinePencilToolHandler implements IHandler {
   private async mouseDown(event: KonvaEventObject<any>) {
     if (!isLeftClick(event)) return;
     if (this.intervalId !== null) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
+      this.setInactive();
+      return;
     }
     const mousePos = this.boardManager.getMousePosition();
     const drawing = this.boardManager.createPencil(mousePos);
+    const pencilManager = this.boardManager.pencilManager;
+    pencilManager.awaitingAdd = true;
     const action = this.actionFactory.create(ActionTypes.Add, drawing.asDTO());
     this.hub.sendAction(action);
-    this.boardManager.pencilManager.awaitingAdd = true;
     this.pointsBatch = [];
-    this.intervalId = window.setInterval(
-      async () => await this.drawLine(),
-      SentRequestInterval
-    );
+
+    await poll({
+      fn: () => {
+        if (pencilManager.awaitingAdd === false) {
+          this.intervalId = window.setInterval(
+            async () => await this.drawLine(),
+            SentRequestInterval
+          );
+          return true;
+        }
+        return false;
+      },
+      interval: 100,
+      maxAttempts: 3,
+      validate: (x) => x,
+    }).catch((e) => {
+      console.error(e);
+    });
   }
 
   private async drawLine() {
@@ -62,7 +78,7 @@ export default class OnlinePencilToolHandler implements IHandler {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.pencilManager.appendPoint(mousePos);
       this.pointsBatch.push(mousePos.x, mousePos.y);
-      if (this.pointsBatch.length == 4) {
+      if (this.pointsBatch.length === PointsBatchSize * 2) {
         await this.sendLineEdit(currentDrawing);
       }
     }
