@@ -12,8 +12,8 @@ import { SentRequestInterval } from "../OnlineBoardEventManager";
 export default class OnlinePencilToolHandler implements IHandler {
   private boardManager: BoardManager;
   intervalId: number | null = null;
-  private maxPointsBatchSize = 8;
-  private editCounter = 0;
+  private pointsBatch: number[] = [];
+
   constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
     this.boardManager = BoardManager.getBoardManager();
   }
@@ -30,7 +30,7 @@ export default class OnlinePencilToolHandler implements IHandler {
         );
         await this.hub.sendAction(releaseAction);
       }
-      this.editCounter = 0;
+      this.pointsBatch = [];
     }
   }
   setActive(eventManager: BaseBoardEventManager): void {
@@ -49,7 +49,7 @@ export default class OnlinePencilToolHandler implements IHandler {
     const action = this.actionFactory.create(ActionTypes.Add, drawing.asDTO());
     this.hub.sendAction(action);
     this.boardManager.pencilManager.awaitingAdd = true;
-    this.editCounter = 0;
+    this.pointsBatch = [];
     this.intervalId = window.setInterval(
       async () => await this.drawLine(),
       SentRequestInterval
@@ -61,16 +61,18 @@ export default class OnlinePencilToolHandler implements IHandler {
     if (currentDrawing != null) {
       const mousePos = this.boardManager.getMousePosition();
       this.boardManager.pencilManager.appendPoint(mousePos);
-      this.editCounter += 1;
-      if (this.editCounter % this.maxPointsBatchSize == 0) {
+      this.pointsBatch.push(mousePos.x, mousePos.y);
+      if (this.pointsBatch.length == 4) {
         await this.sendLineEdit(currentDrawing);
       }
     }
   }
 
   async sendLineEdit(line: PencilLine) {
-    const action = this.actionFactory.create(ActionTypes.Edit, line.asDTO());
+    const lineDTO = { ...line.asDTO(), points: this.pointsBatch };
+    const action = this.actionFactory.create(ActionTypes.Edit, lineDTO);
     await this.hub.sendAction(action);
+    this.pointsBatch = [];
   }
 
   private async mouseUp() {
