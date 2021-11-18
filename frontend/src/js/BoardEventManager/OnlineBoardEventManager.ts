@@ -15,7 +15,7 @@ import OnlinePencilToolHandler from "./Online/OnlinePencilToolHandler";
 import OnlineMultiselectToolHandler from "./Online/OnlineMultiselectToolHandler";
 import { UserRole } from "../SignalR/User";
 
-export const SentRequestInterval = 25;
+export const SentRequestInterval = 33;
 
 export default class OnlineBoardEventManager extends BaseBoardEventManager {
   actionFactory: ActionFactory;
@@ -51,7 +51,6 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.actionFactory,
       this.hub
     );
-
     this.eraseHandler = new OnlineEraseToolHandler(
       this.actionFactory,
       this.hub,
@@ -59,8 +58,7 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
     );
     this.multiselectHandler = new OnlineMultiselectToolHandler(
       this.actionFactory,
-      this.hub,
-      this.highlightHandler
+      this.hub
     );
     this.handlers = [
       this.edgeHandler,
@@ -69,6 +67,8 @@ export default class OnlineBoardEventManager extends BaseBoardEventManager {
       this.eraseHandler,
       this.eraseHandler,
       this.pencilHandler,
+      this.multiselectHandler,
+      this.highlightHandler,
     ];
   }
 

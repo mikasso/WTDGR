@@ -100,7 +100,7 @@ namespace Backend.Service
             {
                 actionResult = await Room.ExecuteActionAsync(userAction);
             }
-            catch (ItemLockedException e)
+            catch (Exception e) when (e is ItemDoesNotExistException or ItemLockedException)
             {
                 Log.Debug(e.Message);
             }

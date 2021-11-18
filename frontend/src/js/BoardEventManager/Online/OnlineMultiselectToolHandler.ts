@@ -20,11 +20,7 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   private readonly PollingTime = 100;
   private readonly DrawTime = 25;
   private boardManager: BoardManager;
-  constructor(
-    private actionFactory: ActionFactory,
-    private hub: BoardHub,
-    private offlineHighlighter: IHandler
-  ) {
+  constructor(private actionFactory: ActionFactory, private hub: BoardHub) {
     this.boardManager = BoardManager.getBoardManager();
   }
 
@@ -36,7 +32,6 @@ export default class OnlineMultiselectToolHandler implements IHandler {
     this.vertexesDTO = [];
   }
   public setInactive(): void {
-    this.offlineHighlighter.setInactive();
     if (this.dragInterval != null) clearInterval(this.dragInterval);
     if (this.drawInterval != null) clearInterval(this.drawInterval);
     this.releaseVertexes();
@@ -60,7 +55,6 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   }
 
   private async updateDraw() {
-    console.log("updateD");
     const mousePos = this.boardManager.getMousePosition();
     this.boardManager.multiselectManager.appendPoint(mousePos);
   }
@@ -106,7 +100,6 @@ export default class OnlineMultiselectToolHandler implements IHandler {
   }
 
   private sendVertexesEdit() {
-    console.log("sendVE");
     const mousePos = this.boardManager.getMousePosition();
     this.vertexesDTO =
       this.boardManager.multiselectManager.updatedSelectedPosAsDto(

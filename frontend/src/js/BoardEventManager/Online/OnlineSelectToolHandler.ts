@@ -36,7 +36,6 @@ export default class OnlineSelectToolHandler implements IHandler {
   }
 
   public setInactive(): void {
-    this.offlineHighlighter.setInactive();
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
     }
@@ -171,7 +170,7 @@ export default class OnlineSelectToolHandler implements IHandler {
           );
           this.intervalId = window.setInterval(
             async (x: Edge) => await this.sendVertexEditsFromEdge(x),
-            SentRequestInterval * 1.3,
+            SentRequestInterval,
             this.currentEdge
           );
           return true;
