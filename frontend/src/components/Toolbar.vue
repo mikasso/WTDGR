@@ -76,7 +76,7 @@
       </el-dropdown>
 
       <el-dropdown split-button :hide-on-click="false">
-        Vertex styles
+        Styles
         <template #dropdown>
           <el-dropdown-menu class="drop-menu styles-menu">
             <el-row>
