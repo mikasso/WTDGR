@@ -41,7 +41,7 @@ namespace Backend.Service
             var loggerConfiguration = new LoggerConfiguration()
             .WriteTo.Console();
 
-            if (true)
+            if (IsProduction())
                 loggerConfiguration.MinimumLevel.Information();
             else
                 loggerConfiguration.MinimumLevel.Debug();

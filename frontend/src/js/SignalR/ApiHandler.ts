@@ -33,7 +33,6 @@ export default class ApiManager {
 
   public loadItems(items: NodeConfig[]) {
     for (const item of items) {
-      console.log(item);
       this.receiveAdd("room", item);
     }
   }
