@@ -15,7 +15,7 @@ import OnlinePencilToolHandler from "./Online/OnlinePencilToolHandler";
 import OnlineMultiselectToolHandler from "./Online/OnlineMultiselectToolHandler";
 import { UserRole } from "../SignalR/User";
 
-export const SentRequestInterval = 33;
+export const SentRequestInterval = 30;
 
 export default class OnlineBoardEventManager extends BaseBoardEventManager {
   actionFactory: ActionFactory;
