@@ -55,7 +55,7 @@ abstract class Formater {
       const action = actionFactory.create(ActionTypes.Add, vertex.asDTO());
       this.hub.sendAction(action);
     } else {
-      this.boardManager.draw(vertex);
+      this.boardManager.addItemToLayer(vertex);
     }
   }
 

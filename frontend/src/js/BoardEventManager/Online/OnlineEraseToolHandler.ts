@@ -10,17 +10,12 @@ import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
 
 export default class OnlineEraseToolHandler implements IHandler {
-  private boardManager: BoardManager;
   constructor(
     private actionFactory: ActionFactory,
     private hub: BoardHub,
     private highlightHandler: IHandler
-  ) {
-    this.boardManager = BoardManager.getBoardManager();
-  }
-  setInactive(): void {
-    this.highlightHandler.setInactive();
-  }
+  ) {}
+  setInactive(): void {}
   setActive(eventManager: BaseBoardEventManager): void {
     this.highlightHandler.setActive(eventManager);
     eventManager.vertexMouseDown = async (event) =>

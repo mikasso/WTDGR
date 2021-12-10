@@ -43,10 +43,12 @@ import WelcomeWindow from "./WelcomeWindow.vue";
 import HelpWindow from "./HelpWindow.vue";
 import UsersList from "./UsersList.vue";
 import { UserRole } from "@/js/SignalR/User";
+import { MaxLayersCount } from "../js/BoardEventManager/utils";
 
 interface BoardData {
   eventManager?: BaseBoardEventManager;
   hub?: BoardHub;
+  stageRefreshIntervalId?: number;
 }
 
 interface toolbarAction {
@@ -181,6 +183,13 @@ export default defineComponent({
         this.store.commit("setLayers", []);
         this.store.commit("setCurrentLayer", null);
       }
+
+      if (this.stageRefreshIntervalId !== undefined)
+        window.clearInterval(this.stageRefreshIntervalId);
+
+      this.stageRefreshIntervalId = window.setInterval(() => {
+        initStage.getLayers().each((x) => x.draw()), 35;
+      });
     },
     getHeigth() {
       if (document.getElementById("root") == null) return 0;

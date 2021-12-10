@@ -1,5 +1,4 @@
-﻿using Backend.Core;
-using Backend.Models;
+﻿using Backend.Models;
 using Backend.Models.RoomItems;
 using Serilog;
 using System;
@@ -101,7 +100,7 @@ namespace Backend.Core
                 _semaphore.Release();
             }
 
-            actionResult.Receviers = actionResult.IsSucceded ? Receviers.all : Receviers.caller;
+            actionResult.Receviers = actionResult.IsSucceded ? Receviers.All : Receviers.Caller;
             return actionResult;
         }
 
@@ -119,7 +118,7 @@ namespace Backend.Core
                 {
                     var realItemState = itemManager.Get(item.Id);
                     if (realItemState == null)
-                        throw new ItemDoesNotExistException("Can not do operation diffrent than add when item has no id!");
+                        throw new ItemDoesNotExistException("Can not do operation different than add when item has no id!");
                     if (realItemState.EditorId == null)
                         return;
                     if (realItemState.EditorId != userId)

@@ -10,10 +10,6 @@ export class PencilLine extends Konva.Line {
     this.className = ClassNames.PencilLine;
   }
 
-  redraw(): void {
-    this.layer.draw();
-  }
-
   asDTO() {
     const dto = {
       ...this.attrs,
@@ -34,7 +30,7 @@ export default class PencilManager {
 
   defualtConfig = {
     points: [],
-    stroke: "red",
+    stroke: "#ed1c24",
     strokeWidth: 3,
     lineCap: "round",
     lineJoin: "round",
@@ -57,7 +53,7 @@ export default class PencilManager {
     return newLine;
   }
 
-  draw(drawing: PencilLine) {
+  addPencilLineToLayer(drawing: PencilLine) {
     drawing.layer.add(drawing);
   }
 
@@ -75,8 +71,6 @@ export default class PencilManager {
   }
 
   removeDrawing(drawing: any) {
-    const removedDrawingLayer = drawing.layer;
     drawing.destroy();
-    removedDrawingLayer.draw();
   }
 }

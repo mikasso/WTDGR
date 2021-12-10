@@ -1,6 +1,6 @@
 ﻿namespace Backend.Models
 {
-    public class Room
+    public class Room : IIdentifiable
     {
         public string Id { get; set; }
 

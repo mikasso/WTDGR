@@ -16,6 +16,6 @@ namespace Backend.Models.RoomItems
         public string LineJoin { get; set; }
         public string Stroke { get; set; }
         public int StrokeWidth { get; set; }
-        public int[] Points { get; set; }
+        public IList<int> Points { get; set; }
     }
 }

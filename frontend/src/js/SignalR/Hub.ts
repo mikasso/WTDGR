@@ -41,8 +41,9 @@ export default class BoardHub {
       store.commit("setOnline");
     });
     this.connection.on("ReceiveJoinResponse", (hasJoined) => {
-      if (hasJoined === true) this.requestGraph();
-      else alert("Cannot join this room, your nickname is already taken");
+      if (hasJoined === true)
+        this.requestGraph(); /* Warning should be sent by server and shown */
+      else;
     });
     this.connection.on("ReceiveWarninig", (warning: string) => {
       alert(warning);

@@ -17,7 +17,7 @@ import { ClassNames } from "./ClassNames";
 export default class BoardManager {
   addEdge(edge: Edge) {
     this.eventManager.bindItem(edge);
-    this.draw(edge);
+    this.addItemToLayer(edge);
   }
 
   private static boardManager: BoardManager;
@@ -77,7 +77,6 @@ export default class BoardManager {
     const vertex = this.findById(attrs.id) as Vertex; //konva uses id as selector so # is required
     vertex.setAttrs(attrs);
     this.edgeManager.dragEdges(vertex);
-    vertex.redraw();
   }
 
   disableDrag() {
@@ -155,7 +154,7 @@ export default class BoardManager {
   editLine(lineDTO: LineDTO) {
     const line = this.findById(lineDTO.id) as TemporaryLine;
     line.setAttrs(lineDTO);
-    line.redraw();
+    line.moveToBottom();
   }
 
   deleteLine(lineId: string) {
@@ -163,14 +162,11 @@ export default class BoardManager {
     this.edgeManager.removeLine(line);
   }
 
-  draw(konvaObject: Vertex | Edge | PencilLine | TemporaryLine) {
+  addItemToLayer(konvaObject: Vertex | Edge | PencilLine | TemporaryLine) {
     sortItems(this.currentLayer);
-    if (konvaObject instanceof Vertex) this.vertexManager.draw(konvaObject);
-    else if (konvaObject instanceof Edge) this.edgeManager.draw(konvaObject);
-    else if (konvaObject instanceof TemporaryLine)
-      this.edgeManager.drawLine(konvaObject);
-    else if (konvaObject instanceof PencilLine)
-      this.pencilManager.draw(konvaObject);
+    konvaObject.layer.add(konvaObject);
+    if (konvaObject instanceof Edge || konvaObject instanceof TemporaryLine)
+      konvaObject.moveToBottom();
   }
 
   connectVertexes(vertex: Vertex) {
@@ -238,8 +234,7 @@ export default class BoardManager {
       position,
       this.currentLayer
     );
-    this.pencilManager.draw(pencilDrawing);
-    pencilDrawing.redraw();
+    this.pencilManager.addPencilLineToLayer(pencilDrawing);
     this.eventManager.bindItem(pencilDrawing);
   }
 
@@ -264,12 +259,10 @@ export default class BoardManager {
 
   movePencil(position: Cordinates) {
     this.pencilManager.appendPoint(position);
-    this.pencilManager.currentDrawing?.redraw();
   }
 
   finishPencilDrawing() {
     this.pencilManager.finishDrawing();
-    this.pencilManager.currentDrawing?.redraw();
   }
 
   startMultiselect(position: Cordinates) {
@@ -306,8 +299,7 @@ export default class BoardManager {
 
   editPencilLine(lineDTO: LineDTO) {
     const line = this.findById(lineDTO.id) as PencilLine;
-    line.setAttrs(lineDTO);
-    line.redraw();
+    line.points([...line.points(), ...lineDTO.points]);
   }
 
   selectLayer(layerId: string) {

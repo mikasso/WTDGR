@@ -24,11 +24,13 @@ namespace Backend.Core
 
         public IList<IRoomItem> GetAll() => LinesList.Cast<IRoomItem>().ToList();
 
-        public bool Update(IRoomItem pencilLine)
+        public bool Update(IRoomItem pencilLineWithNewPoints)
         {
-            if (Exists(pencilLine.Id))
+            if (Exists(pencilLineWithNewPoints.Id))
             {
-                _pencilLines[pencilLine.Id] = (PencilLine)pencilLine;
+                var pencilLine = Get(pencilLineWithNewPoints.Id) as PencilLine;
+                var newPoints = ((PencilLine)pencilLineWithNewPoints).Points;
+                pencilLine.Points = pencilLine.Points.Concat(newPoints).ToList();
                 return true;
             }
             return false;

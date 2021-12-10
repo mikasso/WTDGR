@@ -1,6 +1,5 @@
 import BaseBoardEventManager from "./BaseBoardEventManager";
 import Konva from "konva";
-import BoardManager from "../KonvaManager/BoardManager";
 import { State } from "@/store";
 import { Store } from "vuex";
 import { IHandler } from "./IHandler";
@@ -74,7 +73,6 @@ export default class OffLineBoardEventManager extends BaseBoardEventManager {
   }
 
   addLayer() {
-    const stageLayers = this.store.state.layers;
     let layerId = "Layer ";
     let count = 1;
     while (layerId == "Layer ") {

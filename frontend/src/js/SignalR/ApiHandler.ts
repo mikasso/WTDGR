@@ -9,7 +9,6 @@ import { Edge, EdgeDTO, LineDTO } from "../KonvaManager/EdgeManager";
 import { Vertex } from "../KonvaManager/VertexManager";
 import UserAction from "./Action";
 import { LineConfig } from "konva/types/shapes/Line";
-import { User } from "./User";
 
 export enum ActionTypes {
   Add = "Add",
@@ -74,17 +73,17 @@ export default class ApiManager {
             item as Konva.CircleConfig,
             item.layer as string
           );
-          this.boardManager.draw(vertex);
+          this.boardManager.addItemToLayer(vertex);
           break;
         }
         case ClassNames.Edge: {
           const edge = this.boardManager.createEdge(item as EdgeDTO);
-          if (edge !== undefined) this.boardManager.draw(edge);
+          if (edge !== undefined) this.boardManager.addItemToLayer(edge);
           break;
         }
         case ClassNames.TemporaryLine: {
           const line = this.boardManager.createLine(item as LineDTO);
-          if (line !== undefined) this.boardManager.draw(line);
+          if (line !== undefined) this.boardManager.addItemToLayer(line);
           break;
         }
         case ClassNames.Layer:
@@ -106,7 +105,7 @@ export default class ApiManager {
           ) {
             this.boardManager.pencilManager.currentDrawing?.id(item.id);
             this.boardManager.pencilManager.awaitingAdd = false;
-            this.boardManager.draw(
+            this.boardManager.addItemToLayer(
               this.boardManager.pencilManager.currentDrawing!
             );
           } else {
@@ -114,8 +113,7 @@ export default class ApiManager {
               item as LineConfig,
               item.layer as string
             );
-            this.boardManager.draw(pencilLine);
-            pencilLine.layer.draw();
+            this.boardManager.addItemToLayer(pencilLine);
           }
           break;
         }
@@ -155,7 +153,6 @@ export default class ApiManager {
       case ClassNames.Edge: {
         const edge = this.boardManager.findById(item.id) as Edge;
         edge.setAttrs(item);
-        edge.redraw();
         break;
       }
       case ClassNames.TemporaryLine:
@@ -191,7 +188,6 @@ export default class ApiManager {
             }
             const vertex = this.boardManager.findById(item.id) as Vertex;
             vertex.setAttrs(item);
-            vertex.layer.draw();
           } else console.error("cannot edit vertex" + item.id);
           break;
         case ClassNames.Edge:
@@ -215,18 +211,18 @@ export default class ApiManager {
             vertex.setAttrs({
               stroke: ItemColors.defaultStroke,
             });
-            vertex.redraw();
           }
           break;
         case ClassNames.Edge:
           {
             const edge = this.boardManager.findById(item.id) as Edge;
             edge.setAttrs({ stroke: ItemColors.defaultStroke });
-            edge.redraw();
           }
           break;
+        case ClassNames.PencilLine:
+          break;
         default:
-          throw Error(`Not implemented receive edit for ${item.type}`);
+          throw Error(`Not implemented receive RealeseItem for ${item.type}`);
       }
   }
 }

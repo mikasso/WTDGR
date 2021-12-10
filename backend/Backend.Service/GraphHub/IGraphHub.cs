@@ -10,9 +10,7 @@ namespace Backend.Service
     {
         Task SendAction(UserAction userAction);
         Task ReceiveAction(UserAction userAction, bool isSucceded = true);
-        Task ReceiveActionResponse(UserActionFailure actionResponse);
         Task ReceiveRoomId(string roomId);
-        Task ReceiveText(string message);
         Task ReceiveWarninig(string message);
         Task ReceiveJoinResponse(bool hasJoined);
         Task ReceiveGraph(IList<IRoomItem> items);
