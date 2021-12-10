@@ -121,6 +121,9 @@
     </div>
 
     <div style="display: flex; align-items: center">
+      <el-button class="help" @click="openHelpWindow"
+        ><img class="help-icon" :src="require('../assets/buttons/help.svg')"
+      /></el-button>
       <el-tag class="connBadge" v-bind:type="connectionColorType">
         {{ hubState }}
       </el-tag>
@@ -325,6 +328,9 @@ export default defineComponent({
     openWelcomeWindow() {
       this.emit("toolbarAction", { type: "openWelcomeWindow" });
     },
+    openHelpWindow() {
+      this.emit("toolbarAction", { type: "openHelpWindow" });
+    },
     styleSelected(style: any, category: string, subcategory: any) {
       if (category == "vertex") {
         for (const otherStyle of subcategory) otherStyle.selected = false;
@@ -475,5 +481,15 @@ export default defineComponent({
 .colorSelected {
   border: 3px black solid;
   margin: 1px;
+}
+.help {
+  padding: 0px 7px;
+  min-height: 36px;
+  width: 36px;
+  .help-icon {
+    width: 20px;
+    height: 20px;
+  }
+  margin-right: 15px;
 }
 </style>

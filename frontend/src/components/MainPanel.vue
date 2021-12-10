@@ -1,6 +1,7 @@
 <template>
   <el-container class="wrapper">
     <WelcomeWindow ref="welcomeWindow" />
+    <HelpWindow ref="helpWindow" />
     <el-header class="header" height="55px">
       <Toolbar @toolbarAction="handleToolbarAction($event)" />
     </el-header>
@@ -39,6 +40,7 @@ import { useWindowSize } from "vue-window-size";
 import Toolbar from "./Toolbar.vue";
 import FileWindow from "./FileWindow.vue";
 import WelcomeWindow from "./WelcomeWindow.vue";
+import HelpWindow from "./HelpWindow.vue";
 import UsersList from "./UsersList.vue";
 import { UserRole } from "@/js/SignalR/User";
 
@@ -63,6 +65,7 @@ export default defineComponent({
     // eslint-disable-next-line vue/no-unused-components
     UsersList,
     FileWindow,
+    HelpWindow,
   },
   watch: {
     isOnline: {
@@ -206,6 +209,9 @@ export default defineComponent({
       }
       if (action.type === "openWelcomeWindow") {
         (this.$refs["welcomeWindow"] as typeof WelcomeWindow).open();
+      }
+      if (action.type === "openHelpWindow") {
+        (this.$refs["helpWindow"] as typeof HelpWindow).open();
       }
     },
     addLayer() {
