@@ -8,6 +8,7 @@ import BoardHub from "@/js/SignalR/Hub";
 import { KonvaEventObject } from "konva/types/Node";
 import BaseBoardEventManager from "../BaseBoardEventManager";
 import { IHandler } from "../IHandler";
+import { laysOnCurrentLayer } from "../utils";
 
 export default class OnlineEraseToolHandler implements IHandler {
   constructor(
@@ -25,6 +26,7 @@ export default class OnlineEraseToolHandler implements IHandler {
   }
 
   private async vertexMouseDown(event: KonvaEventObject<any>) {
+    if (!laysOnCurrentLayer(event.target)) return;
     const vertex = event.target as Vertex;
     const action = this.actionFactory.create(
       ActionTypes.Delete,
@@ -34,12 +36,14 @@ export default class OnlineEraseToolHandler implements IHandler {
   }
 
   private async edgeClick(event: KonvaEventObject<any>) {
+    if (!laysOnCurrentLayer(event.target)) return;
     const edge = event.target as Edge;
     const action = this.actionFactory.create(ActionTypes.Delete, edge.asDTO());
     await this.hub.sendAction(action);
   }
 
   private pencilClick(event: KonvaEventObject<any>) {
+    if (!laysOnCurrentLayer(event.target)) return;
     const drawing = event.target as PencilLine;
     const action = this.actionFactory.create(
       ActionTypes.Delete,
