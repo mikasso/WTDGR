@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Backend.Core
 {
-    public interface IRoomManager
+    public interface IRoomManager : IDisposable
     {
         string RoomId { get; }
         IRoomUsersManager Users { get; }

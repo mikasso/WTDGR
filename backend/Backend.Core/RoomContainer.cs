@@ -49,8 +49,10 @@ namespace Backend.Core
 
         public bool DeleteRoom(string Id)
         {
-            if (!_rooms.ContainsKey(Id))
+            IRoomManager? room;
+            if (!_rooms.TryGetValue(Id, out room))
                 return false;
+            room.Dispose();
             _rooms.Remove(Id);
             return true;
         }

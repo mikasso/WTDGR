@@ -172,5 +172,10 @@ namespace Backend.Core
                 _ => throw new NotImplementedException(),
             };
         }
+
+        public void Dispose()
+        {
+            _semaphore.Dispose();
+        }
     }
 }

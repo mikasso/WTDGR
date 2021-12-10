@@ -1,5 +1,7 @@
+import Konva from "konva";
 import { KonvaEventObject } from "konva/types/Node";
 import * as Configuration from "../../config.json";
+import BoardManager from "../KonvaManager/BoardManager";
 
 export const MaxLayersCount = 4;
 
@@ -16,6 +18,12 @@ export function getPointFromEvent(event: KonvaEventObject<any>) {
     x: event.evt.layerX,
     y: event.evt.layerY,
   };
+}
+
+export function laysOnCurrentLayer(item: Konva.Node) {
+  return (
+    item?.getLayer()?.id() === BoardManager.getBoardManager().currentLayer.id()
+  );
 }
 
 export function poll<T>(params: {
