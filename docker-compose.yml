@@ -2,15 +2,19 @@ version: "3.4"
 
 services:
   frontend:
-    image: mikasso/frontend:1.01
+    build:
+      context: ./frontend
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
+    entrypoint: [ "http-server", "dist" ]
     ports:
       - 80:8080
   backend:
-    image: mikasso/backend:1.01
+    build:
+      context: ./backend
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:5000
+    entrypoint: ["dotnet", "Backend.Service.dll"]
     ports:
       - 5000:5000

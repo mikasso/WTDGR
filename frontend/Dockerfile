@@ -4,7 +4,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-ENV ENV_NODE=production
+ENV NODE_ENV=development
 RUN npm run build
 EXPOSE 8080
-CMD [ "http-server", "dist" ]
