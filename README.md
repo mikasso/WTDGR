@@ -12,3 +12,9 @@ Współdzielona tablica do rysowania grafów - serwis działający na asp.net co
 3. Run `docker-compose down`
 4. Run `docker-compose up -d`
 5. Frontend app will be available on http://localhost/ , backend on  http://localhost:5000
+
+## Changing configuration
+App can be lauched in two configuration modes: development and production. In order to set the production mode:
+1. In <i>@\frontend\Dockerfile</i> change the value of "NODE_ENV" variable to "production"
+2. In <i>@\docker-compose.yml</i> change the value of "ASPNETCORE_ENVIRONMENT" variable to "Production"
+3. In <i>@\backend\Backend.Service\Properties\launchSettings.json</i> change the "applicationUrl" value to the address of production server
